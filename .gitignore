@@ -1,0 +1,34 @@
+# Godot 4.x generated files
+.godot/
+.import/
+
+# Local export credentials and generated export outputs
+export.cfg
+export_credentials.cfg
+builds/
+build/
+exports/
+export/
+dist/
+
+# Editor and temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local IDE settings
+.vscode/
+.idea/
+
+# C#/.NET local build output if ever generated; Red Hollow uses GDScript.
+.mono/
+bin/
+obj/
