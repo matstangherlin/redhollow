@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"red_knuckle"
+display_name = "Red Knuckle"
+damage = 8.0
+startup_time = 0.16
+active_time = 0.10
+recovery_time = 0.30
+hitbox_size = Vector2(58, 34)
+hitbox_offset = Vector2(46, -7)
+hitstun_time = 0.34
+knockback = Vector2(260, -55)
+attacker_hitstop = 0.060
+target_hitstop = 0.075
+style_gain = 14
+cancel_window_start = 0.0
+cancel_window_end = 0.0
+can_hit_ground_targets = true
+can_hit_air_targets = false
+max_hits_per_target = 1
+tags = PackedStringArray("red_brand", "knuckle", "ground", "calder", "combo_finisher")

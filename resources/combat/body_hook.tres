@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AttackData" format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"body_hook"
+display_name = "Body Hook"
+damage = 5.0
+startup_time = 0.11
+active_time = 0.09
+recovery_time = 0.22
+hitbox_size = Vector2(50, 32)
+hitbox_offset = Vector2(38, -4)
+hitstun_time = 0.26
+knockback = Vector2(145, -18)
+attacker_hitstop = 0.045
+target_hitstop = 0.055
+style_gain = 8
+cancel_window_start = 0.24
+cancel_window_end = 0.34
+can_hit_ground_targets = true
+can_hit_air_targets = false
+max_hits_per_target = 1
+tags = PackedStringArray("hook", "punch", "ground", "calder", "combo_second")

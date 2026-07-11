@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://g61gld3n12gi"]
+
+[ext_resource type="Script" path="res://scripts/world/boss_encounter_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" path="res://scenes/world/combat_arena_gate.tscn" id="2_gate"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_activation"]
+size = Vector2(360, 120)
+
+[node name="BossEncounter" type="Node2D"]
+script = ExtResource("1_controller")
+encounter_id = &"deacon_rusk_underground"
+activation_zone_path = NodePath("ActivationZone")
+gate_paths = Array[NodePath]([NodePath("Gates/GateLeft"), NodePath("Gates/GateRight")])
+blocked_exit_paths = Array[NodePath]([])
+boss_path = NodePath("../DeaconRusk")
+style_completion_bonus = 150.0
+completion_flag_id = &"boss_deacon_rusk_defeated"
+feedback_label_path = NodePath("FeedbackLabel")
+
+[node name="ActivationZone" type="Area2D" parent="."]
+position = Vector2(520, 848)
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActivationZone"]
+shape = SubResource("RectangleShape2D_activation")
+
+[node name="Gates" type="Node2D" parent="."]
+
+[node name="GateLeft" parent="Gates" instance=ExtResource("2_gate")]
+position = Vector2(60, 848)
+
+[node name="GateRight" parent="Gates" instance=ExtResource("2_gate")]
+position = Vector2(1140, 848)
+
+[node name="FeedbackLabel" type="Label" parent="."]
+visible = false
+offset_left = 380.0
+offset_top = 140.0
+offset_right = 820.0
+offset_bottom = 176.0
+theme_override_colors/font_color = Color(0.95, 0.82, 0.68, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+text = "Deacon Rusk"

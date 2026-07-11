@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://cskj07yrm1rfo"]
+
+[ext_resource type="Script" path="res://scripts/progression/progression_component.gd" id="1_progression"]
+[ext_resource type="Script" path="res://scripts/world/barrier_registry.gd" id="2_barrier_registry"]
+
+[node name="ProgressionSystem" type="Node"]
+
+[node name="ProgressionComponent" type="Node" parent="."]
+script = ExtResource("1_progression")
+can_break_red_barriers = true
+
+[node name="BarrierRegistry" type="Node" parent="."]
+script = ExtResource("2_barrier_registry")

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "locale": "pt_BR",
+  "dialogues": {
+    "elias_church_warning": {
+      "dialogue_id": "elias_church_warning",
+      "speaker": "Elias",
+      "lines": [
+        "A igreja fechou as portas antes do pôr do sol.",
+        "Desde então, ninguém que entrou voltou.",
+        "Se pretende investigar, tente não acreditar em tudo que ouvir lá dentro."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
+      "conditions": {},
+      "choices": []
+    },
+    "elias_vertical_slice_intro": {
+      "dialogue_id": "elias_vertical_slice_intro",
+      "speaker": "Elias",
+      "lines": [
+        "Calder... a igreja fechou antes do pôr do sol.",
+        "Há cultistas nas ruas e algo pior nas catacumbas.",
+        "Se for adiante, use tudo que aprender no caminho."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
+      "conditions": {},
+      "choices": []
+    }
+  }
+}

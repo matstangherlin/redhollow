@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://jc025kwk62na"]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"enemy_test_heavy"
+display_name = "Test Heavy"
+damage = 6.0
+startup_time = 0.55
+active_time = 0.14
+recovery_time = 0.35
+hitbox_size = Vector2(52, 34)
+hitbox_offset = Vector2(38, -2)
+hitstun_time = 0.30
+knockback = Vector2(200, -28)
+attacker_hitstop = 0.045
+target_hitstop = 0.055
+can_hit_ground_targets = true
+can_hit_air_targets = false
+max_hits_per_target = 1
+counterable = false
+tags = PackedStringArray("heavy", "enemy", "test", "not_counterable")

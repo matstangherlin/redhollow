@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://dkylm4fcbs7rw"]
+
+[ext_resource type="Script" path="res://scripts/world/area_root.gd" id="1_area_root"]
+[ext_resource type="Script" path="res://scripts/world/area_spawn_point.gd" id="2_spawn"]
+[ext_resource type="Script" path="res://scripts/world/area_exit.gd" id="3_exit"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/elias.tscn" id="4_elias"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/cult_brawler.tscn" id="5_cult_brawler"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(2400, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
+size = Vector2(180, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(24, 96)
+
+[node name="VerticalSliceStreet" type="Node2D"]
+script = ExtResource("1_area_root")
+area_id = &"vs_greybox_street"
+area_display_name = "Rua Inicial"
+camera_limits = Rect2(0, 200, 2400, 1000)
+fall_recovery_y = 1320.0
+area_tint = Color(0.5, 0.5, 0.54, 1)
+
+[node name="AreaLabel" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 320.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.82, 0.82, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+text = "RUA INICIAL"
+
+[node name="GuideLabel" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 56.0
+offset_right = 520.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "Fale com Elias, atravesse as plataformas e avance para a igreja."
+
+[node name="Solids" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Solids"]
+position = Vector2(1200, 900)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/Ground"]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="GroundVisual" type="Polygon2D" parent="Solids/Ground"]
+color = Color(0.38, 0.38, 0.42, 1)
+polygon = PackedVector2Array(-1200, -24, 1200, -24, 1200, 24, -1200, 24)
+
+[node name="PlatformA" type="StaticBody2D" parent="Solids"]
+position = Vector2(560, 820)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/PlatformA"]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="PlatformVisual" type="Polygon2D" parent="Solids/PlatformA"]
+color = Color(0.42, 0.42, 0.46, 1)
+polygon = PackedVector2Array(-90, -12, 90, -12, 90, 12, -90, 12)
+
+[node name="PlatformB" type="StaticBody2D" parent="Solids"]
+position = Vector2(860, 760)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/PlatformB"]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="PlatformVisual" type="Polygon2D" parent="Solids/PlatformB"]
+color = Color(0.42, 0.42, 0.46, 1)
+polygon = PackedVector2Array(-90, -12, 90, -12, 90, 12, -90, 12)
+
+[node name="PlatformC" type="StaticBody2D" parent="Solids"]
+position = Vector2(1160, 700)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/PlatformC"]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="PlatformVisual" type="Polygon2D" parent="Solids/PlatformC"]
+color = Color(0.42, 0.42, 0.46, 1)
+polygon = PackedVector2Array(-90, -12, 90, -12, 90, 12, -90, 12)
+
+[node name="ReturnPlatform" type="StaticBody2D" parent="Solids"]
+position = Vector2(1360, 780)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/ReturnPlatform"]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="PlatformVisual" type="Polygon2D" parent="Solids/ReturnPlatform"]
+color = Color(0.42, 0.42, 0.46, 1)
+polygon = PackedVector2Array(-90, -12, 90, -12, 90, 12, -90, 12)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="DefaultSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(120, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"default"
+
+[node name="FromChurchSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(2260, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"from_church"
+
+[node name="WorldObjects" type="Node2D" parent="."]
+
+[node name="Elias" parent="WorldObjects" instance=ExtResource("4_elias")]
+position = Vector2(260, 848)
+
+[node name="Interactable" parent="WorldObjects/Elias" index="2"]
+dialogue_id = &"elias_vertical_slice_intro"
+
+[node name="CultBrawlerStreet" parent="WorldObjects" instance=ExtResource("5_cult_brawler")]
+position = Vector2(1700, 848)
+patrol_distance = 120.0
+
+[node name="Exits" type="Node2D" parent="."]
+
+[node name="ToChurchExit" type="Area2D" parent="Exits"]
+position = Vector2(2320, 848)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("3_exit")
+exit_id = &"to_church"
+target_scene = "res://scenes/areas/vertical_slice_church.tscn"
+target_spawn_id = &"from_street"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/ToChurchExit"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="ExitVisual" type="Polygon2D" parent="Exits/ToChurchExit"]
+color = Color(0.72, 0.72, 0.78, 0.55)
+polygon = PackedVector2Array(-12, -48, 12, -48, 12, 48, -12, 48)
+
+[node name="ExitLabel" type="Label" parent="Exits/ToChurchExit"]
+offset_left = -72.0
+offset_top = -72.0
+offset_right = 72.0
+offset_bottom = -48.0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+text = "-> Igreja"

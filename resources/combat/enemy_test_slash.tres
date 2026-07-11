@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://demb1oa7dbi6k"]
+
+[ext_resource type="Script" uid="uid://dc5c46u0ufgqd" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"enemy_test_slash"
+display_name = "Test Slash"
+damage = 4.0
+startup_time = 0.55
+active_time = 0.14
+recovery_time = 0.35
+hitbox_size = Vector2(48, 30)
+hitbox_offset = Vector2(36, -2)
+hitstun_time = 0.22
+knockback = Vector2(160, -20)
+attacker_hitstop = 0.04
+target_hitstop = 0.05
+tags = PackedStringArray("slash", "enemy", "test", "telegraphed")

@@ -2,7 +2,7 @@
 
 ## Uso
 
-Esta matriz define testes manuais e tecnicos para cada sistema quando ele existir. No estado inicial do projeto, muitos itens ainda ficam como nao aplicaveis. Cada nova tarefa deve atualizar ou executar os testes relacionados.
+Esta matriz define testes manuais e tecnicos para cada sistema quando ele existir. Para a demonstração jogável completa, use também [VERTICAL_SLICE_TEST_PLAN.md](VERTICAL_SLICE_TEST_PLAN.md).
 
 Legenda sugerida:
 
@@ -10,6 +10,17 @@ Legenda sugerida:
 - Fail: comportamento incorreto.
 - Blocked: sistema ainda inexistente ou erro impede teste.
 - N/A: nao aplicavel para a etapa atual.
+
+## Demonstracao vertical slice (greybox)
+
+| Area | Teste | Procedimento | Resultado esperado |
+| --- | --- | --- | --- |
+| Demo | Main scene | Executar projeto. | Carrega `vertical_slice_greybox.tscn`. |
+| Demo | Fluxo completo | Seguir roteiro em VERTICAL_SLICE_TEST_PLAN.md. | Todos os marcos completaveis em 10–20 min. |
+| Demo | Reinicio | Pressionar R. | Calder retorna ao spawn/checkpoint sem softlock. |
+| Demo | Voltar ao inicio | Pressionar F7. | Retorna a rua inicial com progresso resetado. |
+| Demo | Conclusao | Derrotar Deacon Rusk. | Overlay informa demonstracao tecnica concluida. |
+| Demo | Verificacao headless | Rodar `vertical_slice_verification.gd`. | Sem erros de cadeia de areas/dialogo. |
 
 ## Matriz
 

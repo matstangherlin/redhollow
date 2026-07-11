@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://dkpw7v8ad8wxy"]
+
+[ext_resource type="Script" path="res://scripts/dialogue/dialogue_controller.gd" id="1_dialogue_controller"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialogue_box.tscn" id="2_dialogue_box"]
+
+[node name="DialogueSystem" type="Node"]
+script = ExtResource("1_dialogue_controller")
+dialogue_box_path = NodePath("DialogueBox")
+
+[node name="DialogueBox" parent="." instance=ExtResource("2_dialogue_box")]

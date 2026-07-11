@@ -1,0 +1,86 @@
+[gd_scene load_steps=9 format=3 uid="uid://streettestarea01"]
+
+[ext_resource type="Script" path="res://scripts/world/area_root.gd" id="1_area_root"]
+[ext_resource type="Script" path="res://scripts/world/area_spawn_point.gd" id="2_spawn"]
+[ext_resource type="Script" path="res://scripts/world/area_exit.gd" id="3_exit"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/cult_brawler.tscn" id="4_cult_brawler"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(1400, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(24, 96)
+
+[node name="StreetTest" type="Node2D"]
+script = ExtResource("1_area_root")
+area_id = &"street_test"
+area_display_name = "Street Test"
+camera_limits = Rect2(0, 0, 1400, 920)
+fall_recovery_y = 1320.0
+area_tint = Color(0.48, 0.48, 0.5, 1)
+
+[node name="AreaLabel" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 260.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.82, 0.82, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+text = "STREET TEST"
+
+[node name="Solids" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Solids"]
+position = Vector2(700, 900)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/Ground"]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="GroundVisual" type="Polygon2D" parent="Solids/Ground"]
+color = Color(0.38, 0.38, 0.4, 1)
+polygon = PackedVector2Array(-700, -24, 700, -24, 700, 24, -700, 24)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="DefaultSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(120, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"default"
+
+[node name="FromChurchSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(1280, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"from_church"
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="CultBrawlerA" parent="Enemies" instance=ExtResource("4_cult_brawler")]
+position = Vector2(680, 848)
+patrol_distance = 140.0
+
+[node name="Exits" type="Node2D" parent="."]
+
+[node name="ToChurchExit" type="Area2D" parent="Exits"]
+position = Vector2(1360, 848)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("3_exit")
+exit_id = &"to_church"
+target_scene = "res://scenes/areas/church_entrance_test.tscn"
+target_spawn_id = &"from_street"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/ToChurchExit"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="ExitVisual" type="Polygon2D" parent="Exits/ToChurchExit"]
+color = Color(0.72, 0.72, 0.78, 0.55)
+polygon = PackedVector2Array(-12, -48, 12, -48, 12, 48, -12, 48)
+
+[node name="ExitLabel" type="Label" parent="Exits/ToChurchExit"]
+offset_left = -48.0
+offset_top = -72.0
+offset_right = 48.0
+offset_bottom = -48.0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+text = "-> Church"

@@ -1,0 +1,147 @@
+[gd_scene load_steps=5 format=3 uid="uid://stylehudredhollow"]
+
+[ext_resource type="Script" path="res://scripts/style/style_hud.gd" id="1_style_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.06, 0.07, 0.72)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.16, 0.12, 0.85)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_taunt_panel"]
+bg_color = Color(0.05, 0.04, 0.06, 0.78)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.72, 0.22, 0.42, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_brand_fill"]
+bg_color = Color(0.92, 0.12, 0.05, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="StyleHud" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_style_hud")
+
+[node name="HudRoot" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="StylePanel" type="PanelContainer" parent="HudRoot"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 286.0
+offset_bottom = 214.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="HudRoot/StylePanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="RankLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.82, 0.34, 1)
+theme_override_font_sizes/font_size = 22
+text = "DUST"
+
+[node name="ScoreLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "0"
+
+[node name="RankProgressBar" type="ProgressBar" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 14)
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+
+[node name="MultiplierLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.86, 0.96, 1)
+theme_override_font_sizes/font_size = 13
+text = "Reward x1.00"
+
+[node name="FeedbackLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.58, 0.28, 1)
+theme_override_font_sizes/font_size = 13
+text = ""
+
+[node name="RedBrandLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.32, 0.18, 1)
+theme_override_font_sizes/font_size = 13
+text = "Red Brand"
+
+[node name="RedBrandBar" type="ProgressBar" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 16)
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_brand_fill")
+
+[node name="RedBrandValueLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "0 / 100"
+
+[node name="BrandChargeLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.62, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = ""
+
+[node name="TauntLinePanel" type="PanelContainer" parent="HudRoot"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -92.0
+offset_right = 320.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_taunt_panel")
+
+[node name="TauntLineLabel" type="Label" parent="HudRoot/TauntLinePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+autowrap_mode = 2
+text = ""

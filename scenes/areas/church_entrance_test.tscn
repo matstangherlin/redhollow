@@ -1,0 +1,128 @@
+[gd_scene load_steps=15 format=3 uid="uid://churchentrancetest01"]
+
+[ext_resource type="Script" path="res://scripts/world/area_root.gd" id="1_area_root"]
+[ext_resource type="Script" path="res://scripts/world/area_spawn_point.gd" id="2_spawn"]
+[ext_resource type="Script" path="res://scripts/world/area_exit.gd" id="3_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/red_barrier.tscn" id="4_red_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/elias.tscn" id="5_elias"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/checkpoint.tscn" id="6_checkpoint"]
+[ext_resource type="PackedScene" path="res://scenes/world/combat_arena.tscn" id="7_combat_arena"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(1800, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(24, 96)
+
+[node name="ChurchEntranceTest" type="Node2D"]
+script = ExtResource("1_area_root")
+area_id = &"church_entrance_test"
+area_display_name = "Church Entrance Test"
+camera_limits = Rect2(0, 0, 1800, 920)
+fall_recovery_y = 1320.0
+area_tint = Color(0.44, 0.42, 0.46, 1)
+
+[node name="AreaLabel" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 340.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.82, 0.82, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+text = "CHURCH ENTRANCE TEST"
+
+[node name="Solids" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Solids"]
+position = Vector2(900, 900)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/Ground"]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="GroundVisual" type="Polygon2D" parent="Solids/Ground"]
+color = Color(0.34, 0.34, 0.36, 1)
+polygon = PackedVector2Array(-900, -24, 900, -24, 900, 24, -900, 24)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="DefaultSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(200, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"default"
+
+[node name="FromStreetSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(80, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"from_street"
+
+[node name="FromUndergroundSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(1430, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"from_underground"
+
+[node name="WorldObjects" type="Node2D" parent="."]
+
+[node name="ArenaCheckpoint" parent="WorldObjects" instance=ExtResource("6_checkpoint")]
+position = Vector2(240, 848)
+
+[node name="Elias" parent="WorldObjects" instance=ExtResource("5_elias")]
+position = Vector2(300, 848)
+
+[node name="CultRedBarrier" parent="WorldObjects" instance=ExtResource("4_red_barrier")]
+position = Vector2(1250, 836)
+
+[node name="ChurchYardArena" parent="WorldObjects" instance=ExtResource("7_combat_arena")]
+position = Vector2(200, 0)
+blocked_exit_paths = Array[NodePath]([NodePath("../../Exits/ToStreetExit"), NodePath("../../Exits/ToUndergroundExit")])
+
+[node name="Exits" type="Node2D" parent="."]
+
+[node name="ToStreetExit" type="Area2D" parent="Exits"]
+position = Vector2(40, 848)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("3_exit")
+exit_id = &"to_street"
+target_scene = "res://scenes/areas/street_test.tscn"
+target_spawn_id = &"from_church"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/ToStreetExit"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="ExitVisual" type="Polygon2D" parent="Exits/ToStreetExit"]
+color = Color(0.72, 0.72, 0.78, 0.55)
+polygon = PackedVector2Array(-12, -48, 12, -48, 12, 48, -12, 48)
+
+[node name="ExitLabel" type="Label" parent="Exits/ToStreetExit"]
+offset_left = -48.0
+offset_top = -72.0
+offset_right = 48.0
+offset_bottom = -48.0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+text = "<- Street"
+
+[node name="ToUndergroundExit" type="Area2D" parent="Exits"]
+position = Vector2(1500, 848)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("3_exit")
+exit_id = &"to_underground"
+target_scene = "res://scenes/areas/underground_test.tscn"
+target_spawn_id = &"from_church_entrance"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/ToUndergroundExit"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="ExitVisual" type="Polygon2D" parent="Exits/ToUndergroundExit"]
+color = Color(0.72, 0.42, 0.32, 0.55)
+polygon = PackedVector2Array(-12, -48, 12, -48, 12, 48, -12, 48)
+
+[node name="ExitLabel" type="Label" parent="Exits/ToUndergroundExit"]
+offset_left = -64.0
+offset_top = -72.0
+offset_right = 64.0
+offset_bottom = -48.0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+text = "-> Underground"

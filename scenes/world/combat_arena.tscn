@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://combatarena01"]
+
+[ext_resource type="Script" path="res://scripts/world/combat_arena_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" path="res://scenes/world/combat_arena_gate.tscn" id="2_gate"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/cult_brawler.tscn" id="3_cult_brawler"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_activation"]
+size = Vector2(480, 120)
+
+[node name="CombatArena" type="Node2D"]
+script = ExtResource("1_controller")
+arena_id = &"church_yard_01"
+activation_zone_path = NodePath("ActivationZone")
+gate_paths = Array[NodePath]([NodePath("Gates/GateLeft"), NodePath("Gates/GateRight")])
+blocked_exit_paths = Array[NodePath]([])
+enemy_spawn_paths = Array[NodePath]([NodePath("EnemySpawns/SpawnA"), NodePath("EnemySpawns/SpawnB")])
+enemies_container_path = NodePath("Enemies")
+enemy_scene = ExtResource("3_cult_brawler")
+style_completion_bonus = 75.0
+completion_flag_id = &"arena_church_yard_01_complete"
+feedback_label_path = NodePath("FeedbackLabel")
+
+[node name="ActivationZone" type="Area2D" parent="."]
+position = Vector2(500, 848)
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActivationZone"]
+shape = SubResource("RectangleShape2D_activation")
+
+[node name="ActivationVisual" type="Polygon2D" parent="ActivationZone"]
+color = Color(0.9, 0.72, 0.2, 0.1)
+polygon = PackedVector2Array(-240, -60, 240, -60, 240, 60, -240, 60)
+
+[node name="Gates" type="Node2D" parent="."]
+
+[node name="GateLeft" parent="Gates" instance=ExtResource("2_gate")]
+position = Vector2(60, 848)
+
+[node name="GateRight" parent="Gates" instance=ExtResource("2_gate")]
+position = Vector2(940, 848)
+
+[node name="EnemySpawns" type="Node2D" parent="."]
+
+[node name="SpawnA" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(700, 848)
+
+[node name="SpawnB" type="Marker2D" parent="EnemySpawns"]
+position = Vector2(860, 848)
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="FeedbackLabel" type="Label" parent="."]
+visible = false
+offset_left = 520.0
+offset_top = 120.0
+offset_right = 920.0
+offset_bottom = 160.0
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+text = "Combate iniciado"

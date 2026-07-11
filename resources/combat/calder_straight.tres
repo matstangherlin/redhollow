@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://dt6xscd2m5q1w"]
+
+[ext_resource type="Script" uid="uid://dc5c46u0ufgqd" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"calder_straight"
+display_name = "Calder Straight"
+damage = 3.0
+startup_time = 0.08
+active_time = 0.08
+recovery_time = 0.18
+hitbox_size = Vector2(44, 28)
+hitbox_offset = Vector2(34, -6)
+hitstun_time = 0.18
+knockback = Vector2(120, -24)
+attacker_hitstop = 0.035
+target_hitstop = 0.045
+style_gain = 5
+cancel_window_start = 0.2
+cancel_window_end = 0.26
+tags = PackedStringArray("straight", "punch", "ground", "calder", "combo_starter")

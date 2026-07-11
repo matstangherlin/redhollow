@@ -1,0 +1,108 @@
+[gd_scene format=3 uid="uid://deaconrusk01"]
+
+[ext_resource type="Script" path="res://scripts/enemies/deacon_rusk.gd" id="1_deacon"]
+[ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox_component.gd" id="3_hurtbox"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox_component.gd" id="4_hitbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(42, 68)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(46, 72)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(52, 32)
+
+[node name="DeaconRusk" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_deacon")
+max_health = 120.0
+move_speed = 95.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Visual" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="MantleVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+color = Color(0.18, 0.08, 0.1, 1)
+polygon = PackedVector2Array(-28, -18, 28, -18, 34, 8, 24, 34, -24, 34, -34, 8)
+
+[node name="BodyVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+color = Color(0.34, 0.1, 0.12, 1)
+polygon = PackedVector2Array(-21, -34, 21, -34, 24, -8, 21, 34, -21, 34, -24, -8)
+
+[node name="HeadVisual" type="Polygon2D" parent="Visual"]
+color = Color(0.72, 0.62, 0.58, 1)
+polygon = PackedVector2Array(-14, -54, 14, -54, 16, -34, -16, -34)
+
+[node name="CrownVisual" type="Polygon2D" parent="Visual"]
+color = Color(0.82, 0.12, 0.1, 1)
+polygon = PackedVector2Array(-18, -58, 0, -68, 18, -58, 12, -52, -12, -52)
+
+[node name="TelegraphVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+visible = false
+color = Color(1, 0.78, 0.22, 0.42)
+polygon = PackedVector2Array(-34, -42, 34, -42, 42, 0, 34, 42, -34, 42, -42, 0)
+
+[node name="WarningVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+visible = false
+color = Color(0.92, 0.12, 0.1, 0.55)
+polygon = PackedVector2Array(-38, -46, 38, -46, 46, 0, 38, 46, -38, 46, -46, 0)
+
+[node name="SlamVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+visible = false
+color = Color(0.92, 0.12, 0.1, 0.35)
+polygon = PackedVector2Array(-44, 18, 44, 18, 52, 34, -52, 34)
+
+[node name="Components" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="HealthComponent" type="Node" parent="Components"]
+unique_name_in_owner = true
+script = ExtResource("2_health")
+max_health = 120.0
+current_health = 120.0
+
+[node name="HurtboxComponent" type="Area2D" parent="Components"]
+unique_name_in_owner = true
+collision_layer = 64
+collision_mask = 8
+monitoring = false
+script = ExtResource("3_hurtbox")
+owner_node_path = NodePath("../..")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Components/HurtboxComponent"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="HitboxComponent" type="Area2D" parent="Components"]
+unique_name_in_owner = true
+collision_layer = 16
+collision_mask = 32
+monitorable = false
+monitoring = false
+script = ExtResource("4_hitbox")
+owner_node_path = NodePath("../..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Components/HitboxComponent"]
+shape = SubResource("RectangleShape2D_hitbox")
+disabled = true
+
+[node name="DebugLabel" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+offset_left = -120.0
+offset_top = -180.0
+offset_right = 220.0
+offset_bottom = -20.0
+theme_override_font_sizes/font_size = 12
+text = "Deacon Rusk"

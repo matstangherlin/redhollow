@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AttackData" format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"rusk_ground_slam"
+display_name = "Rusk Ground Slam"
+damage = 11.0
+startup_time = 0.58
+active_time = 0.16
+recovery_time = 0.52
+hitbox_size = Vector2(88, 24)
+hitbox_offset = Vector2(0, 18)
+hitstun_time = 0.36
+knockback = Vector2(140, -48)
+attacker_hitstop = 0.06
+target_hitstop = 0.07
+counterable = false
+tags = PackedStringArray("melee", "enemy", "boss", "slam", "aoe", "not_counterable", "telegraphed")

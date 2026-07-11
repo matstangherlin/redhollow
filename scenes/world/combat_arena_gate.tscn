@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://bw266n6iilebk"]
+
+[ext_resource type="Script" path="res://scripts/world/combat_arena_gate.gd" id="1_gate"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate"]
+size = Vector2(24, 96)
+
+[node name="CombatArenaGate" type="StaticBody2D"]
+collision_layer = 0
+collision_mask = 0
+script = ExtResource("1_gate")
+gate_visual_path = NodePath("GateVisual")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_gate")
+
+[node name="GateVisual" type="Polygon2D" parent="."]
+visible = false
+color = Color(0.82, 0.18, 0.18, 0.85)
+polygon = PackedVector2Array(-12, -48, 12, -48, 12, 48, -12, 48)

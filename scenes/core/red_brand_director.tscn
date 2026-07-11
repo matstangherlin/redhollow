@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://okkhqegxqx5i"]
+
+[ext_resource type="Script" path="res://scripts/combat/red_brand_director.gd" id="1_red_brand_director"]
+
+[node name="RedBrandDirector" type="Node"]
+script = ExtResource("1_red_brand_director")
+arena_path = NodePath("../Player")
+style_hud_path = NodePath("../StyleManager/StyleHud")

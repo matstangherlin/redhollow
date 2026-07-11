@@ -1,0 +1,117 @@
+[gd_scene format=3 uid="uid://0urvw8i3af5"]
+
+[ext_resource type="Script" path="res://scripts/core/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/core/hitstop_controller.gd" id="2_hitstop"]
+[ext_resource type="PackedScene" path="res://scenes/core/style_manager.tscn" id="3_style"]
+[ext_resource type="PackedScene" path="res://scenes/ui/boss_health_hud.tscn" id="4_boss_hud"]
+[ext_resource type="PackedScene" path="res://scenes/core/red_brand_director.tscn" id="5_red_brand"]
+[ext_resource type="PackedScene" path="res://scenes/core/progression_system.tscn" id="6_progression"]
+[ext_resource type="PackedScene" path="res://scenes/core/dialogue_system.tscn" id="7_dialogue"]
+[ext_resource type="Script" path="res://scripts/save/save_manager.gd" id="8_save"]
+[ext_resource type="Script" path="res://scripts/world/area_transition_manager.gd" id="9_transition"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="10_player"]
+[ext_resource type="PackedScene" path="res://scenes/core/camera_controller.tscn" id="11_camera"]
+[ext_resource type="PackedScene" path="res://scenes/areas/vertical_slice_street.tscn" id="12_street"]
+[ext_resource type="Script" path="res://scripts/demo/vertical_slice_controller.gd" id="13_demo"]
+
+[node name="vertical_slice_greybox" type="Node"]
+script = ExtResource("1_game")
+
+[node name="HitstopController" type="Node" parent="."]
+script = ExtResource("2_hitstop")
+
+[node name="StyleManager" parent="." instance=ExtResource("3_style")]
+
+[node name="BossHealthHud" parent="." instance=ExtResource("4_boss_hud")]
+
+[node name="RedBrandDirector" parent="." instance=ExtResource("5_red_brand")]
+
+[node name="ProgressionSystem" parent="." instance=ExtResource("6_progression")]
+
+[node name="DialogueSystem" parent="." instance=ExtResource("7_dialogue")]
+
+[node name="SaveManager" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("8_save")
+auto_load_on_ready = false
+
+[node name="AreaTransitionManager" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("9_transition")
+world_host_path = NodePath("../WorldHost")
+player_path = NodePath("../Player")
+camera_controller_path = NodePath("../CameraController")
+initial_area_scene = ExtResource("12_street")
+initial_spawn_id = &"default"
+
+[node name="VerticalSliceController" type="Node" parent="."]
+script = ExtResource("13_demo")
+street_scene = ExtResource("12_street")
+
+[node name="DemoHints" type="CanvasLayer" parent="VerticalSliceController"]
+layer = 5
+
+[node name="HintLabel" type="Label" parent="VerticalSliceController/DemoHints"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -34.0
+offset_right = 1140.0
+offset_bottom = -10.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 0.85)
+theme_override_font_sizes/font_size = 12
+text = "A/D mover | Espaço pular | J atacar | K esquivar | L contra-atacar | T provocar | E interagir | U (segurar) Red Brand | Esc destravar | F7 reiniciar"
+
+[node name="CompletionOverlay" type="CanvasLayer" parent="VerticalSliceController"]
+visible = false
+layer = 20
+
+[node name="Dim" type="ColorRect" parent="VerticalSliceController/CompletionOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.04, 0.06, 0.72)
+
+[node name="Panel" type="PanelContainer" parent="VerticalSliceController/CompletionOverlay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -120.0
+offset_right = 360.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="VerticalSliceController/CompletionOverlay/Panel"]
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="VerticalSliceController/CompletionOverlay/Panel/VBox"]
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+text = "Demonstração Técnica Concluída"
+
+[node name="Body" type="Label" parent="VerticalSliceController/CompletionOverlay/Panel/VBox"]
+theme_override_colors/font_color = Color(0.82, 0.82, 0.86, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+autowrap_mode = 2
+text = "Você percorreu combate, estilo, Red Brand, diálogo, checkpoint, transições e o mini-chefe Deacon Rusk. Pressione F7 para recomeçar do início."
+
+[node name="WorldHost" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Player" parent="." instance=ExtResource("10_player")]
+unique_name_in_owner = true
+position = Vector2(120, 848)
+fall_recovery_y = 1320.0
+
+[node name="CameraController" parent="." instance=ExtResource("11_camera")]
+target_path = NodePath("../Player")
+area_limits = Rect2(0, 0, 2400, 920)

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="RedBrandConfig" format=3 uid="uid://b1e8dwphnvc17"]
+
+[ext_resource type="Script" uid="uid://bbaqy1mw8rasq" path="res://scripts/combat/red_brand_config.gd" id="1_red_brand_config"]
+
+[resource]
+script = ExtResource("1_red_brand_config")
+min_energy_to_charge = 30.0

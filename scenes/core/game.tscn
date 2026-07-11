@@ -1,0 +1,55 @@
+[gd_scene load_steps=13 format=3 uid="uid://b3m2vvpv0r0hg"]
+
+[ext_resource type="Script" path="res://scripts/core/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/core/hitstop_controller.gd" id="3_hitstop_controller"]
+[ext_resource type="PackedScene" path="res://scenes/core/style_manager.tscn" id="4_style_manager"]
+[ext_resource type="PackedScene" path="res://scenes/core/red_brand_director.tscn" id="5_red_brand_director"]
+[ext_resource type="PackedScene" path="res://scenes/core/progression_system.tscn" id="6_progression_system"]
+[ext_resource type="PackedScene" path="res://scenes/core/dialogue_system.tscn" id="7_dialogue_system"]
+[ext_resource type="Script" path="res://scripts/save/save_manager.gd" id="8_save_manager"]
+[ext_resource type="Script" path="res://scripts/world/area_transition_manager.gd" id="9_area_transition_manager"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="10_player"]
+[ext_resource type="PackedScene" path="res://scenes/core/camera_controller.tscn" id="11_camera_controller"]
+[ext_resource type="PackedScene" path="res://scenes/areas/street_test.tscn" id="12_street_test"]
+[ext_resource type="PackedScene" path="res://scenes/ui/boss_health_hud.tscn" id="13_boss_health_hud"]
+
+[node name="Game" type="Node"]
+script = ExtResource("1_game")
+
+[node name="HitstopController" type="Node" parent="."]
+script = ExtResource("3_hitstop_controller")
+
+[node name="StyleManager" parent="." instance=ExtResource("4_style_manager")]
+
+[node name="BossHealthHud" parent="." instance=ExtResource("13_boss_health_hud")]
+
+[node name="RedBrandDirector" parent="." instance=ExtResource("5_red_brand_director")]
+
+[node name="ProgressionSystem" parent="." instance=ExtResource("6_progression_system")]
+
+[node name="DialogueSystem" parent="." instance=ExtResource("7_dialogue_system")]
+
+[node name="SaveManager" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("8_save_manager")
+
+[node name="AreaTransitionManager" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("9_area_transition_manager")
+world_host_path = NodePath("../WorldHost")
+player_path = NodePath("../Player")
+camera_controller_path = NodePath("../CameraController")
+initial_area_scene = ExtResource("12_street_test")
+initial_spawn_id = &"default"
+
+[node name="WorldHost" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Player" parent="." instance=ExtResource("10_player")]
+unique_name_in_owner = true
+position = Vector2(120, 848)
+fall_recovery_y = 1320.0
+
+[node name="CameraController" parent="." instance=ExtResource("11_camera_controller")]
+target_path = NodePath("../Player")
+area_limits = Rect2(0, 0, 1400, 920)

@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://bjwdiyr53yp17"]
+
+[ext_resource type="Script" path="res://scripts/world/red_barrier.gd" id="1_red_barrier"]
+[ext_resource type="Script" path="res://scripts/world/barrier_hurtbox_component.gd" id="2_barrier_hurtbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(28, 128)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(34, 134)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_break"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(14, 64, 1)
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 90.0
+initial_velocity_max = 240.0
+gravity = Vector3(0, 980, 0)
+scale_min = 2.0
+scale_max = 5.0
+color = Color(1, 0.22, 0.05, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_particle"]
+size = Vector2(5, 5)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sparks"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(10, 56, 1)
+direction = Vector3(0, -1, 0)
+spread = 45.0
+initial_velocity_min = 40.0
+initial_velocity_max = 120.0
+gravity = Vector3(0, 420, 0)
+scale_min = 1.5
+scale_max = 3.0
+color = Color(1, 0.72, 0.18, 1)
+
+[node name="RedBarrier" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1_red_barrier")
+barrier_id = &"test_arena_cult_gate_01"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+unique_name_in_owner = true
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="BarrierVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+color = Color(0.42, 0.08, 0.12, 0.92)
+polygon = PackedVector2Array(-14, -64, 14, -64, 14, 64, -14, 64)
+
+[node name="RuneVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+color = Color(0.92, 0.18, 0.08, 0.85)
+polygon = PackedVector2Array(-8, -34, 8, -34, 10, -8, 0, 18, -10, -8)
+
+[node name="GlowVisual" type="Polygon2D" parent="Visual"]
+color = Color(0.82, 0.08, 0.04, 0.18)
+polygon = PackedVector2Array(-18, -68, 18, -68, 18, 68, -18, 68)
+
+[node name="Components" type="Node2D" parent="."]
+
+[node name="BarrierHurtboxComponent" type="Area2D" parent="Components"]
+unique_name_in_owner = true
+collision_layer = 64
+collision_mask = 8
+monitoring = false
+script = ExtResource("2_barrier_hurtbox")
+owner_node_path = NodePath("../..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Components/BarrierHurtboxComponent"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="BreakParticles" type="GPUParticles2D" parent="."]
+unique_name_in_owner = true
+emitting = false
+amount = 36
+lifetime = 0.55
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_break")
+draw_pass_1 = SubResource("QuadMesh_particle")
+
+[node name="SparkParticles" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 18
+lifetime = 0.42
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_sparks")
+draw_pass_1 = SubResource("QuadMesh_particle")

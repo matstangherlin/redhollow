@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AttackData" format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"rusk_jab_2"
+display_name = "Rusk Jab 2"
+damage = 5.0
+startup_time = 0.22
+active_time = 0.08
+recovery_time = 0.28
+hitbox_size = Vector2(40, 26)
+hitbox_offset = Vector2(42, -4)
+hitstun_time = 0.22
+knockback = Vector2(120, -12)
+attacker_hitstop = 0.04
+target_hitstop = 0.05
+counterable = true
+tags = PackedStringArray("melee", "enemy", "boss", "jab", "combo", "counterable")

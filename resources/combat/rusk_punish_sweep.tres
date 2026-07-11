@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AttackData" format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"rusk_punish_sweep"
+display_name = "Rusk Punish Sweep"
+damage = 9.0
+startup_time = 0.78
+active_time = 0.14
+recovery_time = 0.48
+hitbox_size = Vector2(58, 30)
+hitbox_offset = Vector2(40, 4)
+hitstun_time = 0.32
+knockback = Vector2(160, -18)
+attacker_hitstop = 0.05
+target_hitstop = 0.06
+counterable = true
+tags = PackedStringArray("melee", "enemy", "boss", "sweep", "slow", "counterable", "telegraphed")

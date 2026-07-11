@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AttackData" format=3 uid="uid://dmou7wfni67y5"]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"red_brand_breaker_lv2"
+display_name = "Red Brand Breaker"
+damage = 22.0
+startup_time = 0.12
+active_time = 0.14
+recovery_time = 0.36
+hitbox_size = Vector2(72, 42)
+hitbox_offset = Vector2(48, -6)
+hitstun_time = 0.48
+knockback = Vector2(360, -72)
+attacker_hitstop = 0.080
+target_hitstop = 0.095
+style_gain = 24
+can_hit_ground_targets = true
+can_hit_air_targets = false
+max_hits_per_target = 1
+counterable = false
+red_brand_gain = 0.0
+red_brand_cost = 60.0
+tags = PackedStringArray("red_brand", "red_brand_breaker", "barrier_break", "breaker", "physical", "charged", "calder", "finisher")

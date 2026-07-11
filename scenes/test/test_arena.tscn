@@ -1,0 +1,121 @@
+[gd_scene load_steps=13 format=3 uid="uid://dgdwcjvfjk40d"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/core/camera_controller.tscn" id="2_camera_controller"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy_dummy.tscn" id="3_enemy_dummy"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy_attacker_test.tscn" id="4_enemy_attacker"]
+[ext_resource type="Resource" path="res://resources/combat/enemy_test_heavy.tres" id="5_enemy_heavy"]
+[ext_resource type="PackedScene" path="res://scenes/world/red_barrier.tscn" id="6_red_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/npcs/elias.tscn" id="7_elias"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/interactable_area.tscn" id="8_interactable_area"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/checkpoint.tscn" id="9_checkpoint"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(2400, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(48, 1400)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platform_wide"]
+size = Vector2(300, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platform_narrow"]
+size = Vector2(240, 24)
+
+[node name="TestArena" type="Node2D"]
+
+[node name="Solids" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Solids"]
+position = Vector2(1200, 900)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/Ground"]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="GroundVisual" type="Polygon2D" parent="Solids/Ground"]
+color = Color(0.22, 0.18, 0.16, 1)
+polygon = PackedVector2Array(-1200, -24, 1200, -24, 1200, 24, -1200, 24)
+
+[node name="LeftWall" type="StaticBody2D" parent="Solids"]
+position = Vector2(24, 700)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/LeftWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="WallVisual" type="Polygon2D" parent="Solids/LeftWall"]
+color = Color(0.18, 0.16, 0.2, 1)
+polygon = PackedVector2Array(-24, -700, 24, -700, 24, 700, -24, 700)
+
+[node name="RightWall" type="StaticBody2D" parent="Solids"]
+position = Vector2(2376, 700)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/RightWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="WallVisual" type="Polygon2D" parent="Solids/RightWall"]
+color = Color(0.18, 0.16, 0.2, 1)
+polygon = PackedVector2Array(-24, -700, 24, -700, 24, 700, -24, 700)
+
+[node name="LowerPlatform" type="StaticBody2D" parent="Solids"]
+position = Vector2(620, 700)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/LowerPlatform"]
+shape = SubResource("RectangleShape2D_platform_wide")
+
+[node name="PlatformVisual" type="Polygon2D" parent="Solids/LowerPlatform"]
+color = Color(0.35, 0.21, 0.14, 1)
+polygon = PackedVector2Array(-150, -12, 150, -12, 150, 12, -150, 12)
+
+[node name="UpperPlatform" type="StaticBody2D" parent="Solids"]
+position = Vector2(1380, 580)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/UpperPlatform"]
+shape = SubResource("RectangleShape2D_platform_narrow")
+
+[node name="PlatformVisual" type="Polygon2D" parent="Solids/UpperPlatform"]
+color = Color(0.35, 0.21, 0.14, 1)
+polygon = PackedVector2Array(-120, -12, 120, -12, 120, 12, -120, 12)
+
+[node name="WorldObjects" type="Node2D" parent="."]
+
+[node name="CultRedBarrier" parent="WorldObjects" instance=ExtResource("6_red_barrier")]
+position = Vector2(420, 836)
+
+[node name="Elias" parent="WorldObjects" instance=ExtResource("7_elias")]
+position = Vector2(300, 848)
+
+[node name="TestInspectArea" parent="WorldObjects" instance=ExtResource("8_interactable_area")]
+position = Vector2(340, 848)
+
+[node name="Interactable" parent="WorldObjects/TestInspectArea" index="1"]
+interaction_id = &"test_crate"
+prompt_text = "Inspect crate"
+priority = 5
+provisional_message = "Um caixote vazio. Só poeira e runas desbotadas."
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(180, 848)
+
+[node name="ArenaCheckpoint" parent="." instance=ExtResource("9_checkpoint")]
+position = Vector2(240, 848)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(180, 848)
+fall_recovery_y = 1320.0
+
+[node name="DummyA" parent="." instance=ExtResource("3_enemy_dummy")]
+position = Vector2(560, 848)
+
+[node name="DummyB" parent="." instance=ExtResource("3_enemy_dummy")]
+position = Vector2(760, 848)
+
+[node name="AttackerCounterable" parent="." instance=ExtResource("4_enemy_attacker")]
+position = Vector2(980, 848)
+
+[node name="AttackerHeavy" parent="." instance=ExtResource("4_enemy_attacker")]
+position = Vector2(1180, 848)
+attack_data = ExtResource("5_enemy_heavy")
+
+[node name="CameraController" parent="." instance=ExtResource("2_camera_controller")]
+target_path = NodePath("../Player")
+area_limits = Rect2(0, 0, 2400, 1400)

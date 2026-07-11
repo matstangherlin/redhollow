@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://byr6e5nljlt1a"]
+
+[ext_resource type="Script" path="res://scripts/style/style_manager.gd" id="1_style_manager"]
+[ext_resource type="PackedScene" path="res://scenes/style/style_hud.tscn" id="2_style_hud"]
+
+[node name="StyleManager" type="Node"]
+script = ExtResource("1_style_manager")
+arena_path = NodePath("../Player")
+
+[node name="StyleHud" parent="." instance=ExtResource("2_style_hud")]

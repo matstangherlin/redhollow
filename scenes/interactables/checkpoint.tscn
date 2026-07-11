@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://qxdy4g4ho4nw"]
+
+[ext_resource type="Script" path="res://scripts/interactables/checkpoint.gd" id="1_checkpoint"]
+[ext_resource type="Script" path="res://scripts/interactables/interactable.gd" id="2_interactable"]
+
+[node name="Checkpoint" type="Node2D"]
+script = ExtResource("1_checkpoint")
+checkpoint_id = &"test_arena_entry"
+prompt_text = "Activate checkpoint"
+
+[node name="IdleVisual" type="Polygon2D" parent="."]
+unique_name_in_owner = true
+color = Color(0.18, 0.62, 0.42, 0.55)
+polygon = PackedVector2Array(-16, -24, 16, -24, 16, 24, -16, 24)
+
+[node name="ActiveVisual" type="Polygon2D" parent="."]
+unique_name_in_owner = true
+visible = false
+color = Color(0.92, 0.82, 0.18, 0.85)
+polygon = PackedVector2Array(-18, -28, 18, -28, 18, 28, -18, 28)
+
+[node name="Interactable" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_interactable")
+interaction_id = &"checkpoint"
+prompt_text = "Activate checkpoint"
+priority = 15
+interaction_range = 80.0
+
+[node name="PromptIndicator" type="Label" parent="Interactable"]
+unique_name_in_owner = true
+visible = false
+offset_left = -72.0
+offset_top = -84.0
+offset_right = 72.0
+offset_bottom = -60.0
+theme_override_colors/font_color = Color(0.92, 0.92, 0.72, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+text = "[E] Activate checkpoint"

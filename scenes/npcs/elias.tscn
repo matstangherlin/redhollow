@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://npceliasproto01"]
+
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc_base.tscn" id="1_npc_base"]
+
+[node name="Elias" instance=ExtResource("1_npc_base")]
+npc_display_name = "Elias"
+
+[node name="Interactable" parent="." index="2"]
+interaction_id = &"elias"
+prompt_text = "Talk to Elias"
+priority = 20
+dialogue_id = &"elias_church_warning"
+
+[node name="BodyVisual" parent="Visual" index="0"]
+color = Color(0.24, 0.34, 0.48, 1)
+
+[node name="HeadVisual" parent="Visual" index="1"]
+color = Color(0.72, 0.78, 0.88, 1)

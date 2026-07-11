@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3 uid="uid://vsredbrandcache01"]
+
+[ext_resource type="Script" path="res://scripts/demo/red_brand_cache.gd" id="1_cache"]
+[ext_resource type="Script" path="res://scripts/interactables/interactable.gd" id="2_interactable"]
+
+[node name="RedBrandCache" type="Node2D"]
+script = ExtResource("1_cache")
+energy_amount = 35.0
+required_narrative_flag = &"arena_vs_church_yard_complete"
+
+[node name="IdleVisual" type="Polygon2D" parent="."]
+unique_name_in_owner = true
+color = Color(0.82, 0.12, 0.14, 0.75)
+polygon = PackedVector2Array(-18, -28, 18, -28, 22, 0, 18, 28, -18, 28, -22, 0)
+
+[node name="UsedVisual" type="Polygon2D" parent="."]
+unique_name_in_owner = true
+visible = false
+color = Color(0.28, 0.28, 0.32, 0.55)
+polygon = PackedVector2Array(-18, -28, 18, -28, 22, 0, 18, 28, -18, 28, -22, 0)
+
+[node name="Interactable" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_interactable")
+interaction_id = &"red_brand_cache"
+prompt_text = "Absorver Coração Rubro"
+priority = 12
+interaction_range = 72.0
+
+[node name="PromptIndicator" type="Label" parent="Interactable"]
+unique_name_in_owner = true
+visible = false
+offset_left = -96.0
+offset_top = -88.0
+offset_right = 96.0
+offset_bottom = -64.0
+theme_override_colors/font_color = Color(0.96, 0.72, 0.68, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+text = "[E] Absorver Coração Rubro"
