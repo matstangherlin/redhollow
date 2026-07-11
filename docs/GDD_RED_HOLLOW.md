@@ -1,223 +1,124 @@
-# Red Hollow - Game Design Document
+# Red Hollow — Game Design Document
 
-## Visao
+Documento de visão de jogo. Para cânone detalhado, ver `NARRATIVE_BIBLE.md`. Para escopo de entrega, ver `BETA_DEMO_SCOPE.md` e `FINAL_GAME_SCOPE.md`.
 
-Red Hollow e um metroidvania de acao 2D em visao lateral sobre entrar, sobreviver e reabrir uma cidade decadente tomada por baroes, cultos e promessas quebradas. O jogo deve combinar exploracao interligada, combate corpo a corpo tecnico e humor agressivo durante lutas, mantendo horror psicologico e religioso como camada de misterio.
+## Visão
 
-O jogador controla Calder Knox, um ex-cacador de recompensas sarcastico, impulsivo e extremamente habilidoso. A Red Brand, uma marca na mao direita, amplifica sua forca, reflexos e resistencia, mas nao e magia tradicional: ela torna o corpo mais perigoso, nao cria feiticos, voo ou projeteis magicos.
+Red Hollow é um metroidvania de ação 2D em visão lateral sobre entrar, sobreviver e reabrir uma cidade decadente tomada por barões, cultos e promessas quebradas. Combina exploração interligada, combate corpo a corpo técnico e humor agressivo durante lutas, com horror psicológico e religioso como camada de mistério.
+
+**Arte final:** pixel art detalhada com faroeste decadente e iluminação dramática (`ART_BIBLE.md`).
+
+O jogador controla **Calder Knox**, ex-caçador de recompensas marcado pela **Red Brand** após um ritual incompleto. A marca amplifica força, reflexos e ligação a **Mol-Khar** — não é magia tradicional.
+
+## Estado do projeto (resumo)
+
+| Categoria | Exemplos |
+| --- | --- |
+| **Implementado e testado** | Movimento, combo, esquiva, counter, provocação, estilo, Red Brand, diálogo, áreas, arena, barreira, save F8/F9, Deacon Rusk, conclusão demo |
+| **Implementado com dívida** | `player.gd` monolítico, panic unlock, acoplamento por grupos, auto-load desativado na greybox |
+| **Planejado beta** | Arte final Capítulo Zero, mapa/objetivos/diário, três inimigos visuais, set pieces Mol-Khar/Arcturus |
+| **Planejado jogo final** | Cidade completa, barões, Palácio Rubro, progressão ampla |
+
+Main scene atual: `res://scenes/demo/vertical_slice_greybox.tscn`  
+Engine: Godot **4.7**
 
 ## Pilares
 
-- Acao 2D responsiva: controles diretos, leitura clara e alvo tecnico de 60 FPS no Windows.
-- Combate fisico: socos, chutes, agarrões, esquivas, counters e ataques da Red Brand com impacto corporal.
-- Exploracao interligada: areas conectadas, atalhos, backtracking e progresso por habilidades.
-- Identidade propria: faroeste alternativo, anime, cidade decadente, violencia estilizada, humor de combate e horror religioso.
-- Prototipagem pragmatica: graficos provisorios e formas geometricas ate que a jogabilidade esteja firme.
+- Ação 2D responsiva: 60 FPS no Windows.
+- Combate físico: socos, chutes, esquivas, counters, provocações, Red Brand.
+- Exploração interligada: atalhos, backtracking, progresso por habilidades e flags.
+- Identidade: faroeste decadente, anime nos personagens, violência estilizada, humor de combate, terror religioso.
+- Vermilite e corrupção como linguagem visual e narrativa controlada.
 
-## Alvos Iniciais
+## Público
 
-- Alvo inicial de plataforma: Windows.
-- Alvo tecnico: 60 FPS.
-- Prototipo com graficos provisorios ate validacao da jogabilidade.
+Jogadores de metroidvanias de ação, chefes exigentes e domínio mecanico. Acessível no básico; alto teto de skill.
 
-## Publico
+## Referências
 
-Red Hollow mira jogadores que gostam de metroidvanias de acao, dominio mecanico, chefes exigentes e personagens com personalidade forte. O jogo deve ser compreensivel para quem chega pelo genero, mas recompensar pratica, timing e leitura dos inimigos.
+Inspiração de qualidade (ex.: intensidade de God Hand) sem copiar golpes, UI, história ou visual. Moodboards só para tom — ver `VISUAL_REFERENCE_RULES.md`.
 
-## Referencias
+## Identidade própria
 
-O ritmo, a irreverencia e a criatividade de jogos de acao como God Hand podem inspirar o senso de intensidade e improviso, sem copiar golpes, personagens, animacoes, historia, interface ou identidade visual. Outras referencias devem ser tratadas como direcao de qualidade, nao como molde a ser reproduzido.
+Red Hollow não é fantasia medieval nem jogo de magia elemental. A Red Brand distorce limites físicos do corpo. Manifestações sobrenaturais existem quando ligadas a Mol-Khar, Vermilite, pactos, dor ou plano espiritual.
 
-## Identidade Propria
+## Ambientação
 
-Red Hollow nao e fantasia medieval nem jogo de magia. A Red Brand nao conjura bolas de fogo, nao permite voo e nao transforma Calder em um mago. Ela distorce o limite fisico do corpo: golpes mais pesados, reflexos absurdos, resistencia fora do comum e tecnicas agressivas de curta distancia.
+Cidade de faroeste alternativo em decomposição: trilhos, saloons, capelas, minas, cemitérios, instalações industriais, ruínas cerimoniais. Símbolos religiosos deformados, cartazes, máquinas velhas, rituais.
 
-A personalidade do jogo vem do contraste entre combate exagerado e uma cidade marcada por culpa, supersticao e fanatismo. O humor aparece em provocacoes, reacoes de Calder e situacoes de combate, sem neutralizar o perigo do culto.
+## História (cânone)
 
-## Ambientacao
+Calder retorna a Red Hollow por rumores de desaparecimentos e culpa não resolvida. A **Ordem do Coração Rubro** venera **Mol-Khar, O Devorador de Promessas**.
 
-Red Hollow e uma cidade de faroeste alternativo em decomposicao. Trilhos, saloons, capelas, minas, cemiterios e casarões se misturam a simbolos religiosos deformados, cartazes de procurados, maquinas velhas e sinais de rituais.
+A **Ressonância Rubra** de Mol-Khar amplifica desejos, ambição, medo e culpa — nunca controle direto da mente. A **Vermilite** minada enfraquece o selo e espalha essa influência.
 
-A cidade deve parecer habitada por historias interrompidas. Ruas levam a areas antigas, portas trancadas escondem rotas, e atalhos revelam como os baroes dividiram o territorio.
-
-Elementos centrais:
-
-- faroeste alternativo;
-- anime e acao estilizada;
-- cidade decadente;
-- violencia estilizada;
-- humor durante o combate;
-- misterio;
-- culto religioso;
-- horror psicologico e religioso.
-
-## Historia
-
-Calder Knox retorna a Red Hollow seguindo rumores sobre pessoas desaparecidas e uma promessa antiga que ele tenta fingir que esqueceu. A cidade esta sob influencia da Ordem do Coração Rubro, um culto que venera Mol-Khar, O Devorador de Promessas.
-
-A Ordem ensina que toda promessa quebrada deixa uma divida espiritual. Mol-Khar se alimenta dessas dividas, e seus seguidores usam juramentos, contratos e culpa como armas sociais e religiosas. Calder se torna uma ameaca porque a Red Brand permite que ele resista fisicamente ao controle do culto, mas tambem o liga ao misterio central da cidade.
+Detalhes: `NARRATIVE_BIBLE.md`.
 
 ## Personagens
 
-### Calder Knox
-
-Ex-cacador de recompensas. Sarcastico, impulsivo e extremamente habilidoso. Calder resolve problemas com violencia precisa, blefes e comentarios em momentos inapropriados. Sua arrogancia deve ser divertida, mas tambem revelar medo de compromisso e culpa mal resolvida.
-
-### Mol-Khar, O Devorador de Promessas
-
-Antagonista central. Deve ser tratado como uma presenca religiosa e psicologica antes de aparecer como ameaca direta. Mol-Khar representa fome por juramentos, culpa, contratos e promessas quebradas.
-
-### Ordem do Coração Rubro
-
-Culto religioso que domina Red Hollow por fe, medo e dependencia. A Ordem usa confissoes, penitencias e promessas como mecanismos de controle. Seus simbolos devem parecer sagrados e violentos ao mesmo tempo.
-
-### Baroes
-
-- Silas Crow: barao ligado a vigilancia, execucoes publicas e controle por medo.
-- Rosa “La Serpiente”: baronesa de charme, veneno social, duelos sujos e redes de informantes.
-- Bispo Arcturus Vale: autoridade religiosa da Ordem, manipulador de culpa e penitencia.
-- Magnus Vane: industrial brutal, associado a maquinas, minas e exploracao fisica da cidade.
+- **Calder Knox** — protagonista; Red Brand na mão direita.
+- **Mol-Khar** — antagonista; presença ritual e psicológica.
+- **Ordem do Coração Rubro** — culto dominante.
+- **Elias** — contato na rua (demo atual).
+- **Deacon Rusk** — executor; chefe do Capítulo Zero.
+- **Barões** — Silas Crow, Rosa La Serpiente, Arcturus Vale, Magnus Vane (jogo final).
 
 ## Combate
 
-O combate e corpo a corpo, tecnico, agressivo e estilizado. Cada acao deve ter intencao clara: aproximar, quebrar guarda, punir erro, escapar, provocar ou gastar recurso da Red Brand.
+Corpo a corpo, técnico, agressivo. Suporta:
 
-O jogo deve suportar:
+- socos e chutes (combo);
+- esquivas e counters;
+- provocações;
+- Red Brand Breaker carregado;
+- chefes com telegraphs e fases.
 
-- socos;
-- chutes;
-- agarrões;
-- esquivas;
-- counters;
-- provocacoes;
-- ataques da Red Brand;
-- chefes com padroes legiveis e pressao alta.
+Ataques orientados por `AttackData` Resource. Hitbox e hurtbox separadas.
 
-Nao implementar magia tradicional, projeteis magicos, bolas de fogo, voo ou poderes genericos de fantasia. Ataques a distancia, se existirem futuramente, devem ser fisicos e coerentes com armas, ferramentas ou ambiente, nao magia.
+**Não implementar:** magia elemental genérica, voo, projéteis mágicos.
 
-## Exploracao
+## Exploração
 
-A exploracao acontece em uma cidade interligada em 2D lateral. O jogador se move em um unico plano. O mapa deve incentivar retorno a areas anteriores com novas habilidades, chaves, atalhos e conhecimento.
+Cidade interligada em 2D lateral, um plano. Portas, barreiras, checkpoints, atalhos. Troca de áreas via shell persistente (`ARCHITECTURE.md`).
 
-Elementos esperados:
+## Progressão
 
-- rotas principais e secundarias;
-- portas ou passagens bloqueadas por habilidades;
-- atalhos que reduzem repeticao;
-- checkpoints posicionados antes de trechos de risco;
-- segredos legiveis por observacao;
-- areas com identidade mecanica clara.
-
-## Progressao
-
-A progressao deve vir de habilidades e dominios fisicos, nao magia. Exemplos futuros possiveis:
-
-- esquiva aprimorada;
-- counter contra ataques especificos;
-- agarrar inimigos ou objetos leves;
-- quebrar barreiras fragilizadas;
-- impulso horizontal curto;
-- tecnica da Red Brand para resistir a dano ou abrir passagem.
-
-Cada habilidade nova deve tambem enriquecer combate e exploracao quando possivel.
+Habilidades físicas e técnicas da Red Brand. Flags narrativas e barreiras destruídas persistem no save. Exemplos futuros: esquiva aprimorada, quebra de barreiras, impulso, counters específicos.
 
 ## Red Brand
 
-A Red Brand e a marca na mao direita de Calder. Ela amplia forca, reflexos e resistencia. Ela deve parecer uma vantagem perigosa, fisica e visceral.
+Marca na mão direita. Funções:
 
-Usos possiveis:
+- golpes reforçados;
+- absorção de energia (Coração Rubro / Vermilite);
+- destruição de barreiras do culto;
+- atingir manifestações espirituais;
+- ligação crescente com Mol-Khar.
 
-- golpes reforcados de curta distancia;
-- counters com janela precisa;
-- resistencia temporaria a stagger;
-- recuperacao agressiva apos acerto perfeito;
-- abertura de barreiras relacionadas ao culto.
+Limites: sem voo, sem feitiços, sem substituir skill do jogador.
 
-Limites:
+## Sistema de estilo
 
-- nao concede voo;
-- nao dispara projeteis magicos;
-- nao cria feiticos;
-- nao substitui habilidade do jogador.
+Recompensa variedade, risco e domínio. Ranks: DUST → IRON → VERMILION → CRIMSON → HOLLOW. Implementado em `StyleManager` + HUD.
 
-## Sistema de Estilo
+## Provocações
 
-O sistema de estilo recompensa variedade, risco controlado e dominio. Ele deve incentivar o jogador a alternar golpes, esquivas, counters, provocacoes e ataques da Red Brand.
-
-O estilo pode considerar:
-
-- variedade de ataques;
-- acertos sem receber dano;
-- counters bem temporizados;
-- provocacoes feitas em risco real;
-- uso inteligente da Red Brand;
-- tempo de combate e pressao ofensiva.
-
-O sistema nao deve obrigar combos longos e decorados para jogadores iniciantes, mas deve oferecer teto de habilidade alto.
-
-## Provocacoes
-
-Provocacoes fazem parte da identidade de Calder. Elas devem servir tanto ao humor quanto a mecanica.
-
-Possiveis funcoes:
-
-- aumentar estilo quando usadas perto de perigo;
-- provocar inimigos especificos;
-- recuperar pequena quantidade de recurso em condicoes arriscadas;
-- ativar falas contextuais.
-
-Provocacoes nao devem ser apenas decoracao se entrarem no prototipo jogavel.
+Identidade de Calder; ganho de estilo em risco; falas contextuais. Implementado no player.
 
 ## Chefes
 
-Chefes representam baroes, monstros do culto ou consequencias da Red Brand. Cada chefe deve testar uma ideia principal, com leitura clara e escalada de pressao.
+Padrões legíveis, pressão alta, fases testáveis. Deacon Rusk implementado na demo técnica.
 
-Diretrizes:
+## Narrativa no gameplay
 
-- padroes justos e agressivos;
-- fases pequenas e testaveis;
-- ataques fisicos ou religiosos simbolicos, sem magia generica;
-- arena coerente com a area;
-- oportunidade para esquiva, counter e punicao corpo a corpo.
+Ambiental e dialogada; diálogos curtos; JSON em `data/dialogues/`. Não bloquear combate com exposição longa.
 
-## Narrativa
+## Escopos de entrega
 
-A narrativa deve ser ambiental, dialogada e reativa ao progresso. Calder pode comentar absurdos, insultar inimigos e revelar sua historia em pedacos. A Ordem deve aparecer em documentos, simbolos, rituais e testemunhos.
+| Entrega | Documento |
+| --- | --- |
+| Demo técnica greybox (atual) | `VERTICAL_SLICE_TEST_PLAN.md` |
+| Beta pública Capítulo Zero | `BETA_DEMO_SCOPE.md` |
+| Jogo completo | `FINAL_GAME_SCOPE.md` |
 
-A historia nao deve bloquear a jogabilidade com exposicao longa no prototipo. Dialogos devem ser curtos, com voz forte e utilidade clara.
-
-## Escopo do Prototipo
-
-O primeiro prototipo deve provar o nucleo jogavel, nao o jogo inteiro.
-
-Inclui:
-
-- uma main scene simples;
-- jogador 2D funcional com graficos provisorios;
-- movimento lateral basico;
-- colisao previsivel;
-- pulo e queda;
-- camera acompanhando o jogador;
-- um ataque corpo a corpo simples;
-- hitbox e hurtbox separadas;
-- um inimigo simples;
-- uma sala ou trecho pequeno de teste;
-- HUD minimo se houver vida/estilo;
-- checkpoint basico apenas se necessario para validar fluxo.
-
-## Fora do Primeiro Prototipo
-
-Ficam fora do primeiro prototipo:
-
-- arte final;
-- animacoes definitivas;
-- mapa completo;
-- todos os baroes;
-- chefes completos;
-- sistema final de save;
-- arvore completa de habilidades;
-- dialogos extensos;
-- cinematicas;
-- audio final;
-- loja, inventario complexo ou equipamentos amplos;
-- qualquer magia tradicional, voo ou projeteis magicos.
+A demo técnica **já superou** o “primeiro protótipo” descrito em versões antigas deste GDD (save, boss, múltiplas áreas, estilo, Red Brand).

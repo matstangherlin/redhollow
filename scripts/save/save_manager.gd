@@ -298,6 +298,9 @@ func _capture_player_state(player: Node) -> Dictionary:
 
 
 func _apply_save_state(save_data: Dictionary) -> void:
+	_begin_new_gameplay_session()
+
+	var loading_token: GameplayLockToken = _acquire_loading_lock()
 	if _progression != null:
 		_progression.import_save_state({
 			"active_checkpoint_id": StringName(String(save_data.get("checkpoint_id", ""))),
@@ -336,6 +339,7 @@ func _apply_save_state(save_data: Dictionary) -> void:
 			player_save.erase("checkpoint_position")
 		_player.call("apply_save_state", player_save)
 
+	_release_loading_lock(loading_token)
 	call_deferred("_sync_checkpoint_visuals_from_save")
 
 
@@ -497,3 +501,33 @@ func _is_saved_area_restorable(area_scene_path: String) -> bool:
 func _set_debug_message(message: String) -> void:
 	_last_debug_message = message
 	print("[SaveManager] %s" % message)
+
+
+func _begin_new_gameplay_session() -> void:
+	var manager := _find_gameplay_lock_manager()
+	if manager != null:
+		manager.begin_new_session()
+
+
+func _acquire_loading_lock() -> GameplayLockToken:
+	var manager := _find_gameplay_lock_manager()
+	if manager == null:
+		return GameplayLockToken.new()
+	return manager.acquire_lock(GameplayLockManager.LockReason.LOADING, self)
+
+
+func _release_loading_lock(token: GameplayLockToken) -> void:
+	var manager := _find_gameplay_lock_manager()
+	if manager == null or token == null or not token.valid:
+		return
+	manager.release_lock(token)
+
+
+func _find_gameplay_lock_manager() -> GameplayLockManager:
+	var tree := get_tree()
+	if tree == null:
+		return null
+	for node in tree.get_nodes_in_group("gameplay_lock_manager"):
+		if node is GameplayLockManager:
+			return node as GameplayLockManager
+	return null

@@ -179,8 +179,10 @@ var brand_charge_time: float = 0.0
 var brand_charge_level: int = 0
 var brand_breaker_release_cost: float = 0.0
 var is_executing_brand_breaker: bool = false
-var _dialogue_locked: bool = false
-var _transition_locked: bool = false
+var _lock_manager: GameplayLockManager = null
+var _dialogue_lock_token: GameplayLockToken = null
+var _transition_lock_token: GameplayLockToken = null
+var _death_lock_token: GameplayLockToken = null
 
 
 func _ready() -> void:
@@ -193,13 +195,34 @@ func _ready() -> void:
 	_set_debug_visible(false)
 	_update_dodge_visual()
 	_update_counter_visual()
-	call_deferred("clear_input_locks")
+	call_deferred("_bind_lock_manager")
+	call_deferred("_release_legacy_player_locks")
+
+
+func _bind_lock_manager() -> void:
+	if _lock_manager != null:
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group("gameplay_lock_manager"):
+		if node is GameplayLockManager:
+			_lock_manager = node as GameplayLockManager
+			if not _lock_manager.player_input_blocked_changed.is_connected(_on_gameplay_input_blocked_changed):
+				_lock_manager.player_input_blocked_changed.connect(_on_gameplay_input_blocked_changed)
+			return
+
+
+func _release_legacy_player_locks() -> void:
+	clear_input_locks()
+
+
+func _on_gameplay_input_blocked_changed(_is_blocked: bool) -> void:
+	if _is_gameplay_input_blocked():
+		velocity = Vector2.ZERO
 
 
 func _physics_process(delta: float) -> void:
-	if Engine.time_scale <= 0.01:
-		Engine.time_scale = 1.0
-	_reconcile_input_locks()
 	_handle_debug_input()
 	_update_timers(delta)
 	_update_combo_timers(delta)
@@ -207,7 +230,7 @@ func _physics_process(delta: float) -> void:
 	_update_counter_cooldown(delta)
 	_update_taunt_cooldown(delta)
 
-	if _dialogue_locked or _transition_locked:
+	if _is_gameplay_input_blocked():
 		_apply_input_lock(delta)
 		return
 
@@ -264,6 +287,9 @@ func _physics_process(delta: float) -> void:
 
 
 func can_interact_now() -> bool:
+	if _is_gameplay_input_blocked():
+		return false
+
 	if _is_dead():
 		return false
 
@@ -278,25 +304,37 @@ func can_interact_now() -> bool:
 
 
 func is_in_dialogue() -> bool:
-	return _dialogue_locked
+	if _lock_manager != null:
+		return _lock_manager.has_lock(GameplayLockManager.LockReason.DIALOGUE)
+	return _dialogue_lock_token != null and _dialogue_lock_token.valid
 
 
 func is_in_transition() -> bool:
-	return _transition_locked
+	if _lock_manager != null:
+		return _lock_manager.has_lock(GameplayLockManager.LockReason.AREA_TRANSITION)
+	return _transition_lock_token != null and _transition_lock_token.valid
 
 
 func enter_transition_mode() -> void:
-	if _transition_locked:
+	_bind_lock_manager()
+	if _transition_lock_token != null and _transition_lock_token.valid:
 		return
 
-	_transition_locked = true
+	if _lock_manager != null:
+		_transition_lock_token = _lock_manager.acquire_lock(
+			GameplayLockManager.LockReason.AREA_TRANSITION,
+			self
+		)
+
 	velocity = Vector2.ZERO
 	interrupt_attack(PlayerState.INTERACT)
 	current_state = PlayerState.INTERACT
 
 
 func exit_transition_mode() -> void:
-	_transition_locked = false
+	if _lock_manager != null and _transition_lock_token != null and _transition_lock_token.valid:
+		_lock_manager.release_lock(_transition_lock_token)
+	_transition_lock_token = null
 	velocity = Vector2.ZERO
 	if current_state == PlayerState.INTERACT:
 		current_state = PlayerState.IDLE
@@ -333,6 +371,7 @@ func apply_checkpoint(
 
 	if restore_health and health_component != null:
 		health_component.call("reset_health")
+		_release_death_lock()
 
 	if restore_red_brand and red_brand_component != null:
 		red_brand_component.call("reset_energy")
@@ -341,6 +380,7 @@ func apply_checkpoint(
 func apply_save_state(save_data: Dictionary) -> void:
 	exit_dialogue_mode()
 	exit_transition_mode()
+	_release_death_lock()
 
 	var position_data := save_data.get("checkpoint_position", {}) as Dictionary
 	var restored_position := Vector2(
@@ -373,27 +413,38 @@ func apply_save_state(save_data: Dictionary) -> void:
 
 
 func enter_dialogue_mode() -> void:
-	if _dialogue_locked:
+	_bind_lock_manager()
+	if _dialogue_lock_token != null and _dialogue_lock_token.valid:
 		return
 
-	_dialogue_locked = true
+	if _lock_manager != null:
+		_dialogue_lock_token = _lock_manager.acquire_lock(
+			GameplayLockManager.LockReason.DIALOGUE,
+			self
+		)
+
 	interrupt_attack(PlayerState.INTERACT)
 	velocity = Vector2.ZERO
 	current_state = PlayerState.INTERACT
 
 
 func exit_dialogue_mode() -> void:
-	_dialogue_locked = false
+	if _lock_manager != null and _dialogue_lock_token != null and _dialogue_lock_token.valid:
+		_lock_manager.release_lock(_dialogue_lock_token)
+	_dialogue_lock_token = null
 	velocity = Vector2.ZERO
-	if current_state == PlayerState.INTERACT:
+	if current_state == PlayerState.INTERACT and not _is_gameplay_input_blocked():
 		current_state = PlayerState.IDLE
 
 
 func clear_input_locks() -> void:
-	_dialogue_locked = false
-	_transition_locked = false
+	exit_dialogue_mode()
+	exit_transition_mode()
+	if _lock_manager != null:
+		_lock_manager.release_locks_for_owner(self)
+	_release_death_lock()
 	velocity = Vector2.ZERO
-	if current_state == PlayerState.INTERACT:
+	if current_state == PlayerState.INTERACT and not _is_gameplay_input_blocked():
 		current_state = PlayerState.IDLE
 
 
@@ -434,38 +485,20 @@ func _apply_input_lock(delta: float) -> void:
 	_update_debug_label()
 
 
-func _reconcile_input_locks() -> void:
-	if get_tree().paused:
-		get_tree().paused = false
-
-	if Engine.time_scale <= 0.0:
-		for node in get_tree().get_nodes_in_group(HITSTOP_GROUP):
-			if node.has_method("force_release"):
-				node.call("force_release")
-				break
-		if Engine.time_scale <= 0.0:
-			Engine.time_scale = 1.0
-
-	if _dialogue_locked and not _is_dialogue_controller_active():
-		clear_input_locks()
-		return
-
-	if _transition_locked and not _is_area_transition_active():
-		exit_transition_mode()
+func _is_gameplay_input_blocked() -> bool:
+	if _lock_manager != null:
+		return _lock_manager.is_player_input_blocked()
+	return (
+		(_dialogue_lock_token != null and _dialogue_lock_token.valid)
+		or (_transition_lock_token != null and _transition_lock_token.valid)
+		or (_death_lock_token != null and _death_lock_token.valid)
+	)
 
 
-func _is_dialogue_controller_active() -> bool:
-	for node in get_tree().get_nodes_in_group("dialogue_controller"):
-		if node is DialogueController and (node as DialogueController).is_active:
-			return true
-	return false
-
-
-func _is_area_transition_active() -> bool:
-	for node in get_tree().get_nodes_in_group("area_transition_manager"):
-		if bool(node.get("is_transitioning")):
-			return true
-	return false
+func _release_death_lock() -> void:
+	if _lock_manager != null and _death_lock_token != null and _death_lock_token.valid:
+		_lock_manager.release_lock(_death_lock_token)
+	_death_lock_token = null
 
 
 func set_facing_direction(direction: int) -> void:
@@ -661,6 +694,9 @@ func _handle_attack_input() -> void:
 
 
 func _can_accept_attack_input() -> bool:
+	if _is_gameplay_input_blocked():
+		return false
+
 	if current_state == PlayerState.DEAD or current_state == PlayerState.INTERACT or current_state == PlayerState.DODGE or current_state == PlayerState.HURT or current_state == PlayerState.COUNTER or current_state == PlayerState.TAUNT:
 		return false
 
@@ -1715,6 +1751,9 @@ func _on_player_damaged(_amount: float, _source: Node) -> void:
 
 func _on_player_died() -> void:
 	interrupt_attack(PlayerState.DEAD)
+	_bind_lock_manager()
+	if _lock_manager != null and (_death_lock_token == null or not _death_lock_token.valid):
+		_death_lock_token = _lock_manager.acquire_lock(GameplayLockManager.LockReason.DEATH, self)
 
 
 func _update_dodge_visual() -> void:

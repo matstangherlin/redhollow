@@ -18,6 +18,8 @@ const COMPLETION_FLAG := &"vertical_slice_completed"
 @export var street_spawn_id: StringName = &"default"
 
 var _completion_shown: bool = false
+var _lock_manager: GameplayLockManager = null
+var _completion_lock_token: GameplayLockToken = null
 
 
 func _ready() -> void:
@@ -28,6 +30,7 @@ func _ready() -> void:
 
 
 func _initialize_demo() -> void:
+	_bind_lock_manager()
 	await get_tree().process_frame
 	_connect_runtime_signals()
 	_check_existing_completion()
@@ -39,30 +42,24 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func return_to_start() -> void:
+	_bind_lock_manager()
+	if _lock_manager != null:
+		_lock_manager.begin_new_session()
+		_lock_manager.debug_force_release_all("demo_reset")
+
 	for node in get_tree().get_nodes_in_group("dialogue_controller"):
 		if node.has_method("force_reset"):
 			node.call("force_reset")
 
-	for node in get_tree().get_nodes_in_group("hitstop_controller"):
-		if node.has_method("force_release"):
-			node.call("force_release")
-
-	if Engine.time_scale <= 0.0:
-		Engine.time_scale = 1.0
-	if get_tree().paused:
-		get_tree().paused = false
-
-	var player := get_tree().get_first_node_in_group("player")
-	if player != null and player.has_method("clear_input_locks"):
-		player.call("clear_input_locks")
+	_release_completion_lock()
+	_completion_shown = false
+	_hide_completion_overlay()
 
 	var save_manager := _find_node_in_group(SAVE_MANAGER_GROUP)
 	if save_manager != null and save_manager.has_method("delete_save"):
 		save_manager.call("delete_save")
 
 	_reset_progression_for_demo()
-	_completion_shown = false
-	_hide_completion_overlay()
 
 	var transition_manager := _find_node_in_group(AREA_TRANSITION_GROUP) as AreaTransitionManager
 	if transition_manager != null and street_scene != null:
@@ -128,12 +125,43 @@ func _show_completion_overlay() -> void:
 	if overlay == null:
 		return
 	overlay.visible = true
+	_acquire_completion_lock()
 
 
 func _hide_completion_overlay() -> void:
 	var overlay := get_node_or_null("CompletionOverlay")
 	if overlay != null:
 		overlay.visible = false
+
+
+func _acquire_completion_lock() -> void:
+	_bind_lock_manager()
+	if _lock_manager == null:
+		return
+	if _completion_lock_token != null and _completion_lock_token.valid:
+		return
+	_completion_lock_token = _lock_manager.acquire_lock(
+		GameplayLockManager.LockReason.COMPLETION,
+		self
+	)
+
+
+func _release_completion_lock() -> void:
+	if _lock_manager != null and _completion_lock_token != null and _completion_lock_token.valid:
+		_lock_manager.release_lock(_completion_lock_token)
+	_completion_lock_token = null
+
+
+func _bind_lock_manager() -> void:
+	if _lock_manager != null:
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group("gameplay_lock_manager"):
+		if node is GameplayLockManager:
+			_lock_manager = node as GameplayLockManager
+			return
 
 
 func _reset_progression_for_demo() -> void:

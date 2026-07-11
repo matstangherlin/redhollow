@@ -29,6 +29,8 @@ var _player: Node = null
 var _ignore_advance_until_release: bool = false
 var _ignore_advance_time_remaining: float = 0.0
 var _last_close_ms: int = -100000
+var _lock_manager: GameplayLockManager = null
+var _dialogue_lock_token: GameplayLockToken = null
 
 
 func _ready() -> void:
@@ -38,6 +40,7 @@ func _ready() -> void:
 	set_process_unhandled_input(true)
 	_bind_dialogue_box()
 	_load_dialogue_data()
+	call_deferred("_bind_lock_manager")
 	force_reset()
 
 
@@ -152,13 +155,13 @@ func is_blocking_interactions() -> bool:
 
 
 func _force_unlock_player() -> void:
-	var player := _player
-	if player == null and get_tree() != null:
-		player = get_tree().get_first_node_in_group(PLAYER_GROUP)
-	if player != null and player.has_method("clear_input_locks"):
-		player.call("clear_input_locks")
-	elif player != null and player.has_method("exit_dialogue_mode"):
-		player.call("exit_dialogue_mode")
+	_release_dialogue_lock()
+
+
+func _release_dialogue_lock() -> void:
+	if _lock_manager != null and _dialogue_lock_token != null and _dialogue_lock_token.valid:
+		_lock_manager.release_lock(_dialogue_lock_token)
+	_dialogue_lock_token = null
 
 
 func _reset_runtime_state() -> void:
@@ -264,13 +267,29 @@ func _resolve_player(interactor: Node) -> Node:
 
 
 func _lock_player() -> void:
+	_bind_lock_manager()
+	if _lock_manager != null:
+		if _dialogue_lock_token == null or not _dialogue_lock_token.valid:
+			_dialogue_lock_token = _lock_manager.acquire_lock(
+				GameplayLockManager.LockReason.DIALOGUE,
+				self
+			)
+		return
+
 	if _player != null and _player.has_method("enter_dialogue_mode"):
 		_player.call("enter_dialogue_mode")
 
 
-func _unlock_player() -> void:
-	if _player != null and _player.has_method("exit_dialogue_mode"):
-		_player.call("exit_dialogue_mode")
+func _bind_lock_manager() -> void:
+	if _lock_manager != null:
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group("gameplay_lock_manager"):
+		if node is GameplayLockManager:
+			_lock_manager = node as GameplayLockManager
+			return
 
 
 func _run_actions(actions: Array, phase: StringName) -> void:

@@ -55,16 +55,17 @@ func _ready() -> void:
 		_activation_zone.body_entered.connect(_on_activation_body_entered)
 
 
-func _physics_process(_delta: float) -> void:
+func try_complete_if_enemies_cleared() -> bool:
 	if state != ArenaState.ACTIVE:
-		return
+		return false
 	if _spawned_count <= 0:
-		return
-	# Fail-safe: if every tracked enemy is gone/dead, open the gates.
-	if get_remaining_enemy_count() <= 0 and _defeated_instance_ids.size() >= _spawned_count:
-		_complete_arena()
-	elif get_remaining_enemy_count() <= 0 and _tracked_enemies.is_empty():
-		_complete_arena()
+		return false
+	if _defeated_instance_ids.size() < _spawned_count:
+		return false
+	if get_remaining_enemy_count() > 0:
+		return false
+	_complete_arena()
+	return true
 
 
 func is_blocking_exits() -> bool:

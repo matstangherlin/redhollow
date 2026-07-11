@@ -1,268 +1,145 @@
-# Red Hollow - Roadmap
+# Red Hollow — Roadmap
 
-## Principios do Roadmap
+Roadmap alinhado ao estado real do repositório (Godot 4.7, demo greybox jogável) e à meta **Capítulo Zero — O Sino Antes do Anoitecer**.
 
-- Uma funcionalidade por etapa.
-- Cada fase deve terminar com teste manual claro.
-- Graficos provisorios durante o prototipo.
-- Manter o jogo inteiramente 2D, em visao lateral e em um unico plano.
-- Nao implementar magia tradicional, projeteis magicos ou voo.
-- Priorizar 60 FPS no Windows desde o inicio.
+## Princípios
 
-## Fase 0 - Base do Projeto
+- Uma funcionalidade por etapa quando possível.
+- Cada fase termina com teste manual ou headless documentado.
+- Greybox até arte final substituir por área.
+- 2D lateral, um plano; sem magia elemental genérica.
+- 60 FPS no Windows.
 
-Objetivo: preparar o projeto para evoluir com seguranca.
+## Legenda
 
-Entregas:
+- ✅ Concluído
+- 🔧 Concluído com dívida técnica
+- 🎯 Próximo
+- 📋 Planejado
 
-- documentacao inicial;
-- controle de versao;
-- estrutura minima de pastas quando necessaria;
-- convencoes de nomes;
-- matriz de testes inicial.
+---
 
-Criterios de conclusao:
+## Fase 0 — Base do projeto ✅
 
-- repositório limpo;
-- documentacao versionada;
-- nenhum arquivo gerado da Godot versionado por engano.
+- Documentação inicial, git, `.gitignore`, convenções
+- Repositório `redhollow` na main
 
-## Fase 1 - Main Scene e Sala de Teste
+## Fase 1 — Main scene e shell ✅
 
-Objetivo: ter uma cena inicial executavel e previsivel.
+- Main scene `vertical_slice_greybox.tscn`
+- Shell persistente: player, câmera, managers, `WorldHost`
 
-Entregas:
+## Fase 2 — Movimento base ✅
 
-- main scene simples;
-- sala de teste 2D com colisao provisoria;
-- camera inicial;
-- jogador instanciado com placeholder geometrico;
-- configuracao de main scene em project.godot, se necessario.
+- `CharacterBody2D`, andar, acelerar, virar, gravidade
 
-Testes:
+## Fase 3 — Pulo e colisão ✅
 
-- projeto abre pela main scene;
-- jogador aparece;
-- sala carrega sem erros;
-- camera mostra a area correta.
+- Pulo, coyote time, buffer, queda, recuperação por `fall_recovery_y`
 
-## Fase 2 - Movimento Base
+## Fase 4 — Estados do jogador 🔧
 
-Objetivo: validar movimento lateral em um unico plano.
+- Estados no `player.gd` (enum + lógica inline)
+- 📋 Máquina de estados em módulos separados (`TECH_DEBT.md`)
 
-Entregas:
+## Fase 5 — Ataque corpo a corpo ✅
 
-- CharacterBody2D para o jogador;
-- andar, parar e virar;
-- aceleracao/atrito basicos;
-- queda e gravidade;
-- valores expostos para ajuste.
+- Combo 3 golpes, `AttackData`, hitbox/hurtbox
 
-Testes:
+## Fase 6 — Inimigo simples ✅
 
-- mover esquerda/direita;
-- parar sem deslize excessivo;
-- virar direcao corretamente;
-- manter 60 FPS em sala simples.
+- Cult Brawler, dummy, attacker test
 
-## Fase 3 - Pulo e Colisao
+## Fase 7 — Esquiva e counter ✅
 
-Objetivo: tornar a movimentacao confiavel em plataformas simples.
+- Dodge com i-frames; counter com janela e ataque dedicado
 
-Entregas:
+## Fase 8 — Estilo e provocações ✅
 
-- pulo;
-- queda;
-- colisao com piso e parede;
-- limites da sala;
-- pequenos ajustes de responsividade, se necessarios.
+- `StyleManager`, ranks, provocação no player
 
-Testes:
+## Fase 9 — Red Brand ✅
 
-- pular do chao;
-- cair de plataforma;
-- colidir com paredes;
-- nao atravessar piso;
-- comportamento independente da taxa de quadros.
+- Energia, Breaker carregado (U), barreira destrutível, cristal na igreja
 
-## Fase 4 - Estado do Jogador
+## Fase 10 — Exploração e backtracking ✅
 
-Objetivo: separar comportamento por estados claros.
+- Rua → igreja → subterrâneo; barreira; retorno por exits
 
-Entregas:
+## Fase 11 — Diálogo e checkpoint ✅
 
-- maquina de estados inicial;
-- idle, run, jump e fall;
-- transicoes observaveis em debug simples;
-- isolamento entre entrada e movimento.
+- JSON, Elias, checkpoint com save automático ao ativar
 
-Testes:
+## Fase 12 — Salvamento básico 🔧
 
-- transicoes corretas entre estados;
-- nenhum estado preso;
-- movimento continua funcional.
+- Save versionado, validação, backup, F8/F9
+- Auto-load **desativado** na greybox; load manual
+- 📋 Auto-load seguro para beta
 
-## Fase 5 - Ataque Corpo a Corpo Basico
+## Fase 13 — Vertical slice técnica ✅
 
-Objetivo: provar o primeiro ataque fisico.
+- Arena, dois brawlers, Deacon Rusk, overlay de conclusão, F7 reset
+- Testes headless; plano em `VERTICAL_SLICE_TEST_PLAN.md`
 
-Entregas:
+---
 
-- estado attack;
-- hitbox separada;
-- dados simples de ataque;
-- startup, active e recovery documentados;
-- feedback visual provisório.
+## Fase 14 — Documentação canônica ✅
 
-Testes:
+- GDD, arquitetura real, bíblia narrativa/arte/UI, escopos beta/final, dívida técnica
 
-- ataque dispara;
-- hitbox ativa no momento correto;
-- movimento respeita estado de ataque;
-- nao ha dano multiplo acidental no mesmo alvo.
+## Fase 15 — Estabilização pré-beta 🎯
 
-## Fase 6 - Inimigo Simples
+- Testes headless sem runtime errors
+- Gameplay lock manager (substituir panic unlock)
+- Hitstop/feedback sem resets globais de `Engine.time_scale`
+- Início da separação de `player.gd`
 
-Objetivo: validar alvo de combate.
+**Gate:** `TECH_DEBT.md` itens P0 críticos.
 
-Entregas:
+## Fase 16 — Arte Capítulo Zero (rua + igreja) 📋
 
-- inimigo placeholder;
-- hurtbox separada;
-- vida simples;
-- reacao a dano;
-- morte/remocao controlada.
+- Pixel art Calder, rua, igreja, UI skin base
+- Ver `CONTENT_PRODUCTION_PLAN.md` fase C
 
-Testes:
+## Fase 17 — Inimigos beta (3 tipos) 📋
 
-- inimigo recebe dano;
-- inimigo nao quebra quando atacado repetidas vezes;
-- hitbox do jogador acerta somente quando sobrepoe.
+- Arte + IA derivada de Cult Brawler
+- `BETA_DEMO_SCOPE.md`
 
-## Fase 7 - Esquiva e Counter
+## Fase 18 — Catacumbas + set pieces 📋
 
-Objetivo: adicionar defesa tecnica sem ampliar escopo demais.
+- Subterrâneo/catacumbas ilustrados
+- Estátua Mol-Khar, aparição, silhueta Arcturus
+- Uma variante de corrupção ambiental
 
-Entregas:
+## Fase 19 — UI beta completa 📋
 
-- estado dodge;
-- estado counter;
-- janelas claras;
-- invulnerabilidade ou reducao de dano documentada;
-- resposta de estilo para counter bem sucedido.
+- Mapa, objetivos, diário, pausa, tela Red Brand (≤3 habilidades)
+- `UI_BIBLE.md`
 
-Testes:
+## Fase 20 — Beta pública 🎯
 
-- esquiva evita dano dentro da janela;
-- counter exige timing;
-- falha de counter tem custo ou risco;
-- combate continua corpo a corpo.
+- Capítulo Zero jogável 30–45 min
+- Build Windows, QA `TEST_MATRIX.md`
 
-## Fase 8 - Estilo e Provocacoes
+---
 
-Objetivo: tornar o combate expressivo.
+## Pós-beta (jogo final) — resumo 📋
 
-Entregas:
+| Marco | Conteúdo |
+| --- | --- |
+| Distrito expandido | Novas áreas metroidvania |
+| Barões | Encontros jogáveis (Silas, Rosa, Arcturus, Magnus) |
+| Progressão ampla | Mais habilidades Red Brand |
+| Palácio Rubro | Clímax narrativo |
+| Polimento | Áudio, acessibilidade, localização |
 
-- StyleComponent inicial;
-- ganho por variedade e risco;
-- provocacao simples;
-- indicador visual minimo.
+Detalhes: `FINAL_GAME_SCOPE.md`.
 
-Testes:
+## O que não está no roadmap imediato
 
-- estilo sobe com acertos variados;
-- estilo nao sobe infinitamente com repeticao trivial;
-- provocacao funciona em condicao definida.
-
-## Fase 9 - Red Brand Inicial
-
-Objetivo: validar o poder fisico central sem magia.
-
-Entregas:
-
-- recurso da Red Brand;
-- um ataque reforcado de curta distancia;
-- custo/ganho de recurso;
-- feedback visual provisorio.
-
-Testes:
-
-- Red Brand amplifica golpe fisico;
-- nao cria projeteis magicos;
-- nao permite voo;
-- recurso atualiza corretamente.
-
-## Fase 10 - Exploracao e Backtracking
-
-Objetivo: provar metroidvania em escala pequena.
-
-Entregas:
-
-- duas ou tres salas conectadas;
-- atalho;
-- bloqueio por habilidade;
-- retorno a area anterior com nova possibilidade.
-
-Testes:
-
-- transicao entre areas;
-- camera ajusta limites;
-- backtracking abre caminho novo;
-- progresso nao depende de ordem quebrada.
-
-## Fase 11 - Dialogo e Checkpoint
-
-Objetivo: introduzir fluxo narrativo minimo e retorno seguro.
-
-Entregas:
-
-- caixa de dialogo simples;
-- trigger de dialogo;
-- checkpoint ativavel;
-- retorno do jogador ao checkpoint em teste.
-
-Testes:
-
-- dialogo inicia e termina;
-- checkpoint registra posicao;
-- jogador retorna corretamente;
-- dialogo nao bloqueia input permanentemente.
-
-## Fase 12 - Salvamento Basico
-
-Objetivo: persistir progresso minimo em `user://`.
-
-Entregas:
-
-- formato de save com versao;
-- checkpoint ativo;
-- habilidades liberadas;
-- validacao de dados ao carregar.
-
-Testes:
-
-- salvar;
-- carregar;
-- lidar com arquivo ausente;
-- lidar com arquivo corrompido sem encerrar o jogo.
-
-## Fase 13 - Vertical Slice
-
-Objetivo: consolidar uma fatia pequena e jogavel.
-
-Entregas:
-
-- trecho curto de exploracao;
-- combate contra inimigo simples;
-- uma habilidade de progressao;
-- uma cena de dialogo curta;
-- checkpoint e save basico;
-- HUD minimo.
-
-Testes:
-
-- jogar do inicio ao fim sem usar editor;
-- medir FPS em Windows;
-- listar bugs restantes;
-- definir proxima prioridade.
+- cidade inteira antes da beta;
+- crafting complexo;
+- loot aleatório;
+- todos os arquétipos de inimigo;
+- duplicação manual de mapas corrompidos.

@@ -1,300 +1,228 @@
-# Red Hollow - Architecture
+# Red Hollow — Architecture
 
-## Objetivo
+Arquitetura do projeto Godot 4.7 em GDScript. Este documento descreve **o que está implementado** e **para onde evoluir**.
 
-Este documento propoe uma arquitetura inicial para Red Hollow como metroidvania de acao 2D em Godot 4.x, usando GDScript, cenas reutilizaveis, Resources configuraveis e acoplamento baixo por sinais. Ele descreve a direcao desejada, mas nao representa implementacao existente.
+## Legenda de estado
 
-## Estrutura de Pastas Proposta
+| Tag | Significado |
+| --- | --- |
+| **[implemented]** | Existe no repositório e funciona na demo greybox |
+| **[implemented-debt]** | Funciona, mas com dívida documentada em `TECH_DEBT.md` |
+| **[planned-beta]** | Previsto para Capítulo Zero |
+| **[planned-final]** | Previsto para o jogo completo |
+| **[target]** | Direção arquitetural desejada |
+
+## Main scene e shell persistente
+
+**[implemented]** Main scene: `res://scenes/demo/vertical_slice_greybox.tscn`
+
+Estrutura persistente (player, câmera e managers não são recriados a cada área):
+
+```text
+vertical_slice_greybox (game.gd)
+├── HitstopController
+├── StyleManager → StyleHud
+├── BossHealthHud
+├── RedBrandDirector
+├── ProgressionSystem
+├── DialogueSystem
+├── SaveManager          (auto_load_on_ready = false na greybox)
+├── AreaTransitionManager
+├── VerticalSliceController
+├── WorldHost            ← apenas a área atual
+├── Player
+└── CameraController
+```
+
+`scenes/core/game.tscn` existe como referência de shell; a demo greybox replica o mesmo padrão.
+
+**[target]** Separar orquestração de `game.gd` em serviços menores sem concentrar panic recovery.
+
+## Troca de áreas
+
+**[implemented]** `AreaTransitionManager` troca cenas filhas em `WorldHost` — não usa `change_scene_to_file()` para cada passagem.
+
+Fluxo:
+
+1. `AreaExit` emite trigger
+2. Player entra em `enter_transition_mode()`
+3. Pausa curta (`transition_pause_seconds`)
+4. Área atual removida; nova instanciada (`AreaRoot`)
+5. Spawn em `AreaSpawnPoint` por `spawn_id`
+6. Câmera `configure_for_area`
+7. Rebind: save checkpoints, style trackables, diálogo reset, Red Brand
+8. Player `exit_transition_mode()` / `clear_input_locks`
+
+Áreas da vertical slice:
+
+- `vertical_slice_street.tscn`
+- `vertical_slice_church.tscn`
+- `vertical_slice_underground.tscn`
+
+Áreas de teste legadas: `street_test`, `church_entrance_test`, `underground_test`.
+
+Ver `AREA_TRANSITIONS.md`.
+
+## Estrutura de pastas (atual)
 
 ```text
 scenes/
-  main/
-  levels/
+  demo/           # vertical_slice_greybox
+  core/           # game, camera, dialogue, progression, style
   player/
   enemies/
-  bosses/
-  combat/
+  areas/          # vertical_slice_* + test_*
+  world/          # arena, barrier, boss_encounter
   ui/
+  interactables/
+  npcs/
 scripts/
-  player/
+  player/         # player.gd (monolítico) [implemented-debt]
+  combat/         # components, attack_data, red_brand
+  core/           # game, camera, hitstop
+  dialogue/
+  demo/
   enemies/
-  combat/
-  components/
-  state_machines/
-  ui/
   save/
-  progression/
-resources/
-  attacks/
-  enemies/
-  player/
-  dialogue/
-  progression/
-data/
-  dialogue/
-  localization/
-ui/
-audio/
-art/
-tests/
+  style/
+  world/
+  ui/
+resources/combat/   # AttackData .tres
+data/dialogues/     # dialogues_pt_br.json
 docs/
 ```
 
-A estrutura deve crescer por necessidade real. Nao criar pastas vazias sem uma tarefa que va usa-las.
-
-## Main Scene
-
-A main scene deve ser o ponto de entrada do jogo. Responsabilidades recomendadas:
-
-- carregar o nivel inicial;
-- instanciar ou conter o jogador;
-- conter CanvasLayer/HUD quando necessario;
-- conectar sinais de alto nivel;
-- manter inicializacao previsivel.
-
-A main scene nao deve concentrar toda a logica do jogo.
-
-## Cenas Reutilizaveis
-
-Cenas devem ser pequenas e testaveis:
-
-- Player: personagem jogavel com componentes filhos.
-- EnemyBase: base de inimigos simples.
-- Hitbox2D: Area2D para dano ativo.
-- Hurtbox2D: Area2D para recebimento de dano.
-- CameraRig2D: camera e limites por area.
-- Checkpoint: ponto de retorno e salvamento.
-- DialogueTrigger: gatilho de dialogo.
-- HUD: interface desacoplada do jogador.
-
-Cenas de area devem compor plataformas, portas, checkpoints, inimigos e triggers sem duplicar logica central.
+**[planned-beta]** `art/`, `audio/` com assets finais versionados.
 
 ## Jogador
 
-O jogador deve usar CharacterBody2D. Movimento, combate e apresentacao visual devem ficar separados quando possivel.
+**[implemented]** `CharacterBody2D` + componentes filhos:
 
-Responsabilidades sugeridas:
+- `HealthComponent`, `HitboxComponent`, `HurtboxComponent`
+- `RedBrandComponent`, `InteractionDetector`
+- Estados: idle, run, jump, fall, attack, dodge, counter, taunt, hurt, dead, interact
 
-- PlayerController: orquestra estado atual e componentes.
-- PlayerMovement: calcula velocidade, pulo, queda, aceleracao e atrito.
-- PlayerCombat: inicia ataques, counters, esquivas e Red Brand.
-- PlayerStats: vida, recursos, estilo e estados de dano.
-- PlayerVisuals: sprite, animacao provisoria e feedback visual.
-- PlayerInput: traduz Input Map em intencoes do jogador.
+**[implemented-debt]** Toda lógica em `scripts/player/player.gd`.
 
-O personagem deve continuar funcional com graficos provisorios e sem depender de sprites finais.
+**[target]** Divisão:
 
-## Componentes
+| Módulo | Responsabilidade |
+| --- | --- |
+| PlayerInput | Input map, buffers |
+| PlayerMovement | Velocidade, pulo, gravidade |
+| PlayerCombat | Combo, fases de ataque |
+| PlayerDefense | Dodge, counter, i-frames |
+| PlayerRedBrand | Carga e release do Breaker |
+| PlayerInteractionLock | Diálogo, transição |
+| PlayerPresentation | Visual, animação |
 
-Componentes devem encapsular responsabilidades pequenas:
+## Componentes de combate
 
-- HealthComponent: vida, dano, cura e morte.
-- HitboxComponent: aplica dados de ataque a alvos validos.
-- HurtboxComponent: recebe contato de hitboxes.
-- KnockbackComponent: calcula impulso fisico.
-- StyleComponent: registra variedade, risco e pontuacao de estilo.
-- RedBrandComponent: controla recurso, ativacoes e efeitos fisicos.
-- InteractionComponent: detecta interacoes.
+**[implemented]**
 
-Componentes devem se comunicar por sinais ou interfaces claras, evitando caminhos frageis com get_node espalhado.
+| Componente | Função |
+| --- | --- |
+| `HitboxComponent` | Dano ativo, hitstop request, alvos únicos |
+| `HurtboxComponent` | Recebe hit, encaminha counter/dano |
+| `HealthComponent` | Vida, morte, invulnerabilidade |
+| `AttackData` | Resource: timing, dano, knockback, tags, estilo |
 
-## Maquinas de Estados
+Hitboxes/hurtboxes em `Node2D` filho (`Components`) para seguir o personagem.
 
-Usar maquinas de estados para jogador, inimigos e chefes.
+## Inimigos e chefes
 
-Estados iniciais do jogador:
+**[implemented]**
 
-- idle;
-- run;
-- jump;
-- fall;
-- attack;
-- dodge;
-- counter;
-- hurt;
-- dead;
-- interact.
+- `cult_brawler.gd` — IA patrulha/ataque
+- `deacon_rusk.gd` — chefe em fases, stagger, super armor
+- `enemy_dummy`, `enemy_attacker_test` — testes
 
-Cada estado deve ter entrada, atualizacao, saida e regras claras de transicao. O objetivo e impedir condicionais gigantes dentro de um unico script.
+**[planned-beta]** Três arquétipos visuais finais reutilizando padrões de IA existentes.
 
-## Hitbox e Hurtbox
+## Sistemas globais (na shell, não autoload)
 
-Hitboxes e hurtboxes devem ser separadas.
+| Sistema | Estado | Notas |
+| --- | --- | --- |
+| `StyleManager` | [implemented] | Grupos + sinais do player |
+| `RedBrandDirector` | [implemented] | Energia e recompensas |
+| `ProgressionComponent` | [implemented] | Flags, checkpoints, habilidades |
+| `SaveManager` | [implemented-debt] | `user://saves`; F8/F9; auto-load off na greybox |
+| `DialogueController` | [implemented] | JSON, cooldown reopen |
+| `BarrierRegistry` | [implemented] | Barreiras destruídas persistentes |
+| `CombatArenaController` | [implemented] | Spawn, gates, flags |
+| `BossEncounterController` | [implemented] | Rusk + HUD |
+| `HitstopController` | [implemented-debt] | Marcador; não congela simulação |
 
-Hitbox:
-
-- deve ser Area2D ou componente equivalente;
-- carrega dados do ataque ativo;
-- respeita direcao do personagem;
-- mantem lista de alvos ja atingidos durante a ativacao;
-- emite sinal quando acerta.
-
-Hurtbox:
-
-- recebe hitboxes;
-- valida alvo, invulnerabilidade e time/faccao;
-- encaminha dano para HealthComponent;
-- emite sinal de dano recebido.
-
-## Dados de Ataques com Resource
-
-Ataques devem ser orientados por dados usando Resource. Um AttackData pode conter:
-
-- id;
-- nome interno;
-- dano;
-- startup;
-- active frames;
-- recovery;
-- hitstun;
-- knockback;
-- hitstop;
-- ganho de estilo;
-- custo ou ganho de Red Brand;
-- tags, como punch, kick, grab, counter ou red_brand.
-
-Se valores forem descritos em frames, a conversao para tempo deve ser consistente e documentada. Nao misturar frames e segundos sem criterio.
-
-## Inimigos
-
-Inimigos devem ser compostos por:
-
-- CharacterBody2D quando precisarem de movimento fisico;
-- maquina de estados;
-- HealthComponent;
-- HurtboxComponent;
-- CombatComponent quando atacarem;
-- EnemyData Resource para valores configuraveis.
-
-Inimigos simples devem testar apenas uma ideia por vez: perseguir, atacar, bloquear, fugir, contra-atacar ou pressionar espaco.
-
-## Chefes
-
-Chefes devem usar a mesma base de componentes, com maquinas de estados ou fases dedicadas. Cada fase deve ser testavel isoladamente. Ataques de chefe podem ser simbolicos e religiosos, mas nao devem virar magia generica ou projeteis magicos.
-
-## Camera
-
-A camera deve ser 2D, previsivel e ajustavel por area.
-
-Responsabilidades:
-
-- seguir o jogador com suavidade controlada;
-- respeitar limites de sala/area;
-- suportar pequenos shakes de impacto;
-- evitar esconder plataformas ou inimigos importantes;
-- nao depender de arte final.
-
-## HUD
-
-A HUD deve usar Control e CanvasLayer quando apropriado. Ela nao deve ler detalhes internos do jogador diretamente. Preferir sinais ou um adaptador de estado.
-
-Elementos possiveis:
-
-- vida;
-- recurso da Red Brand;
-- indicador de estilo;
-- prompts de interacao;
-- texto curto de dialogo.
-
-## Dialogos
-
-Dialogos devem ser dirigidos por dados sempre que possivel.
-
-Proposta:
-
-- DialogueData Resource ou JSON validado;
-- DialogueRunner para fluxo;
-- DialogueBox como Control;
-- triggers em cena que chamam dialogos por id.
-
-Dialogos devem ser curtos no prototipo e nao bloquear testes de combate por muito tempo.
+**[target]** Autoloads apenas se múltiplas roots precisarem do mesmo serviço (ex.: menu principal separado).
 
 ## Salvamento
 
-Salvar em `user://`. O save deve possuir versao e validacao antes de carregar.
+**[implemented]** `SaveData` versão 1; validação; backup `.bak`; escrita atômica via temp.
 
-Nao salvar:
+Persiste: área, posição, vida, Red Brand, flags, checkpoints, barreiras destruídas.
 
-- referencias de Node;
-- paths temporarios;
-- IDs instaveis;
-- objetos arbitrarios serializados sem validacao.
+**Importante:** na vertical slice greybox, `SaveManager.auto_load_on_ready = false` — carregamento manual (**F9**) ou após bind explícito.
 
-Salvar:
+**[planned-beta]** Auto-load seguro com validação de área compatível.
 
-- versao do save;
-- area atual;
-- checkpoint ativo;
-- habilidades desbloqueadas;
-- flags de progressao;
-- vida/recurso quando fizer sentido.
+## Corrupção ambiental (Ressonância Rubra)
 
-Arquivo corrompido nao deve encerrar o jogo.
+**[planned-beta]** Uma transformação curta no Capítulo Zero.
 
-## Checkpoints
+**[target]** Arquitetura sem duplicar mapas inteiros:
 
-Checkpoints devem ser entidades simples e reutilizaveis.
+```text
+AreaRoot
+├── Layers_Normal (Node2D)
+│   ├── background
+│   ├── midground
+│   └── foreground
+├── Layers_Corrupted (Node2D, hidden by default)
+│   └── ... variantes substituíveis
+└── CorruptionController
+    └── aplica: lighting, swap meshes, enemy table, particles
+```
 
-Responsabilidades:
+Técnicas:
 
-- definir posicao de retorno;
-- emitir sinal ao serem ativados;
-- opcionalmente restaurar vida/recurso;
-- informar o sistema de save/progressao.
+- trocar visibilidade de camadas;
+- `Resource` de variante por prop;
+- shader/global modulate para iluminação;
+- spawn table diferente por estado;
+- **não** manter dois `.tscn` completos por área salvo exceção.
 
-Checkpoint nao deve conhecer detalhes internos de todos os sistemas.
+## HUD e UI
 
-## Gerenciamento de Progressao
+**[implemented]** `StyleHud`, `BossHealthHud`, `DialogueBox`, hints na demo.
 
-Progressao deve controlar habilidades, portas, atalhos e flags narrativas. Usar um ProgressionManager apenas se houver necessidade global real.
+**[planned-beta]** Mapa, objetivos, diário, menu pausa, tela Red Brand — `UI_BIBLE.md`.
 
-Alternativas preferidas antes de Autoload:
+## Diálogo
 
-- Resources de dados;
-- sinais entre cena atual e controlador de nivel;
-- componentes locais;
-- grupos para consultas especificas.
+**[implemented]** `DialogueLibrary` + `dialogues_pt_br.json` + `DialogueController` + triggers em NPCs/interactables.
 
-## Depuracao
+## Câmera
 
-Ferramentas de depuracao devem ajudar o prototipo sem virar dependencia do jogo.
+**[implemented]** `CameraController` — follow, limites por `AreaRoot.camera_limits`, shake.
 
-Possibilidades:
+## Depuração
 
-- overlay de estado do jogador;
-- visualizacao de hitboxes/hurtboxes;
-- log de transicoes de estado;
-- reset rapido de sala;
-- teleporte de teste controlado.
+**[implemented]** F toggle debug hitboxes; R respawn; F7 reset demo; F8/F9 save/load; Esc panic unlock.
 
-Recursos de debug devem poder ser desligados.
+**[target]** Debug overlay desligável em release.
 
-## Sinais
+## Sinais recomendados
 
-Sinais recomendados:
+Muitos já em uso: `health_changed`, `died`, `damaged`, `hit_landed`, `style_changed`, `dialogue_started/finished`, `area_changed`, `boss_defeated`, `arena_completed`.
 
-- health_changed(current, maximum);
-- died();
-- damage_received(amount, source);
-- attack_started(attack_id);
-- attack_hit(target, attack_id);
-- style_changed(value, rank);
-- red_brand_changed(current, maximum);
-- checkpoint_activated(checkpoint_id);
-- ability_unlocked(ability_id);
-- dialogue_started(dialogue_id);
-- dialogue_finished(dialogue_id);
-- area_changed(area_id).
+## Testes
 
-Usar nomes em snake_case e payloads pequenos.
+Scripts headless em `scripts/**/*_tests.gd` e `vertical_slice_verification.gd`. Comandos portáveis em `TEST_MATRIX.md`.
 
-## Autoloads Estritamente Necessarios
+**[target]** Fixture de cena mínima para testes que hoje assumem árvore incompleta.
 
-Autoloads devem ser raros. Candidatos aceitaveis somente quando a necessidade aparecer:
+## Documentos relacionados
 
-- SaveManager: se save precisar persistir entre trocas de cena.
-- ProgressionManager: se habilidades e flags globais forem usadas por varias areas.
-- AudioManager: se musica e mixagem precisarem sobreviver a troca de cenas.
-- SceneLoader: se houver transicoes consistentes entre areas.
-
-Nao criar um Autoload que concentre todo o jogo. Se um sistema pode viver na main scene ou em componentes locais, preferir essa opcao no inicio.
+- `TECH_DEBT.md` — dívida e ordem de refatoração
+- `AREA_TRANSITIONS.md` — fluxo de transição
+- `BETA_DEMO_SCOPE.md` — próximo marco de entrega

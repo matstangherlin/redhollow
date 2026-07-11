@@ -1,103 +1,118 @@
-# Red Hollow - Test Matrix
+# Red Hollow — Test Matrix
 
-## Uso
+Matriz de testes manuais e headless. Para roteiro passo a passo da demo greybox, use [VERTICAL_SLICE_TEST_PLAN.md](VERTICAL_SLICE_TEST_PLAN.md).
 
-Esta matriz define testes manuais e tecnicos para cada sistema quando ele existir. Para a demonstração jogável completa, use também [VERTICAL_SLICE_TEST_PLAN.md](VERTICAL_SLICE_TEST_PLAN.md).
+## Legenda
 
-Legenda sugerida:
+| Resultado | Significado |
+| --- | --- |
+| **Pass** | Comportamento correto |
+| **Fail** | Comportamento incorreto |
+| **Blocked** | Sistema ausente ou erro impede teste |
+| **N/A** | Não aplicável na etapa |
 
-- Pass: comportamento correto.
-- Fail: comportamento incorreto.
-- Blocked: sistema ainda inexistente ou erro impede teste.
-- N/A: nao aplicavel para a etapa atual.
+## Estado dos sistemas (repositório atual)
 
-## Demonstracao vertical slice (greybox)
+| Sistema | Estado | Notas |
+| --- | --- | --- |
+| Main scene greybox | Implementado | `vertical_slice_greybox.tscn` |
+| Movimento / pulo | Implementado | |
+| Combo / dodge / counter / taunt | Implementado | |
+| Estilo + HUD | Implementado | |
+| Red Brand + Breaker | Implementado | |
+| Diálogo | Implementado | Cooldown reopen 250 ms |
+| Áreas (3) | Implementado | street → church → underground |
+| Arena | Implementado | |
+| Barreira persistente | Implementado | Registry + save |
+| Checkpoint | Implementado | Auto-save ao ativar |
+| Save/load | Implementado | **Manual:** F8 / F9 |
+| Auto-load ao boot | Desativado | `auto_load_on_ready = false` na greybox |
+| Deacon Rusk | Implementado | |
+| Conclusão demo | Implementado | Overlay + flag |
+| Pixel art final | Planejado beta | |
+| Mapa / diário UI | Planejado beta | |
 
-| Area | Teste | Procedimento | Resultado esperado |
+## Comandos headless (portáveis)
+
+Executar na raiz do projeto. Substituir `godot` pelo executável da Godot 4.7 no PATH, se necessário.
+
+```bash
+godot --headless --path . --script res://scripts/demo/vertical_slice_verification.gd
+godot --headless --path . --script res://scripts/dialogue/dialogue_tests.gd
+godot --headless --path . --script res://scripts/save/save_tests.gd
+godot --headless --path . --script res://scripts/world/area_transition_tests.gd
+godot --headless --path . --script res://scripts/world/combat_arena_tests.gd
+godot --headless --path . --script res://scripts/enemies/cult_brawler_tests.gd
+godot --headless --path . --script res://scripts/enemies/deacon_rusk_tests.gd
+```
+
+**Nota:** algumas suítes passam com warnings/erros de runtime em fixtures incompletas — tratar como dívida (`TECH_DEBT.md`). Meta: zero erros no console.
+
+## Demonstração vertical slice (greybox)
+
+| Área | Teste | Procedimento | Resultado esperado |
 | --- | --- | --- | --- |
-| Demo | Main scene | Executar projeto. | Carrega `vertical_slice_greybox.tscn`. |
-| Demo | Fluxo completo | Seguir roteiro em VERTICAL_SLICE_TEST_PLAN.md. | Todos os marcos completaveis em 10–20 min. |
-| Demo | Reinicio | Pressionar R. | Calder retorna ao spawn/checkpoint sem softlock. |
-| Demo | Voltar ao inicio | Pressionar F7. | Retorna a rua inicial com progresso resetado. |
-| Demo | Conclusao | Derrotar Deacon Rusk. | Overlay informa demonstracao tecnica concluida. |
-| Demo | Verificacao headless | Rodar `vertical_slice_verification.gd`. | Sem erros de cadeia de areas/dialogo. |
+| Demo | Main scene | Executar projeto | Carrega `vertical_slice_greybox.tscn` |
+| Demo | Fluxo completo | `VERTICAL_SLICE_TEST_PLAN.md` | Marcos em 10–20 min |
+| Demo | Reinício | **R** | Retorna spawn/checkpoint sem softlock |
+| Demo | Voltar ao início | **F7** | Rua inicial; progresso resetado |
+| Demo | Salvar | **F8** | Arquivo em `user://saves/` |
+| Demo | Carregar | **F9** | Estado restaurado (não auto no boot) |
+| Demo | Conclusão | Derrotar Deacon Rusk | Overlay de demonstração concluída |
+| Demo | Verificação headless | `vertical_slice_verification.gd` | Mensagem de sucesso |
+| Demo | Panic recovery | **Esc** | Destrava diálogo/locks se travado |
 
-## Matriz
+## Matriz geral
 
-| Area | Teste | Procedimento | Resultado esperado |
-| --- | --- | --- | --- |
-| Inicializacao | Abrir projeto | Abrir o projeto pela Godot 4.x indicada pelo projeto. | Projeto abre sem erros criticos. |
-| Inicializacao | Main scene | Executar o projeto. | Main scene carrega quando existir; se nao existir, o estado deve ser documentado. |
-| Inicializacao | Arquivos gerados | Verificar `git status --ignored`. | `.godot/` permanece ignorada. |
-| Inicializacao | FPS base | Rodar uma sala simples no Windows. | Mantem alvo tecnico de 60 FPS em cenario basico. |
-| Movimento | Direita/esquerda | Pressionar acoes de mover para os dois lados. | Calder move em um unico plano 2D lateral. |
-| Movimento | Parada | Soltar direcional durante corrida. | Personagem desacelera ou para conforme design, sem deslize inesperado. |
-| Movimento | Virada | Alternar direcao rapidamente. | Orientacao visual e hitboxes respeitam a direcao. |
-| Movimento | Taxa de quadros | Testar com variacao de FPS quando possivel. | Movimento nao depende da taxa de quadros. |
-| Colisao | Piso | Cair sobre plataforma. | Jogador pousa sem atravessar. |
-| Colisao | Parede | Caminhar contra parede. | Jogador bloqueia corretamente, sem tremer de forma excessiva. |
-| Colisao | Cantos | Pular perto de bordas/cantos. | Sem prender, teleportar ou atravessar colisao. |
-| Colisao | Layers/masks | Revisar interacoes de jogador, inimigos e mundo. | Colisoes batem com a documentacao. |
-| Pulo | Pulo do chao | Pressionar pulo no chao. | Jogador sobe e entra em estado de pulo. |
-| Pulo | Queda | Sair de uma plataforma. | Jogador entra em queda e pousa corretamente. |
-| Pulo | Bloqueio no ar | Tentar pular sem estar autorizado. | Nao gera pulo extra salvo se houver habilidade documentada. |
-| Pulo | Responsividade | Testar pulo em sequencia. | Entrada responde sem atraso perceptivel indevido. |
-| Camera | Seguimento | Mover pelo nivel. | Camera acompanha sem esconder o jogador. |
-| Camera | Limites | Ir aos extremos da sala. | Camera respeita limites configurados. |
-| Camera | Transicao | Trocar de area. | Camera ajusta limites/posicao sem corte incoerente. |
-| Camera | Impacto | Acionar hitstop ou shake, quando existir. | Feedback nao prejudica leitura do combate. |
-| Ataques | Ataque basico | Pressionar acao de ataque. | Ataque corpo a corpo inicia e termina. |
-| Ataques | Startup | Observar inicio do ataque. | Dano nao ocorre antes da janela ativa. |
-| Ataques | Recovery | Atacar e tentar cancelar. | Cancelamentos obedecem regras definidas. |
-| Ataques | Direcao | Atacar para esquerda e direita. | Golpe respeita orientacao de Calder. |
-| Hitboxes | Separacao | Inspecionar jogador/inimigo. | Hitbox e hurtbox sao elementos separados. |
-| Hitboxes | Acerto unico | Manter hitbox sobre mesmo alvo durante uma ativacao. | Mesmo alvo nao recebe multiplos hits acidentais. |
-| Hitboxes | Alvo invalido | Sobrepor hitbox a objeto nao atacavel. | Nenhum dano indevido ocorre. |
-| Hitboxes | Hitstop | Acertar inimigo quando hitstop existir. | Pausa curta reforca impacto sem quebrar estado. |
-| Inimigos | Spawn | Carregar sala com inimigo. | Inimigo aparece em posicao esperada. |
-| Inimigos | Dano recebido | Acertar inimigo. | Vida reduz e feedback ocorre. |
-| Inimigos | Morte | Reduzir vida a zero. | Inimigo morre/remove sem erros. |
-| Inimigos | Ataque | Entrar no alcance do inimigo. | Ataque inimigo e legivel e justo. |
-| Esquiva | Ativacao | Pressionar esquiva. | Calder entra em dodge. |
-| Esquiva | Janela defensiva | Esquivar durante ataque inimigo. | Dano e evitado somente dentro da janela definida. |
-| Esquiva | Recuperacao | Esquivar e tentar agir imediatamente. | Recovery respeita design. |
-| Esquiva | Sem voo | Usar esquiva perto de bordas. | Esquiva nao vira voo ou movimento aereo ilimitado. |
-| Counter | Timing correto | Acionar counter na janela correta. | Counter responde e pune ataque valido. |
-| Counter | Timing errado | Acionar fora da janela. | Falha tem risco claro. |
-| Counter | Alvos | Testar contra ataques diferentes. | Apenas ataques permitidos podem ser counterados. |
-| Counter | Estilo | Counter bem sucedido. | Estilo aumenta conforme regra. |
-| Estilo | Variedade | Alternar ataques e defesas. | Estilo sobe por variedade. |
-| Estilo | Repeticao | Repetir a mesma acao segura. | Estilo nao escala indefinidamente. |
-| Estilo | Dano recebido | Receber dano. | Estilo reduz, trava ou reage conforme regra. |
-| Estilo | HUD | Alterar estilo. | HUD atualiza por sinal ou interface clara. |
-| Red Brand | Recurso | Ganhar e gastar recurso. | Valor atualiza corretamente. |
-| Red Brand | Golpe reforcado | Usar ataque da Red Brand. | Ataque fisico de curta distancia fica mais forte. |
-| Red Brand | Restricoes | Tentar usar como magia/voo/projetil. | Sistema nao produz magia tradicional, voo ou projetil magico. |
-| Red Brand | Feedback | Ativar recurso. | Feedback visual/sonoro e legivel com placeholder. |
-| Dialogo | Trigger | Entrar em gatilho de dialogo. | Dialogo inicia uma vez ou conforme regra. |
-| Dialogo | Avanco | Avancar linhas. | Texto progride e termina. |
-| Dialogo | Controle | Finalizar dialogo. | Controle retorna ao jogador. |
-| Dialogo | Dados invalidos | Chamar id inexistente. | Erro e tratado sem encerrar jogo. |
-| Checkpoint | Ativacao | Tocar/interagir com checkpoint. | Checkpoint ativo e registrado. |
-| Checkpoint | Retorno | Forcar respawn. | Calder retorna ao checkpoint ativo. |
-| Checkpoint | Multiplos | Ativar outro checkpoint. | Novo checkpoint substitui anterior quando aplicavel. |
-| Checkpoint | Feedback | Ativar checkpoint. | Jogador recebe confirmacao clara. |
-| Salvamento | Criar save | Salvar progresso. | Arquivo e criado em `user://`. |
-| Salvamento | Versao | Inspecionar dados salvos. | Save possui campo de versao. |
-| Salvamento | Carregar | Reiniciar e carregar. | Estado essencial retorna corretamente. |
-| Salvamento | Arquivo corrompido | Carregar arquivo invalido. | Jogo nao encerra; usa fallback seguro. |
-| Troca de areas | Entrada | Entrar em passagem. | Nova area carrega. |
-| Troca de areas | Posicao | Voltar pela passagem. | Jogador aparece em ponto coerente. |
-| Troca de areas | Estado | Trocar area durante estado normal. | Vida, habilidades e progressao persistem. |
-| Troca de areas | Camera/HUD | Trocar area. | Camera e HUD continuam consistentes. |
+| Área | Teste | Procedimento | Resultado esperado | Estado |
+| --- | --- | --- | --- | --- |
+| Inicialização | Abrir projeto | Godot 4.7 | Sem erros críticos | Implementado |
+| Inicialização | Main scene | Executar | Greybox carrega | Implementado |
+| Inicialização | `.godot/` | `git status --ignored` | Ignorada | Implementado |
+| Inicialização | FPS | Sala simples Windows | ~60 FPS | Implementado |
+| Movimento | Direita/esquerda | A/D | Plano 2D lateral | Implementado |
+| Movimento | Parada | Soltar direcional | Desacelera previsível | Implementado |
+| Movimento | Virada | Alternar direção | Hitbox/orientação corretas | Implementado |
+| Colisão | Piso / parede | Plataformas | Sem atravessar | Implementado |
+| Pulo | Chão / queda | Espaço | Pulo e pouso | Implementado |
+| Câmera | Seguimento / limites | Extremos da área | Limites respeitados | Implementado |
+| Câmera | Troca de área | Exit entre áreas | Limites atualizados | Implementado |
+| Ataques | Combo | J | Três golpes encadeáveis | Implementado |
+| Ataques | Startup / recovery | Observar fases | Dano só na janela ativa | Implementado |
+| Hitboxes | Separação | Inspecionar cena | Hitbox ≠ hurtbox | Implementado |
+| Hitboxes | Acerto único | Um swing | Sem multi-hit acidental | Implementado |
+| Hitboxes | Hitstop | Acertar inimigo | Feedback sem softlock | Implementado-debt |
+| Esquiva | K | Durante ataque inimigo | I-frames na janela | Implementado |
+| Counter | L | Telegraph amarelo | Counter em ataques counterable | Implementado |
+| Estilo | Variedade / repetição | Combo + repetição | Sobe com variedade; penaliza spam | Implementado |
+| Red Brand | U (segurar/soltar) | Após cristal | Breaker destrói barreira | Implementado |
+| Red Brand | Restrições | — | Sem magia/voo/projétil | Implementado |
+| Diálogo | E com Elias | Avançar e sair | Controles liberados | Implementado |
+| Diálogo | Reabertura | Fechar e mover | Não reabre no mesmo frame | Implementado |
+| Checkpoint | E no subterrâneo | Ativar | Visual ativo + save | Implementado |
+| Salvamento | F8 / F9 | Salvar e recarregar | Área, barreira, chefe consistentes | Implementado |
+| Salvamento | Corrompido | Arquivo inválido | Fallback sem crash | Implementado |
+| Salvamento | Boot | Iniciar jogo frio | **Não** auto-carrega na greybox | Por design atual |
+| Troca de áreas | Exits | Rua ↔ igreja ↔ sub | Spawn correto | Implementado |
+| Arena | Ativação | Zona igreja | Portas fecham; 2 inimigos | Implementado |
+| Arena | Conclusão | Derrotar todos | Portas abrem; flag set | Implementado |
+| Chefe | Deacon Rusk | Zona subterrâneo | HUD, fase 2, vitória | Implementado |
+| UI beta | Mapa / diário | — | — | Planejado |
+| Arte final | Pixel art | — | — | Planejado beta |
 
-## Checklist por Tarefa
+## Checklist por tarefa
 
-Depois de cada alteracao de jogo, registrar:
+Depois de cada alteração de jogo, registrar:
 
 - arquivos criados e modificados;
-- testes da matriz executados;
-- erros encontrados;
+- testes executados (manual + headless aplicáveis);
+- erros no console (incluir warnings em testes);
 - se a Godot foi executada pelo terminal;
-- se collision layers e masks foram alteradas;
-- se sinais e referencias foram verificados.
+- se collision layers/masks mudaram;
+- se sinais e referências foram verificados.
+
+## Documentos relacionados
+
+- `VERTICAL_SLICE_TEST_PLAN.md` — roteiro jogável
+- `BETA_DEMO_SCOPE.md` — critérios da beta
+- `TECH_DEBT.md` — falhas conhecidas de teste e runtime

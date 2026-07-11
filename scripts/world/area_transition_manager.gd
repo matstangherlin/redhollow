@@ -30,6 +30,8 @@ var _progression: ProgressionComponent = null
 var _current_area: AreaRoot = null
 var _current_spawn_id: StringName = &"default"
 var _initialized: bool = false
+var _lock_manager: GameplayLockManager = null
+var _transition_lock_token: GameplayLockToken = null
 
 
 func _ready() -> void:
@@ -39,6 +41,7 @@ func _ready() -> void:
 		return
 
 	add_to_group(MANAGER_GROUP)
+	call_deferred("_bind_lock_manager")
 
 
 func initialize(game_root: Node) -> void:
@@ -237,18 +240,44 @@ func _configure_camera_for_current_area(animate_camera: bool) -> void:
 
 
 func _lock_player() -> void:
+	_bind_lock_manager()
+	if _lock_manager != null:
+		if _transition_lock_token == null or not _transition_lock_token.valid:
+			_transition_lock_token = _lock_manager.acquire_lock(
+				GameplayLockManager.LockReason.AREA_TRANSITION,
+				self
+			)
+		return
+
 	if _player != null and _player.has_method("enter_transition_mode"):
 		_player.call("enter_transition_mode")
 
 
 func _unlock_player() -> void:
+	if _lock_manager != null:
+		if _transition_lock_token != null and _transition_lock_token.valid:
+			_lock_manager.release_lock(_transition_lock_token)
+		_transition_lock_token = null
+		return
+
 	if _player != null and _player.has_method("exit_transition_mode"):
 		_player.call("exit_transition_mode")
 
 
+func _bind_lock_manager() -> void:
+	if _lock_manager != null:
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group("gameplay_lock_manager"):
+		if node is GameplayLockManager:
+			_lock_manager = node as GameplayLockManager
+			return
+
+
 func _notify_world_rebound() -> void:
 	_force_close_dialogue()
-	_reset_player_locks()
 	_unlock_player()
 
 	for node in get_tree().get_nodes_in_group("save_manager"):
@@ -282,8 +311,3 @@ func _force_close_dialogue() -> void:
 	for node in get_tree().get_nodes_in_group("dialogue_controller"):
 		if node.has_method("force_reset"):
 			node.call("force_reset")
-
-
-func _reset_player_locks() -> void:
-	if _player != null and _player.has_method("clear_input_locks"):
-		_player.call("clear_input_locks")

@@ -1,0 +1,121 @@
+# Headless Testing — Red Hollow
+
+Red Hollow uses Godot 4.x headless `SceneTree` scripts for automated verification. Each suite is a standalone script; a shared runner executes all suites and reports a non-zero exit code when anything fails.
+
+## Quick start
+
+From the project root, with `godot` on your PATH (or use the full path to the Godot executable):
+
+```bash
+godot --headless --path . --script res://scripts/tests/test_runner.gd
+```
+
+Run a single suite:
+
+```bash
+godot --headless --path . --script res://scripts/dialogue/dialogue_tests.gd
+```
+
+On Windows (example with a local Godot install):
+
+```powershell
+& "C:\Path\To\Godot_v4.7-stable_win64.exe" --headless --path . --script res://scripts/tests/test_runner.gd
+```
+
+## Suites
+
+| Suite | Script |
+| --- | --- |
+| Vertical slice verification | `res://scripts/demo/vertical_slice_verification.gd` |
+| Dialogue | `res://scripts/dialogue/dialogue_tests.gd` |
+| Save | `res://scripts/save/save_tests.gd` |
+| Area transition | `res://scripts/world/area_transition_tests.gd` |
+| Combat arena | `res://scripts/world/combat_arena_tests.gd` |
+| Cult brawler | `res://scripts/enemies/cult_brawler_tests.gd` |
+| Deacon Rusk | `res://scripts/enemies/deacon_rusk_tests.gd` |
+| Player regression | `res://scripts/player/player_regression_tests.gd` |
+| Gameplay lock | `res://scripts/core/gameplay_lock_tests.gd` |
+| Vertical slice regression | `res://scripts/demo/vertical_slice_regression_tests.gd` |
+
+### Regression contracts (vertical slice baseline)
+
+Before refactors, these docs define the frozen public surface and behavior:
+
+| Doc | Purpose |
+| --- | --- |
+| `docs/PLAYER_PUBLIC_API.md` | Public methods, signals, groups, NodePaths, resources, external deps |
+| `docs/PLAYER_BEHAVIOR_CONTRACT.md` | Movement, combat, locks, camera/dialogue/save/Red Brand/style/hitstop contracts |
+| `docs/VISUAL_PRESENTATION_CONTRACT.md` | Gameplay must not depend on provisional art |
+
+Player movement jump/coyote/buffer tests call `_try_buffered_jump` with preconditions because headless `Input` does not reliably emit `is_action_just_pressed`. Manual playtesting still covers the input path.
+
+## Pass criteria
+
+A suite **fails** when any of the following occur:
+
+- assertion failure (`failures` array not empty);
+- unexpected engine error;
+- unexpected script error;
+- unexpected warning (unless explicitly allowed);
+- unexpected stderr message flagged as error.
+
+A suite **passes** only when:
+
+- all assertions pass;
+- zero unexpected console issues;
+- exit code is `0`.
+
+## Infrastructure
+
+| File | Role |
+| --- | --- |
+| `scripts/tests/test_runner.gd` | Runs every suite in a subprocess, prints summary, sets exit code |
+| `scripts/tests/test_helpers.gd` | `HeadlessTestSuite`, fixtures (`mount_player`, `mount_style_manager`, arena teardown) |
+| `scripts/tests/runtime_error_monitor.gd` | Custom `Logger` that records errors/warnings and compares against an allowlist |
+
+### Expected errors and warnings
+
+Tests that intentionally trigger console output must declare allowed fragments:
+
+```gdscript
+var suite := TestHelpers.begin_suite(self, "save_tests")
+suite.allow_warning_contains("Invalid JSON in save file")
+suite.allow_error_contains("Parse JSON failed")
+```
+
+Allowed messages are counted but do not fail the suite. Everything else is treated as unexpected.
+
+### Fixtures
+
+- **Player**: use `TestHelpers.mount_player(parent, tree)` and wait frames so `@onready` components exist before gameplay calls.
+- **StyleManager**: use `TestHelpers.mount_style_manager(parent, tree)` (loads `style_manager.tscn` with `StyleHud`).
+- **Dialogue / progression**: use `mount_dialogue_system` and `mount_progression` when world systems need a full scene tree.
+- **Combat arena teardown**: use `TestHelpers.teardown_combat_arena()` to defeat tracked enemies before freeing the arena.
+
+### Combat arena (headless physics)
+
+The combat arena suite declares allowed console output for Godot 4.7 headless physics:
+
+- `Can't change this state while flushing queries` — collision shape toggles during arena activation/teardown in an isolated `SceneTree`.
+- `lost a living enemy from the scene tree` — production arena warning when test fixtures free spawned enemies; assertions still verify arena rules separately.
+
+These messages are counted as **allowed issues**, not failures. Fixing them fully may require production-side deferred collision updates (out of scope for the test-only task).
+
+## Runner output
+
+Each suite prints:
+
+- test count (when provided);
+- assertion failures;
+- unexpected issues;
+- allowed issues;
+- elapsed time;
+- exit code.
+
+The runner summary lists every suite with pass/fail and the final exit code.
+
+## Git / CI
+
+- Keep the working tree clean before baseline runs when comparing regressions.
+- CI should invoke `test_runner.gd` and fail the job when exit code ≠ 0.
+- Do not hide engine output; the monitor complements stdout/stderr, it does not replace it.

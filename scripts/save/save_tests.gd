@@ -1,5 +1,6 @@
 extends SceneTree
 
+const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const SaveManagerScript := preload("res://scripts/save/save_manager.gd")
 const SaveDataScript := preload("res://scripts/save/save_data.gd")
 const TEST_SLOT_ID := "slot_test"
@@ -8,6 +9,15 @@ var _manager: Node
 
 
 func _initialize() -> void:
+	call_deferred("_run_tests")
+
+
+func _run_tests() -> void:
+	var suite := TestHelpers.begin_suite(self, "save_tests")
+	suite.allow_warning_contains("Invalid JSON in save file")
+	suite.allow_warning_contains("No valid save file found for slot")
+	suite.allow_error_contains("Parse JSON failed")
+
 	var failures: PackedStringArray = PackedStringArray()
 	_cleanup_test_files()
 	_manager = _create_manager()
@@ -19,14 +29,7 @@ func _initialize() -> void:
 	_cleanup_test_files()
 	_manager.queue_free()
 
-	if failures.is_empty():
-		print("Save tests passed.")
-	else:
-		for failure in failures:
-			push_error(failure)
-		print("Save tests failed: %s" % failures.size())
-
-	quit()
+	suite.finish(failures, 5)
 
 
 func _create_manager() -> Node:

@@ -1,5 +1,7 @@
 extends SceneTree
 
+const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
+
 const DeaconRuskScene := preload("res://scenes/enemies/deacon_rusk.tscn")
 const PlayerScene := preload("res://scenes/player/player.tscn")
 const RedBrandBreaker := preload("res://resources/combat/red_brand_breaker_lv1.tres")
@@ -11,6 +13,7 @@ func _initialize() -> void:
 
 
 func _run_tests() -> void:
+	var suite := TestHelpers.begin_suite(self, "deacon_rusk_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
 	root.add_child(root_node)
@@ -24,10 +27,7 @@ func _run_tests() -> void:
 	ground.add_child(ground_shape)
 	root_node.add_child(ground)
 
-	var player: Node = PlayerScene.instantiate()
-	player.global_position = Vector2(560, 848)
-	root_node.add_child(player)
-	await process_frame
+	var player: Node = await TestHelpers.mount_player(root_node, self, Vector2(560, 848))
 
 	var boss: DeaconRusk = DeaconRuskScene.instantiate()
 	boss.global_position = Vector2(780, 848)
@@ -47,14 +47,7 @@ func _run_tests() -> void:
 	player.queue_free()
 	root_node.queue_free()
 
-	if failures.is_empty():
-		print("Deacon Rusk tests passed.")
-	else:
-		for failure in failures:
-			push_error(failure)
-		print("Deacon Rusk tests failed: %s" % failures.size())
-
-	quit()
+	suite.finish(failures, 7)
 
 
 func _prepare_active_boss(boss: DeaconRusk, player: Node) -> void:

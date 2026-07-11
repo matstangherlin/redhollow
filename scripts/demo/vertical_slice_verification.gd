@@ -1,5 +1,7 @@
 extends SceneTree
 
+const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
+
 const VS_STREET := "res://scenes/areas/vertical_slice_street.tscn"
 const VS_CHURCH := "res://scenes/areas/vertical_slice_church.tscn"
 const VS_UNDERGROUND := "res://scenes/areas/vertical_slice_underground.tscn"
@@ -12,6 +14,7 @@ func _initialize() -> void:
 
 
 func _run_verification() -> void:
+	var suite := TestHelpers.begin_suite(self, "vertical_slice_verification")
 	var failures: PackedStringArray = PackedStringArray()
 
 	_verify_main_scene(failures)
@@ -21,14 +24,7 @@ func _run_verification() -> void:
 	_verify_no_autoload_duplicates(failures)
 	_verify_boss_encounter_paths(failures)
 
-	if failures.is_empty():
-		print("Vertical slice verification passed.")
-	else:
-		for failure in failures:
-			push_error(failure)
-		print("Vertical slice verification failed: %s" % failures.size())
-
-	quit()
+	suite.finish(failures, 6)
 
 
 func _verify_main_scene(failures: PackedStringArray) -> void:

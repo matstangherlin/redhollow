@@ -1,8 +1,8 @@
 extends SceneTree
 
+const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
+
 const CultBrawlerScene := preload("res://scenes/enemies/cult_brawler.tscn")
-const PlayerScene := preload("res://scenes/player/player.tscn")
-const StyleManagerScript := preload("res://scripts/style/style_manager.gd")
 const TestHit := preload("res://resources/combat/cult_brawler_hook.tres")
 
 
@@ -11,6 +11,7 @@ func _initialize() -> void:
 
 
 func _run_tests() -> void:
+	var suite := TestHelpers.begin_suite(self, "cult_brawler_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
 	root.add_child(root_node)
@@ -24,26 +25,16 @@ func _run_tests() -> void:
 	ground.add_child(ground_shape)
 	root_node.add_child(ground)
 
-	var player: Node = PlayerScene.instantiate()
-	player.global_position = Vector2(420, 848)
-	root_node.add_child(player)
-	await process_frame
+	var player: Node = await TestHelpers.mount_player(root_node, self, Vector2(420, 848))
 
 	_test_single_brawler(failures, root_node, player)
 	_test_two_brawlers(failures, root_node)
 	_test_edge_and_wall(failures, root_node)
-	_test_combo_and_defeat(failures, root_node, player)
+	await _test_combo_and_defeat(failures, root_node, player)
 
 	root_node.queue_free()
 
-	if failures.is_empty():
-		print("Cult Brawler tests passed.")
-	else:
-		for failure in failures:
-			push_error(failure)
-		print("Cult Brawler tests failed: %s" % failures.size())
-
-	quit()
+	suite.finish(failures, 4)
 
 
 func _spawn_brawler(parent: Node2D, position: Vector2) -> Node:
@@ -109,9 +100,7 @@ func _test_combo_and_defeat(failures: PackedStringArray, parent: Node2D, player:
 	if died_events > 0:
 		failures.append("Dead brawler should not emit died again.")
 
-	var style_manager: Node = StyleManagerScript.new()
-	root.add_child(style_manager)
-	style_manager.call("refresh_world_bindings")
+	var style_manager: Node = await TestHelpers.mount_style_manager(parent, self)
 	var style_before := float(style_manager.get("style_score"))
 	style_manager.call("_on_enemy_died", brawler)
 	var style_after := float(style_manager.get("style_score"))
@@ -120,3 +109,4 @@ func _test_combo_and_defeat(failures: PackedStringArray, parent: Node2D, player:
 
 	style_manager.queue_free()
 	brawler.queue_free()
+	await TestHelpers.await_frames(self, 1)

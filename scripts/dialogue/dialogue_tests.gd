@@ -1,24 +1,26 @@
 extends SceneTree
 
+const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
+
 const DIALOGUE_PATH := "res://data/dialogues/dialogues_pt_br.json"
 const VALID_ID := &"elias_church_warning"
 const INVALID_ID := &"missing_dialogue_id"
 
 
 func _initialize() -> void:
+	call_deferred("_run_tests")
+
+
+func _run_tests() -> void:
+	var suite := TestHelpers.begin_suite(self, "dialogue_tests")
+	suite.allow_warning_contains("Dialogue id not found: missing_dialogue_id")
+
 	var failures: PackedStringArray = PackedStringArray()
-	_test_library(failures)
-	_test_controller(failures)
-	_test_player_input_lock(failures)
+	await _test_library(failures)
+	await _test_controller(failures)
+	await _test_player_input_lock(failures)
 
-	if failures.is_empty():
-		print("Dialogue tests passed.")
-	else:
-		for failure in failures:
-			push_error(failure)
-		print("Dialogue tests failed: %s" % failures.size())
-
-	quit()
+	suite.finish(failures, 3)
 
 
 func _test_library(failures: PackedStringArray) -> void:
@@ -48,27 +50,19 @@ func _test_library(failures: PackedStringArray) -> void:
 
 
 func _test_controller(failures: PackedStringArray) -> void:
-	var controller_scene := load("res://scenes/core/dialogue_system.tscn") as PackedScene
-	if controller_scene == null:
-		failures.append("Failed to load dialogue system scene.")
-		return
-
-	var controller_root := controller_scene.instantiate()
-	if controller_root == null:
-		failures.append("Failed to instantiate dialogue system scene.")
-		return
-
-	root.add_child(controller_root)
-
+	var player := await TestHelpers.mount_player(root, self)
+	var controller_root := await TestHelpers.mount_dialogue_system(root, self)
 	var controller := controller_root as DialogueController
 	if controller == null:
 		failures.append("Dialogue system root is not a DialogueController.")
 		controller_root.queue_free()
+		player.queue_free()
 		return
 
 	if not controller.try_start_dialogue(VALID_ID):
 		failures.append("Valid dialogue id failed to start.")
 		controller_root.queue_free()
+		player.queue_free()
 		return
 
 	if not controller.is_active:
@@ -105,20 +99,13 @@ func _test_controller(failures: PackedStringArray) -> void:
 		failures.append("Controller should close cleanly.")
 
 	controller_root.queue_free()
+	player.queue_free()
+	await TestHelpers.await_frames(self, 1)
 
 
 func _test_player_input_lock(failures: PackedStringArray) -> void:
-	var player_scene := load("res://scenes/player/player.tscn") as PackedScene
-	if player_scene == null:
-		failures.append("Failed to load player scene for dialogue input test.")
-		return
-
-	var player := player_scene.instantiate()
-	if player == null:
-		failures.append("Failed to instantiate player for dialogue input test.")
-		return
-
-	root.add_child(player)
+	var lock_manager := await TestHelpers.mount_gameplay_lock_manager(root, self)
+	var player := await TestHelpers.mount_player(root, self)
 	player.call("enter_dialogue_mode")
 
 	if not bool(player.call("is_in_dialogue")):
@@ -132,3 +119,5 @@ func _test_player_input_lock(failures: PackedStringArray) -> void:
 
 	player.call("exit_dialogue_mode")
 	player.queue_free()
+	lock_manager.queue_free()
+	await TestHelpers.await_frames(self, 1)

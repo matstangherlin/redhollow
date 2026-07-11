@@ -1,0 +1,18 @@
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+SCRIPT ERROR: Parse Error: Could not find type "RuntimeErrorMonitor" in the current scope.
+   at: GDScript::reload (res://scripts/tests/test_helpers.gd:16)
+SCRIPT ERROR: Parse Error: Identifier "RuntimeErrorMonitor" not declared in the current scope.
+   at: GDScript::reload (res://scripts/tests/test_helpers.gd:22)
+SCRIPT ERROR: Parse Error: Cannot infer the type of "unexpected" variable because the value doesn't have a set type.
+   at: GDScript::reload (res://scripts/tests/test_helpers.gd:36)
+SCRIPT ERROR: Parse Error: Cannot infer the type of "unexpected_count" variable because the value doesn't have a set type.
+   at: GDScript::reload (res://scripts/tests/test_helpers.gd:39)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://scripts/dialogue/dialogue_tests.gd:0)
+ERROR: Failed to load script "res://scripts/dialogue/dialogue_tests.gd" with error "Compilation failed".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+SCRIPT ERROR: Invalid call. Nonexistent function 'begin_suite' in base 'GDScript'.
+   at: _run_tests (res://scripts/dialogue/dialogue_tests.gd:15)
+   GDScript backtrace (most recent call first):
+       [0] _run_tests (res://scripts/dialogue/dialogue_tests.gd:15)

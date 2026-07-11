@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/core/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/core/hitstop_controller.gd" id="3_hitstop_controller"]
+[ext_resource type="Script" path="res://scripts/core/gameplay_lock_manager.gd" id="3_lock_manager"]
 [ext_resource type="PackedScene" path="res://scenes/core/style_manager.tscn" id="4_style_manager"]
 [ext_resource type="PackedScene" path="res://scenes/core/red_brand_director.tscn" id="5_red_brand_director"]
 [ext_resource type="PackedScene" path="res://scenes/core/progression_system.tscn" id="6_progression_system"]
@@ -18,6 +19,9 @@ script = ExtResource("1_game")
 
 [node name="HitstopController" type="Node" parent="."]
 script = ExtResource("3_hitstop_controller")
+
+[node name="GameplayLockManager" type="Node" parent="."]
+script = ExtResource("3_lock_manager")
 
 [node name="StyleManager" parent="." instance=ExtResource("4_style_manager")]
 

@@ -1,5 +1,6 @@
 extends SceneTree
 
+const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const AreaTransitionManagerScript := preload("res://scripts/world/area_transition_manager.gd")
 const PlayerScene := preload("res://scenes/player/player.tscn")
 const CameraScene := preload("res://scenes/core/camera_controller.tscn")
@@ -7,7 +8,13 @@ const StreetScene := preload("res://scenes/areas/street_test.tscn")
 
 
 func _initialize() -> void:
+	call_deferred("_run_tests")
+
+
+func _run_tests() -> void:
+	var suite := TestHelpers.begin_suite(self, "area_transition_tests")
 	var failures: PackedStringArray = PackedStringArray()
+
 	var game_root := Node.new()
 	game_root.name = "GameRoot"
 	root.add_child(game_root)
@@ -22,7 +29,12 @@ func _initialize() -> void:
 
 	var camera: Node = CameraScene.instantiate()
 	camera.name = "CameraController"
+	camera.set("target_path", NodePath("../Player"))
 	game_root.add_child(camera)
+
+	await TestHelpers.mount_dialogue_system(game_root, self)
+	await TestHelpers.mount_progression(game_root, self)
+	await TestHelpers.await_frames(self, 2)
 
 	var manager: Node = AreaTransitionManagerScript.new()
 	manager.name = "AreaTransitionManager"
@@ -34,6 +46,7 @@ func _initialize() -> void:
 	manager.transition_pause_seconds = 0.01
 	game_root.add_child(manager)
 
+	await TestHelpers.await_frames(self, 2)
 	manager.initialize(game_root)
 	await create_timer(0.05).timeout
 
@@ -46,14 +59,7 @@ func _initialize() -> void:
 
 	game_root.queue_free()
 
-	if failures.is_empty():
-		print("Area transition tests passed.")
-	else:
-		for failure in failures:
-			push_error(failure)
-		print("Area transition tests failed: %s" % failures.size())
-
-	quit()
+	suite.finish(failures, 6)
 
 
 func _test_initial_spawn(failures: PackedStringArray, manager: Node, player: Node) -> void:
