@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "events": {
+    "cz_evt_chapter_start": {
+      "event_id": "cz_evt_chapter_start",
+      "sets_flags": ["cz_chapter_started"],
+      "objective_hint": "Fale com Elias."
+    },
+    "cz_evt_met_elias": {
+      "event_id": "cz_evt_met_elias",
+      "sets_flags": ["cz_met_elias"]
+    },
+    "cz_evt_statue": {
+      "event_id": "cz_evt_statue",
+      "sets_flags": ["cz_street_statue_observed"]
+    },
+    "cz_evt_partner_clue": {
+      "event_id": "cz_evt_partner_clue",
+      "sets_flags": ["cz_partner_clue_found"]
+    },
+    "cz_evt_order_doc": {
+      "event_id": "cz_evt_order_doc",
+      "sets_flags": ["cz_order_document_read"]
+    },
+    "cz_evt_partner_evidence": {
+      "event_id": "cz_evt_partner_evidence",
+      "sets_flags": ["cz_partner_evidence_found"]
+    },
+    "cz_evt_church_reached": {
+      "event_id": "cz_evt_church_reached",
+      "sets_flags": ["cz_church_district_reached"]
+    },
+    "cz_evt_underground_reached": {
+      "event_id": "cz_evt_underground_reached",
+      "sets_flags": ["cz_underground_reached"]
+    },
+    "cz_evt_checkpoint": {
+      "event_id": "cz_evt_checkpoint",
+      "sets_flags": ["cz_checkpoint_activated"]
+    },
+    "cz_evt_barrier_broken": {
+      "event_id": "cz_evt_barrier_broken",
+      "sets_flags": ["cz_barrier_broken"]
+    },
+    "cz_evt_brawler_defeated": {
+      "event_id": "cz_evt_brawler_defeated",
+      "sets_flags": ["cz_street_brawler_defeated"]
+    },
+    "cz_evt_gunslinger_defeated": {
+      "event_id": "cz_evt_gunslinger_defeated",
+      "sets_flags": ["cz_gunslinger_defeated"]
+    },
+    "cz_evt_chain_penitent_defeated": {
+      "event_id": "cz_evt_chain_penitent_defeated",
+      "sets_flags": ["cz_chain_penitent_defeated"]
+    },
+    "cz_evt_marked_cartridge": {
+      "event_id": "cz_evt_marked_cartridge",
+      "sets_flags": ["cz_marked_cartridge_found"]
+    },
+    "cz_evt_secret_found": {
+      "event_id": "cz_evt_secret_found",
+      "sets_flags": ["cz_secret_found"]
+    }
+  }
+}

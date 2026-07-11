@@ -40,7 +40,18 @@ Estas mudanças visuais existem hoje mas **não alteram hitboxes ou colisão**:
 - Taunt: `TAUNT_BODY_COLOR`
 - Brand charge: `DEFAULT/CHARGING/MAX_CHARGE_BRAND_HAND_COLOR`
 
-Refatoração de arte pode mover esse feedback para AnimationPlayer/Sprite2D **desde que** colisões e AttackData permaneçam a fonte de verdade combat.
+Refatoração de arte pode mover esse feedback para `AnimatedSprite2D`/VFX **desde que** colisões e AttackData permaneçam a fonte de verdade combat.
+
+## Camada visual substituível (Calder)
+
+| Nó | Responsabilidade |
+| --- | --- |
+| `PlayerVisualController` | Escolhe placeholder vs sprite; mapeia estado/attack → animação |
+| `PlayerVisualProfile` | Modo visual + `attack_animation_map` |
+| `%SpriteVisual` | `AnimatedSprite2D` (oculto em PLACEHOLDER) |
+| `%BodyVisual` / `%BrandHand` | Greybox (visível em PLACEHOLDER) |
+
+Ver `ANIMATION_PIPELINE.md` e `ASSET_IMPORT_RULES.md`.
 
 ## Colisões protegidas (baseline)
 

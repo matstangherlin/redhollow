@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AttackData" format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"gunslinger_whip"
+display_name = "Pistol Whip"
+damage = 3.0
+startup_time = 0.42
+active_time = 0.1
+recovery_time = 0.35
+hitbox_size = Vector2(36, 24)
+hitbox_offset = Vector2(22, -2)
+hitstun_time = 0.22
+knockback = Vector2(140, -16)
+attacker_hitstop = 0.04
+target_hitstop = 0.05
+counterable = true
+tags = PackedStringArray("melee", "enemy", "vermilite", "telegraphed", "counterable")

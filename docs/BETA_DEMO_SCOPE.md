@@ -29,8 +29,10 @@ Validar núcleo jogável, narrativa, combate, exploração curta e identidade vi
 
 ### Inimigos
 
-- **Três arquétipos** visuais finais (ex.: fanático, carrasco, terceiro variante mecânica)
-- Base de IA: **Cult Brawler** já implementado na greybox
+- **Cult Brawler** — pressão melee, counterable (existente)
+- **Vermilite Gunslinger** — pistoleiro, projétil físico, recarga vulnerável (greybox)
+- **Chain Penitent** — correntes, controle de espaço, vulnerável após errar (greybox)
+- **Deacon Rusk** — mini-chefe (existente)
 
 ### Narrativa e set pieces
 
@@ -92,6 +94,27 @@ Validar núcleo jogável, narrativa, combate, exploração curta e identidade vi
 ## Relação com a demo técnica
 
 A greybox **já supera** um protótipo vazio: combate, três áreas, save, chefe e conclusão funcionam. A beta **substitui arte**, expande duração/narrativa/UI e adiciona set pieces listados — **sem** reescrever o núcleo de combate do zero.
+
+### Camada narrativa provisória (greybox — implementada)
+
+Capítulo Zero — **O Sino Antes do Anoitecer** usa sistemas estabilizados com dados orientados por JSON:
+
+| Componente | Caminho |
+| --- | --- |
+| Flags estáveis | `scripts/narrative/chapter_zero_flags.gd` |
+| Objetivos | `data/narrative/chapter_zero_objectives.json` |
+| Eventos | `data/narrative/chapter_zero_events.json` |
+| Diretor | `scripts/narrative/narrative_director.gd` |
+| HUD objetivo | `scenes/ui/objective_hud.tscn` |
+| Encerramento (8 passos curtos) | `scripts/narrative/chapter_zero_finale.gd` |
+| Props narrativos | `scenes/interactables/story_prop.tscn` |
+| Diálogos | `data/dialogues/dialogues_pt_br.json` (IDs `cz_*`) |
+
+**Pista do parceiro (provisória):** medalhão na rua + página de diário nas catacumbas. Não revela assassino, destino definitivo nem ligação completa com Mol-Khar.
+
+**Duração alvo na greybox narrativa:** 30–45 minutos (jogador novo), com seis encontros escalonados, exploração opcional e balanceamento em `CHAPTER_ZERO_BALANCE.md`.
+
+**Encerramento:** tremor subterrâneo, Red Brand reage, estátua colossal abre os olhos, sombra breve de Mol-Khar (nomeia Calder), silhueta de Arcturus, passagem revelada — beta termina. Mol-Khar completo, Arcturus jogável e Palácio Rubro **fora** do escopo.
 
 ## Critérios de aceite
 

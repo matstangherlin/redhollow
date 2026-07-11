@@ -16,7 +16,24 @@ Metroidvania de ação 2D em pixel art detalhada. Calder explora Red Hollow, enf
 - humor agressivo de Calder;
 - Ressonância Rubra — sem magia elemental genérica.
 
-## Estrutura narrativa provisória
+## Estrutura narrativa (jogo final)
+
+Capítulo Zero e arcos futuros compartilham a mesma shell e os mesmos sistemas. Registro em `resources/content/chapters/`.
+
+| ID | Título | Estado no repo |
+| --- | --- | --- |
+| `chapter_zero_bell_before_nightfall` | O Sino Antes do Anoitecer | **Jogável** (beta + full_game) |
+| `act1_silas_crow` | Silas Crow — Centro, prisão, estação | Stub (áreas futuras) |
+| `act2_rosa_la_serpiente` | Rosa — mercado, cemitério, túneis, distrito | Stub |
+| `act3_magnus_vane` | Magnus — mina, industrial, mansão | Stub |
+| `act4_arcturus_vale` | Arcturus — Igreja Rubra, catacumbas, altar, Palácio | Stub |
+| `finale_mol_khar` | Mol-Khar | Stub |
+
+**Beta pública:** manifesto `beta_demo` — termina em Capítulo Zero (`beta_end_chapter_id`).
+
+**Jogo completo:** manifesto `full_game` — inclui stubs; adicionar áreas ao `ChapterData` e incluir `chapter_id` em `playable_chapter_ids` quando prontas.
+
+## Estrutura narrativa provisória (macro)
 
 Ordem macro sujeita a ajuste de produção; cada arco deve reforçar pactos, culpa e custo da Red Brand.
 
@@ -59,6 +76,7 @@ Ordem macro sujeita a ajuste de produção; cada arco deve reforçar pactos, cul
 | Entrega | Estado |
 | --- | --- |
 | Shell + troca de áreas | Implementado |
+| ContentManifest + ChapterData | Implementado (Capítulo Zero + stubs) |
 | Player combate completo | Implementado (dívida) |
 | Save, progressão, barreiras | Implementado |
 | Arco demo rua → igreja → sub → Rusk | Implementado |

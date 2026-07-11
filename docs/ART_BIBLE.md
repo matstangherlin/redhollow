@@ -2,6 +2,29 @@
 
 Direção visual definitiva para arte final. Complementa `VISUAL_REFERENCE_RULES.md`.
 
+## Documentação técnica (produção)
+
+| Documento | Conteúdo |
+| --- | --- |
+| [ANIMATION_PIPELINE.md](ANIMATION_PIPELINE.md) | Separação lógica/sprite/ataque, modos PLACEHOLDER/PILOT/FINAL |
+| [CHARACTER_SCALE_GUIDE.md](CHARACTER_SCALE_GUIDE.md) | Resolução, escala Calder/inimigos, pivô, facing |
+| [ASSET_IMPORT_RULES.md](ASSET_IMPORT_RULES.md) | Import, filtros, compressão, atlas, nomenclatura |
+| [VFX_LANGUAGE.md](VFX_LANGUAGE.md) | Vermilite, Red Brand, telegraphs, estátuas |
+| [ENVIRONMENT_ART_GUIDE.md](ENVIRONMENT_ART_GUIDE.md) | Camadas, parallax, z-index, tiles, Capítulo Zero |
+| [VISUAL_PRESENTATION_CONTRACT.md](VISUAL_PRESENTATION_CONTRACT.md) | Contrato gameplay vs apresentação |
+
+## Especificação rápida (canônica)
+
+| Parâmetro | Valor |
+| --- | --- |
+| Estilo | Pixel art detalhada, faroeste decadente + terror religioso |
+| Resolução lógica | 480×270 |
+| px / unidade | 1 px = 1 unidade |
+| Calder (colisão) | 32×56 px |
+| Facing | `Visual.scale.x` |
+| Filtro sprites | Nearest |
+| Fonte combate | `AttackData` — animação **não** contradiz timings |
+
 ## Visão geral
 
 Red Hollow é um metroidvania de ação 2D lateral em **pixel art detalhada**.
@@ -131,7 +154,13 @@ Arquitetura técnica: variantes por camada, não duplicação manual de mapa int
 
 | Item | Agora (greybox) | Beta |
 | --- | --- | --- |
-| Personagens | Formas geométricas | Pixel art final |
+| Personagens | Formas geométricas + **pipeline piloto** (`PlayerVisualController`) | Pixel art final |
 | Cenários | Blocos cinza | Rua, igreja, catacumbas ilustradas |
 | UI | Placeholder funcional | `UI_BIBLE.md` |
 | Efeitos | Cores sólidas | Partículas e luz controladas |
+
+### Pipeline piloto Calder (implementado)
+
+- Perfil placeholder (padrão): `resources/visual/calder_placeholder_profile.tres`
+- Perfil piloto: `resources/visual/calder_pilot_profile.tres` — idle, run, jump, straight
+- Testes: `scripts/visual/player_visual_pipeline_tests.gd`

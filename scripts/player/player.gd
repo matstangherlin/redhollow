@@ -1,6 +1,5 @@
 extends CharacterBody2D
 
-const NO_BUFFERED_ATTACK := -1
 const PLAYER_GROUP := "player"
 const CAMERA_CONTROLLER_GROUP := "camera_controller"
 const HITSTOP_GROUP := "hitstop_controller"
@@ -112,8 +111,13 @@ signal brand_breaker_released(level: int, cost: float)
 
 @onready var input_controller: PlayerInputController = $Controllers/PlayerInputController
 @onready var movement_controller: PlayerMovementController = $Controllers/PlayerMovementController
+@onready var attack_controller: PlayerAttackController = $Controllers/PlayerAttackController
+@onready var red_brand_controller: PlayerRedBrandController = $Controllers/PlayerRedBrandController
+@onready var defense_controller: PlayerDefenseController = $Controllers/PlayerDefenseController
+@onready var taunt_controller: PlayerTauntController = $Controllers/PlayerTauntController
 @onready var state_coordinator: PlayerStateCoordinator = $Controllers/PlayerStateCoordinator
 @onready var presentation_controller: PlayerPresentationController = $Controllers/PlayerPresentationController
+@onready var visual_controller: PlayerVisualController = $Controllers/PlayerVisualController
 @onready var debug_view: PlayerDebugView = $Controllers/PlayerDebugView
 
 @onready var visual: Node2D = %Visual
@@ -128,51 +132,16 @@ signal brand_breaker_released(level: int, cost: float)
 @onready var brand_hand: Polygon2D = %BrandHand
 @onready var interaction_detector: Node = %InteractionDetector
 
+const DEATH_RESPAWN_DELAY := 0.65
+
 var current_state: int = PlayerState.IDLE
 var facing_direction: int = 1
 var spawn_position: Vector2 = Vector2.ZERO
-var current_attack: Resource
-var attack_phase: int = AttackPhase.NONE
-var attack_phase_time_remaining: float = 0.0
-var attack_elapsed_time: float = 0.0
-var current_combo_index: int = 0
-var buffered_combo_attack_index: int = NO_BUFFERED_ATTACK
-var combo_input_buffer_time_remaining: float = 0.0
-var combo_reset_time_remaining: float = 0.0
-var last_hit_target_name: String = "none"
-var dodge_phase: int = DodgePhase.NONE
-var dodge_phase_time_remaining: float = 0.0
-var dodge_elapsed_time: float = 0.0
-var dodge_direction: int = 1
-var dodge_cooldown_time_remaining: float = 0.0
-var dodge_invulnerability_applied: bool = false
-var was_invulnerable_before_dodge: bool = false
-var counter_phase: int = CounterPhase.NONE
-var counter_phase_time_remaining: float = 0.0
-var counter_elapsed_time: float = 0.0
-var counter_cooldown_time_remaining: float = 0.0
-var is_executing_counter_attack: bool = false
-var last_counter_result: String = "none"
-var last_incoming_attack_name: String = "none"
-var last_incoming_counterable: bool = false
-var taunt_time_remaining: float = 0.0
-var taunt_elapsed_time: float = 0.0
-var taunt_cooldown_time_remaining: float = 0.0
-var current_taunt_phrase: String = ""
-var current_taunt_line_id: StringName = &""
-var taunt_vulnerability_applied: bool = false
-var was_invulnerable_before_taunt: bool = false
-var _taunt_phrase_bag: Array[String] = []
-var _last_taunt_phrase: String = ""
-var brand_breaker_phase: int = BrandBreakerPhase.NONE
-var brand_charge_time: float = 0.0
-var brand_charge_level: int = 0
-var brand_breaker_release_cost: float = 0.0
-var is_executing_brand_breaker: bool = false
 var _lock_manager: GameplayLockManager = null
 var _dialogue_lock_token: GameplayLockToken = null
 var _transition_lock_token: GameplayLockToken = null
 var _death_lock_token: GameplayLockToken = null
+var _death_respawn_pending: bool = false
 
 
 func _ready() -> void:
@@ -180,8 +149,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	spawn_position = global_position
 	set_facing_direction(default_facing_direction)
-	_connect_combat_signals()
 	_setup_controllers()
+	_connect_combat_signals()
 	call_deferred("_bind_lock_manager")
 	call_deferred("_release_legacy_player_locks")
 
@@ -189,11 +158,73 @@ func _ready() -> void:
 func _setup_controllers() -> void:
 	input_controller.setup(self)
 	presentation_controller.setup(visual, body_visual, brand_hand, direction_marker)
+	visual_controller.setup(self)
 	movement_controller.setup(self, presentation_controller)
 	movement_controller.configure_floor_snap()
+	attack_controller.setup(self, hitbox_component)
+	red_brand_controller.setup(self, red_brand_component, attack_controller, presentation_controller)
+	defense_controller.setup(
+		self, input_controller, attack_controller, presentation_controller, health_component, hurtbox_component
+	)
+	taunt_controller.setup(self, input_controller, attack_controller, presentation_controller, health_component)
+	_connect_attack_controller_signals()
+	_connect_red_brand_controller_signals()
+	_connect_defense_controller_signals()
+	_connect_taunt_controller_signals()
+	var hit_landed_callable := Callable(self, "_on_hit_landed")
+	if hitbox_component.has_signal("hit_landed") and not hitbox_component.is_connected("hit_landed", hit_landed_callable):
+		hitbox_component.connect("hit_landed", hit_landed_callable)
 	state_coordinator.setup(self)
 	debug_view.setup(debug_label, hitbox_component, hurtbox_component)
 	presentation_controller.refresh_from_player(self)
+
+
+func _connect_attack_controller_signals() -> void:
+	attack_controller.combo_completed.connect(func() -> void: combo_completed.emit())
+	attack_controller.counter_attack_finished.connect(_on_counter_attack_finished)
+	attack_controller.locomotion_refresh_requested.connect(
+		func() -> void: _update_locomotion_state(input_controller.move_axis)
+	)
+
+
+func _connect_red_brand_controller_signals() -> void:
+	red_brand_controller.brand_breaker_charge_started.connect(func() -> void: brand_breaker_charge_started.emit())
+	red_brand_controller.brand_breaker_charge_updated.connect(
+		func(charge_time: float, preview_level: int) -> void:
+			brand_breaker_charge_updated.emit(charge_time, preview_level)
+	)
+	red_brand_controller.brand_breaker_charge_cancelled.connect(func() -> void: brand_breaker_charge_cancelled.emit())
+	red_brand_controller.brand_breaker_released.connect(
+		func(level: int, cost: float) -> void: brand_breaker_released.emit(level, cost)
+	)
+	red_brand_controller.screen_shake_requested.connect(_on_screen_shake_requested)
+	red_brand_controller.hitstop_requested.connect(_on_hitstop_requested)
+
+
+func _connect_defense_controller_signals() -> void:
+	defense_controller.dodge_started.connect(func() -> void: dodge_started.emit())
+	defense_controller.dodge_finished.connect(func() -> void: dodge_finished.emit())
+	defense_controller.counter_success.connect(
+		func(attack_data: Resource, attacker: Node) -> void: counter_success.emit(attack_data, attacker)
+	)
+	defense_controller.counter_resolved.connect(func(result: String) -> void: counter_resolved.emit(result))
+	defense_controller.screen_shake_requested.connect(_on_screen_shake_requested)
+	defense_controller.hitstop_requested.connect(_on_hitstop_requested)
+	defense_controller.locomotion_refresh_requested.connect(
+		func() -> void: _update_locomotion_state(input_controller.move_axis)
+	)
+
+
+func _connect_taunt_controller_signals() -> void:
+	taunt_controller.taunt_started.connect(
+		func(phrase: String, line_id: StringName) -> void: taunt_started.emit(phrase, line_id)
+	)
+	taunt_controller.taunt_performed.connect(
+		func(phrase: String, context: Dictionary) -> void: taunt_performed.emit(phrase, context)
+	)
+	taunt_controller.locomotion_refresh_requested.connect(
+		func() -> void: _update_locomotion_state(input_controller.move_axis)
+	)
 
 
 func _bind_lock_manager() -> void:
@@ -223,10 +254,10 @@ func _physics_process(delta: float) -> void:
 	input_controller.update_jump_buffer(delta)
 	movement_controller.update_coyote_timer(delta)
 	_handle_debug_requests()
-	_update_combo_timers(delta)
-	_update_dodge_cooldown(delta)
-	_update_counter_cooldown(delta)
-	_update_taunt_cooldown(delta)
+	attack_controller.update_combo_timers(delta)
+	defense_controller.update_dodge_cooldown(delta)
+	defense_controller.update_counter_cooldown(delta)
+	taunt_controller.update_taunt_cooldown(delta)
 
 	var input_blocked := _is_gameplay_input_blocked()
 	input_controller.poll(input_blocked)
@@ -237,18 +268,22 @@ func _physics_process(delta: float) -> void:
 		_refresh_presentation_and_debug()
 		return
 
-	_handle_dodge_input()
-	_handle_counter_input()
-	_handle_taunt_input()
-	_handle_brand_breaker_input(delta)
+	defense_controller.handle_dodge_input()
+	defense_controller.handle_counter_input()
+	taunt_controller.handle_taunt_input()
+	red_brand_controller.handle_input(
+		delta,
+		input_controller.special_pressed,
+		input_controller.special_just_pressed
+	)
 	_handle_interaction_input()
 	if not _is_dodging() and not _is_countering() and not _is_taunting() and not _is_charging_brand_breaker():
-		_handle_attack_input()
+		attack_controller.handle_attack_input(input_controller.attack_just_pressed)
 
 	var input_direction := input_controller.move_axis
 	if _is_dodging():
 		movement_controller.apply_dodge_movement(delta)
-	elif _is_countering() and not is_executing_counter_attack:
+	elif _is_countering() and not attack_controller.is_executing_counter_attack:
 		movement_controller.apply_counter_movement(delta)
 	elif _is_taunting():
 		movement_controller.apply_taunt_movement(delta)
@@ -264,11 +299,11 @@ func _physics_process(delta: float) -> void:
 		_try_buffered_jump()
 		movement_controller.apply_variable_jump_cut(input_controller.jump_just_released)
 
-	_update_attack_timing(delta)
-	_update_dodge_timing(delta)
-	_update_counter_timing(delta)
-	_update_taunt_timing(delta)
-	_update_brand_breaker_charge(delta)
+	attack_controller.update_attack_timing(delta)
+	defense_controller.update_dodge_timing(delta)
+	defense_controller.update_counter_timing(delta)
+	taunt_controller.update_taunt_timing(delta)
+	red_brand_controller.update_charge(delta, input_controller.special_pressed)
 	movement_controller.move_and_slide()
 	movement_controller.refresh_ground_state()
 	state_coordinator.apply_post_movement_state(input_direction)
@@ -287,7 +322,7 @@ func can_interact_now() -> bool:
 		PlayerState.HURT, PlayerState.DEAD, PlayerState.INTERACT:
 			return false
 
-	if current_attack != null or _is_dodging() or _is_countering() or _is_taunting() or _is_charging_brand_breaker():
+	if attack_controller.is_attacking() or _is_dodging() or _is_countering() or _is_taunting() or _is_charging_brand_breaker():
 		return false
 
 	return true
@@ -353,18 +388,18 @@ func apply_checkpoint(
 	velocity = Vector2.ZERO
 	movement_controller.reset_jump_timers()
 	input_controller.reset_jump_buffer()
-	_cancel_attack_sequence(PlayerState.IDLE)
+	attack_controller.cancel_attack_sequence(PlayerState.IDLE)
 	_cancel_dodge(PlayerState.IDLE)
 	_cancel_counter(PlayerState.IDLE)
 	_cancel_taunt(PlayerState.IDLE)
-	_cancel_brand_breaker_charge(PlayerState.IDLE)
+	red_brand_controller.cancel_brand_breaker_charge(PlayerState.IDLE)
 
 	if restore_health and health_component != null:
-		health_component.call("reset_health")
+		health_component.reset_health()
 		_release_death_lock()
 
 	if restore_red_brand and red_brand_component != null:
-		red_brand_component.call("reset_energy")
+		red_brand_component.reset_energy()
 
 
 func apply_save_state(save_data: Dictionary) -> void:
@@ -382,23 +417,21 @@ func apply_save_state(save_data: Dictionary) -> void:
 	velocity = Vector2.ZERO
 	movement_controller.reset_jump_timers()
 	input_controller.reset_jump_buffer()
-	_cancel_attack_sequence(PlayerState.IDLE)
+	attack_controller.cancel_attack_sequence(PlayerState.IDLE)
 	_cancel_dodge(PlayerState.IDLE)
 	_cancel_counter(PlayerState.IDLE)
 	_cancel_taunt(PlayerState.IDLE)
-	_cancel_brand_breaker_charge(PlayerState.IDLE)
+	red_brand_controller.cancel_brand_breaker_charge(PlayerState.IDLE)
 
 	if health_component != null:
-		health_component.call(
-			"set_health_values",
-			float(save_data.get("player_current_health", health_component.get("current_health"))),
-			float(save_data.get("player_max_health", health_component.get("max_health")))
+		health_component.set_health_values(
+			float(save_data.get("player_current_health", health_component.current_health)),
+			float(save_data.get("player_max_health", health_component.max_health))
 		)
 
 	if red_brand_component != null:
-		red_brand_component.call(
-			"set_energy",
-			float(save_data.get("red_brand_energy", red_brand_component.get("current_energy")))
+		red_brand_component.set_energy(
+			float(save_data.get("red_brand_energy", red_brand_component.current_energy))
 		)
 
 
@@ -446,6 +479,22 @@ func get_red_brand_component() -> RedBrandComponent:
 	return red_brand_component
 
 
+func export_save_state() -> Dictionary:
+	return capture_persistence_state()
+
+
+func import_save_state(save_data: Dictionary) -> void:
+	apply_save_state(save_data)
+
+
+func is_player_dodging() -> bool:
+	return defense_controller.is_dodging()
+
+
+func is_player_invulnerable() -> bool:
+	return health_component != null and health_component.invulnerable
+
+
 func capture_persistence_state() -> Dictionary:
 	var state := {
 		"spawn_position": {"x": spawn_position.x, "y": spawn_position.y},
@@ -455,11 +504,11 @@ func capture_persistence_state() -> Dictionary:
 	}
 
 	if health_component != null:
-		state["max_health"] = float(health_component.get("max_health"))
-		state["current_health"] = float(health_component.get("current_health"))
+		state["max_health"] = health_component.max_health
+		state["current_health"] = health_component.current_health
 
 	if red_brand_component != null:
-		state["red_brand_energy"] = float(red_brand_component.current_energy)
+		state["red_brand_energy"] = red_brand_component.current_energy
 
 	return state
 
@@ -497,15 +546,16 @@ func _reset_jump_buffer() -> void:
 
 
 func _reset_combat_on_recovery() -> void:
-	_cancel_attack_sequence(PlayerState.IDLE)
+	attack_controller.interrupt_offensive(PlayerState.IDLE)
+	red_brand_controller.cancel_brand_breaker_charge(PlayerState.IDLE)
 	_cancel_dodge(PlayerState.IDLE)
 	_cancel_counter(PlayerState.IDLE)
 	_cancel_taunt(PlayerState.IDLE)
-	_cancel_brand_breaker_charge(PlayerState.IDLE)
 
 
 func _refresh_presentation_and_debug() -> void:
 	presentation_controller.refresh_from_player(self)
+	visual_controller.refresh_from_player(attack_controller)
 	debug_view.refresh(_build_debug_snapshot())
 
 
@@ -513,7 +563,10 @@ func _handle_debug_requests() -> void:
 	if input_controller.debug_toggle_just_pressed:
 		debug_view.toggle_visibility()
 	if input_controller.debug_reset_just_pressed:
-		movement_controller.recover_to_spawn()
+		if _is_dead():
+			_perform_death_respawn()
+		else:
+			movement_controller.recover_to_spawn()
 
 
 func _build_debug_snapshot() -> Dictionary:
@@ -526,36 +579,36 @@ func _build_debug_snapshot() -> Dictionary:
 		"coyote_time_remaining": movement_controller.coyote_time_remaining,
 		"jump_buffer_remaining": input_controller.jump_buffer_remaining,
 		"facing_direction": facing_direction,
-		"attack_name": _get_attack_display_name(current_attack),
-		"combo_index_display": current_combo_index + 1,
+		"attack_name": attack_controller.get_attack_display_name(attack_controller.current_attack),
+		"combo_index_display": attack_controller.current_combo_index + 1,
 		"combo_size": combo_attacks.size(),
-		"buffered_attack_name": _get_buffered_attack_display_name(),
-		"combo_buffer_time_remaining": combo_input_buffer_time_remaining,
-		"attack_phase_name": _get_attack_phase_name(attack_phase),
-		"attack_phase_time_remaining": attack_phase_time_remaining,
-		"last_hit_target_name": last_hit_target_name,
-		"dodge_phase_name": _get_dodge_phase_name(dodge_phase),
+		"buffered_attack_name": attack_controller.get_buffered_attack_display_name(),
+		"combo_buffer_time_remaining": attack_controller.combo_input_buffer_time_remaining,
+		"attack_phase_name": attack_controller.get_attack_phase_name(attack_controller.attack_phase),
+		"attack_phase_time_remaining": attack_controller.attack_phase_time_remaining,
+		"last_hit_target_name": attack_controller.last_hit_target_name,
+		"dodge_phase_name": defense_controller.get_dodge_phase_name(dodge_phase),
 		"dodge_elapsed_time": dodge_elapsed_time,
 		"is_invulnerable": _is_health_invulnerable(),
-		"dodge_recovery_remaining": _get_dodge_recovery_time_remaining(),
+		"dodge_recovery_remaining": defense_controller.get_dodge_recovery_time_remaining(),
 		"dodge_cooldown_remaining": dodge_cooldown_time_remaining,
-		"counter_phase_name": _get_counter_phase_name(counter_phase),
-		"counter_window_remaining": counter_phase_time_remaining if _is_in_counter_window() else 0.0,
-		"counter_recovery_remaining": _get_counter_recovery_time_remaining(),
+		"counter_phase_name": defense_controller.get_counter_phase_name(counter_phase),
+		"counter_window_remaining": counter_phase_time_remaining if defense_controller.is_in_counter_window() else 0.0,
+		"counter_recovery_remaining": defense_controller.get_counter_recovery_time_remaining(),
 		"counter_cooldown_remaining": counter_cooldown_time_remaining,
 		"last_counter_result": last_counter_result,
 		"last_incoming_attack_name": last_incoming_attack_name,
 		"last_incoming_counterable": last_incoming_counterable,
 		"taunt_elapsed_time": taunt_elapsed_time if _is_taunting() else 0.0,
-		"taunt_vulnerable": _is_taunt_vulnerability_window_active(),
+		"taunt_vulnerable": taunt_controller.is_taunt_vulnerability_window_active(),
 		"taunt_cooldown_remaining": taunt_cooldown_time_remaining,
 		"taunt_phrase": current_taunt_phrase if not current_taunt_phrase.is_empty() else "none",
 		"red_brand_current": float(red_brand_component.current_energy) if red_brand_component != null else 0.0,
 		"red_brand_max": float(red_brand_component.max_energy) if red_brand_component != null else 0.0,
-		"brand_charge_level": brand_charge_level,
-		"brand_breaker_release_cost": brand_breaker_release_cost,
-		"brand_charge_time": brand_charge_time if _is_charging_brand_breaker() else 0.0,
-		"brand_breaker_state_name": _get_brand_breaker_state_name(),
+		"brand_charge_level": red_brand_controller.brand_charge_level,
+		"brand_breaker_release_cost": red_brand_controller.brand_breaker_release_cost,
+		"brand_charge_time": red_brand_controller.brand_charge_time if _is_charging_brand_breaker() else 0.0,
+		"brand_breaker_state_name": red_brand_controller.get_brand_breaker_state_name(),
 		"input_blocked": _is_gameplay_input_blocked(),
 		"interact_id": String(interaction_debug.get("id", "none")),
 		"interact_distance": float(interaction_debug.get("distance", -1.0)),
@@ -584,6 +637,234 @@ var debug_visible: bool:
 		debug_view.set_debug_visible(value)
 
 
+var current_attack: Resource:
+	get:
+		return attack_controller.current_attack
+
+
+var attack_phase: int:
+	get:
+		return attack_controller.attack_phase
+	set(value):
+		attack_controller.attack_phase = value
+
+
+var attack_phase_time_remaining: float:
+	get:
+		return attack_controller.attack_phase_time_remaining
+	set(value):
+		attack_controller.attack_phase_time_remaining = value
+
+
+var attack_elapsed_time: float:
+	get:
+		return attack_controller.attack_elapsed_time
+	set(value):
+		attack_controller.attack_elapsed_time = value
+
+
+var current_combo_index: int:
+	get:
+		return attack_controller.current_combo_index
+
+
+var buffered_combo_attack_index: int:
+	get:
+		return attack_controller.buffered_combo_attack_index
+
+
+var combo_input_buffer_time_remaining: float:
+	get:
+		return attack_controller.combo_input_buffer_time_remaining
+
+
+var combo_reset_time_remaining: float:
+	get:
+		return attack_controller.combo_reset_time_remaining
+
+
+var last_hit_target_name: String:
+	get:
+		return attack_controller.last_hit_target_name
+
+
+var brand_breaker_phase: int:
+	get:
+		return red_brand_controller.brand_breaker_phase
+
+
+var brand_charge_time: float:
+	get:
+		return red_brand_controller.brand_charge_time
+	set(value):
+		red_brand_controller.brand_charge_time = value
+
+
+var brand_charge_level: int:
+	get:
+		return red_brand_controller.brand_charge_level
+
+
+var brand_breaker_release_cost: float:
+	get:
+		return red_brand_controller.brand_breaker_release_cost
+
+
+var is_executing_brand_breaker: bool:
+	get:
+		return red_brand_controller.is_executing_brand_breaker
+
+
+var is_executing_counter_attack: bool:
+	get:
+		return attack_controller.is_executing_counter_attack
+
+
+var dodge_phase: int:
+	get:
+		return defense_controller.dodge_phase
+	set(value):
+		defense_controller.dodge_phase = value
+
+
+var dodge_phase_time_remaining: float:
+	get:
+		return defense_controller.dodge_phase_time_remaining
+	set(value):
+		defense_controller.dodge_phase_time_remaining = value
+
+
+var dodge_elapsed_time: float:
+	get:
+		return defense_controller.dodge_elapsed_time
+	set(value):
+		defense_controller.dodge_elapsed_time = value
+
+
+var dodge_direction: int:
+	get:
+		return defense_controller.dodge_direction
+	set(value):
+		defense_controller.dodge_direction = value
+
+
+var dodge_cooldown_time_remaining: float:
+	get:
+		return defense_controller.dodge_cooldown_time_remaining
+	set(value):
+		defense_controller.dodge_cooldown_time_remaining = value
+
+
+var counter_phase: int:
+	get:
+		return defense_controller.counter_phase
+	set(value):
+		defense_controller.counter_phase = value
+
+
+var counter_phase_time_remaining: float:
+	get:
+		return defense_controller.counter_phase_time_remaining
+	set(value):
+		defense_controller.counter_phase_time_remaining = value
+
+
+var counter_elapsed_time: float:
+	get:
+		return defense_controller.counter_elapsed_time
+	set(value):
+		defense_controller.counter_elapsed_time = value
+
+
+var counter_cooldown_time_remaining: float:
+	get:
+		return defense_controller.counter_cooldown_time_remaining
+	set(value):
+		defense_controller.counter_cooldown_time_remaining = value
+
+
+var last_counter_result: String:
+	get:
+		return defense_controller.last_counter_result
+	set(value):
+		defense_controller.last_counter_result = value
+
+
+var last_incoming_attack_name: String:
+	get:
+		return defense_controller.last_incoming_attack_name
+	set(value):
+		defense_controller.last_incoming_attack_name = value
+
+
+var last_incoming_counterable: bool:
+	get:
+		return defense_controller.last_incoming_counterable
+	set(value):
+		defense_controller.last_incoming_counterable = value
+
+
+var taunt_time_remaining: float:
+	get:
+		return taunt_controller.taunt_time_remaining
+	set(value):
+		taunt_controller.taunt_time_remaining = value
+
+
+var taunt_elapsed_time: float:
+	get:
+		return taunt_controller.taunt_elapsed_time
+	set(value):
+		taunt_controller.taunt_elapsed_time = value
+
+
+var taunt_cooldown_time_remaining: float:
+	get:
+		return taunt_controller.taunt_cooldown_time_remaining
+	set(value):
+		taunt_controller.taunt_cooldown_time_remaining = value
+
+
+var current_taunt_phrase: String:
+	get:
+		return taunt_controller.current_taunt_phrase
+	set(value):
+		taunt_controller.current_taunt_phrase = value
+
+
+var current_taunt_line_id: StringName:
+	get:
+		return taunt_controller.current_taunt_line_id
+	set(value):
+		taunt_controller.current_taunt_line_id = value
+
+
+func _on_hit_landed(target: Node, _hurtbox: Area2D, attack_data: Resource) -> void:
+	attack_controller.on_hit_landed(target, attack_data)
+	red_brand_controller.on_hit_landed(target, attack_data)
+
+
+func _on_screen_shake_requested(intensity: float, duration: float) -> void:
+	for node in get_tree().get_nodes_in_group(CAMERA_CONTROLLER_GROUP):
+		if node.has_method("request_shake"):
+			node.call("request_shake", intensity, duration)
+			return
+
+
+func _on_hitstop_requested(duration: float) -> void:
+	if duration <= 0.0:
+		return
+
+	for node in get_tree().get_nodes_in_group(HITSTOP_GROUP):
+		if node.has_method("request_hitstop"):
+			node.call("request_hitstop", duration)
+			return
+
+
+func _on_counter_attack_finished() -> void:
+	defense_controller.on_counter_attack_finished()
+
+
 func _is_gameplay_input_blocked() -> bool:
 	if _lock_manager != null:
 		return _lock_manager.is_player_input_blocked()
@@ -605,43 +886,22 @@ func set_facing_direction(direction: int) -> void:
 
 
 func can_cancel_attack() -> bool:
-	return _is_in_combo_window()
+	return attack_controller.can_cancel_attack()
 
 
 func interrupt_attack(next_state: int = PlayerState.HURT) -> void:
-	_cancel_attack_sequence(next_state)
+	attack_controller.interrupt_offensive(next_state)
+	red_brand_controller.cancel_brand_breaker_charge(next_state)
 	_cancel_dodge(next_state)
 	_cancel_counter(next_state)
 	_cancel_taunt(next_state)
-	_cancel_brand_breaker_charge(next_state)
 
 
 func try_counter_hit(attack_data: Resource, _hitbox: Area2D, attacker: Node) -> bool:
-	last_incoming_attack_name = _get_attack_display_name(attack_data)
-	last_incoming_counterable = attack_data != null and bool(attack_data.get("counterable"))
-
-	if counter_phase != CounterPhase.WINDOW:
-		last_counter_result = "miss_window"
-		return false
-
-	if attack_data == null or not last_incoming_counterable:
-		last_counter_result = "not_counterable"
-		return false
-
-	last_counter_result = "success"
-	if attacker is Node2D:
-		var direction := signi(int((attacker as Node2D).global_position.x - global_position.x))
-		if direction != 0:
-			set_facing_direction(direction)
-
-	return true
+	return defense_controller.try_counter_hit(attack_data, _hitbox, attacker)
 
 
 func _connect_combat_signals() -> void:
-	var hit_landed_callable := Callable(self, "_on_hit_landed")
-	if hitbox_component.has_signal("hit_landed") and not hitbox_component.is_connected("hit_landed", hit_landed_callable):
-		hitbox_component.connect("hit_landed", hit_landed_callable)
-
 	var damaged_callable := Callable(self, "_on_player_damaged")
 	if health_component.has_signal("damaged") and not health_component.is_connected("damaged", damaged_callable):
 		health_component.connect("damaged", damaged_callable)
@@ -650,58 +910,11 @@ func _connect_combat_signals() -> void:
 	if health_component.has_signal("died") and not health_component.is_connected("died", died_callable):
 		health_component.connect("died", died_callable)
 
-	var hit_countered_callable := Callable(self, "_on_hit_countered")
-	if hurtbox_component.has_signal("hit_countered") and not hurtbox_component.is_connected("hit_countered", hit_countered_callable):
-		hurtbox_component.connect("hit_countered", hit_countered_callable)
-
 
 func _try_buffered_jump() -> void:
 	if movement_controller.try_buffered_jump(input_controller.jump_buffer_remaining):
 		input_controller.jump_buffer_remaining = 0.0
 		current_state = PlayerState.JUMP
-
-
-func _handle_attack_input() -> void:
-	if not input_controller.attack_just_pressed or not _can_accept_attack_input():
-		return
-
-	if current_attack == null:
-		if _can_start_combo():
-			_clear_combo_buffer()
-			_start_attack_at_index(0)
-		return
-
-	if _can_buffer_next_combo_attack():
-		_buffer_next_combo_attack()
-
-
-func _update_combo_timers(delta: float) -> void:
-	if _has_buffered_combo_input():
-		combo_input_buffer_time_remaining = maxf(combo_input_buffer_time_remaining - delta, 0.0)
-		if combo_input_buffer_time_remaining <= 0.0:
-			_clear_combo_buffer()
-
-	if current_attack != null or combo_reset_time_remaining <= 0.0:
-		return
-
-	combo_reset_time_remaining = maxf(combo_reset_time_remaining - delta, 0.0)
-	if combo_reset_time_remaining <= 0.0:
-		current_combo_index = 0
-		last_hit_target_name = "none"
-
-
-func _update_dodge_cooldown(delta: float) -> void:
-	if dodge_cooldown_time_remaining <= 0.0:
-		return
-
-	dodge_cooldown_time_remaining = maxf(dodge_cooldown_time_remaining - delta, 0.0)
-
-
-func _update_counter_cooldown(delta: float) -> void:
-	if counter_cooldown_time_remaining <= 0.0:
-		return
-
-	counter_cooldown_time_remaining = maxf(counter_cooldown_time_remaining - delta, 0.0)
 
 
 func _can_accept_attack_input() -> bool:
@@ -714,787 +927,76 @@ func _can_accept_attack_input() -> bool:
 	return not _is_dead()
 
 
-func _can_start_combo() -> bool:
-	return is_on_floor() and _get_combo_attack(0) != null
-
-
-func _can_buffer_next_combo_attack() -> bool:
-	var next_attack_index := current_combo_index + 1
-	return next_attack_index < combo_attacks.size() and _get_combo_attack(next_attack_index) != null and _is_in_combo_window()
+func _start_attack_at_index(attack_index: int) -> void:
+	attack_controller.start_attack_at_index(attack_index)
 
 
 func _buffer_next_combo_attack() -> void:
-	buffered_combo_attack_index = current_combo_index + 1
-	combo_input_buffer_time_remaining = attack_input_buffer_time
+	attack_controller.buffer_next_combo_attack()
 
 
-func _has_buffered_combo_input() -> bool:
-	return buffered_combo_attack_index != NO_BUFFERED_ATTACK and combo_input_buffer_time_remaining > 0.0
+func _can_start_brand_charge() -> bool:
+	return red_brand_controller.can_start_brand_charge()
 
 
-func _clear_combo_buffer() -> void:
-	buffered_combo_attack_index = NO_BUFFERED_ATTACK
-	combo_input_buffer_time_remaining = 0.0
+func _start_brand_charge() -> void:
+	red_brand_controller.start_brand_charge()
 
 
-func _is_in_combo_window() -> bool:
-	if current_attack == null or not current_attack.has_method("has_cancel_window") or not bool(current_attack.call("has_cancel_window")):
-		return false
-
-	return attack_elapsed_time >= float(current_attack.get("cancel_window_start")) and attack_elapsed_time <= float(current_attack.get("cancel_window_end"))
+func _release_brand_breaker() -> void:
+	red_brand_controller.release_brand_breaker()
 
 
-func _get_combo_attack(attack_index: int) -> Resource:
-	if attack_index < 0 or attack_index >= combo_attacks.size():
-		return null
-
-	return combo_attacks[attack_index]
-
-
-func _start_attack_at_index(attack_index: int) -> void:
-	var attack_data := _get_combo_attack(attack_index)
-	if attack_data == null:
-		return
-
-	current_combo_index = attack_index
-	combo_reset_time_remaining = 0.0
-	_start_attack(attack_data)
-
-
-func _start_attack(attack_data: Resource) -> void:
-	current_attack = attack_data
-	attack_elapsed_time = 0.0
-	attack_phase = AttackPhase.STARTUP
-	attack_phase_time_remaining = maxf(float(current_attack.get("startup_time")), 0.0)
-	current_state = PlayerState.ATTACK
-	last_hit_target_name = "none"
-	hitbox_component.call("clear_hit_targets")
-	hitbox_component.call("deactivate")
-
-	if is_executing_counter_attack:
-		current_state = PlayerState.COUNTER
-	elif is_executing_brand_breaker:
-		current_state = PlayerState.ATTACK
-
-	if attack_phase_time_remaining <= 0.0:
-		_advance_attack_phase()
-
-
-func _update_attack_timing(delta: float) -> void:
-	if current_attack == null:
-		return
-
-	attack_elapsed_time += delta
-	attack_phase_time_remaining -= delta
-
-	while current_attack != null and attack_phase_time_remaining <= 0.0:
-		var overflow := -attack_phase_time_remaining
-		_advance_attack_phase()
-		if current_attack == null:
-			return
-		attack_phase_time_remaining -= overflow
-
-
-func _advance_attack_phase() -> void:
-	match attack_phase:
-		AttackPhase.STARTUP:
-			attack_phase = AttackPhase.ACTIVE
-			attack_phase_time_remaining = maxf(float(current_attack.get("active_time")), 0.0)
-			hitbox_component.call("activate", current_attack, self, facing_direction)
-		AttackPhase.ACTIVE:
-			hitbox_component.call("deactivate")
-			attack_phase = AttackPhase.RECOVERY
-			attack_phase_time_remaining = maxf(float(current_attack.get("recovery_time")), 0.0)
-		AttackPhase.RECOVERY:
-			_finish_attack()
-		_:
-			_finish_attack()
-
-
-func _finish_attack() -> void:
-	var next_attack_index := buffered_combo_attack_index
-	var finished_combo_index := current_combo_index
-	var was_combo_finisher := finished_combo_index == combo_attacks.size() - 1
-	hitbox_component.call("deactivate")
-	current_attack = null
-	attack_phase = AttackPhase.NONE
-	attack_phase_time_remaining = 0.0
-	attack_elapsed_time = 0.0
-
-	if is_executing_counter_attack:
-		is_executing_counter_attack = false
-		_finish_counter()
-		return
-
-	if is_executing_brand_breaker:
-		is_executing_brand_breaker = false
-		brand_breaker_release_cost = 0.0
-		brand_charge_level = 0
-		presentation_controller.update_brand_hand(false, 0)
-		_update_locomotion_state(input_controller.move_axis)
-		return
-
-	if was_combo_finisher and not is_executing_brand_breaker:
-		combo_completed.emit()
-
-	if _can_start_buffered_attack(next_attack_index):
-		_clear_combo_buffer()
-		_start_attack_at_index(next_attack_index)
-		return
-
-	_clear_combo_buffer()
-	combo_reset_time_remaining = combo_reset_time
-	_update_locomotion_state(input_controller.move_axis)
-
-
-func _can_start_buffered_attack(attack_index: int) -> bool:
-	return attack_index != NO_BUFFERED_ATTACK and combo_input_buffer_time_remaining > 0.0 and attack_index == current_combo_index + 1 and attack_index < combo_attacks.size() and is_on_floor() and _can_accept_attack_input()
-
-
-func _cancel_attack_sequence(next_state: int = PlayerState.IDLE) -> void:
-	hitbox_component.call("deactivate")
-	current_attack = null
-	attack_phase = AttackPhase.NONE
-	attack_phase_time_remaining = 0.0
-	attack_elapsed_time = 0.0
-	current_combo_index = 0
-	combo_reset_time_remaining = 0.0
-	last_hit_target_name = "none"
-	_clear_combo_buffer()
-	current_state = next_state
-
-
-func _handle_dodge_input() -> void:
-	if input_controller.dodge_just_pressed and _can_start_ground_dodge():
-		_start_ground_dodge()
-
-
-func _can_start_ground_dodge() -> bool:
-	return is_on_floor() and not _is_dead() and current_attack == null and not _is_countering() and not _is_taunting() and not _is_charging_brand_breaker() and dodge_phase == DodgePhase.NONE and dodge_cooldown_time_remaining <= 0.0 and _can_dodge_cancel_current_state()
-
-
-func _can_dodge_cancel_current_state() -> bool:
-	match current_state:
-		PlayerState.IDLE, PlayerState.RUN, PlayerState.FALL:
-			return true
-		_:
-			return false
+func _cancel_brand_breaker_charge(next_state: int = PlayerState.IDLE) -> void:
+	red_brand_controller.cancel_brand_breaker_charge(next_state)
 
 
 func _start_ground_dodge() -> void:
-	var input_direction := input_controller.move_axis
-	dodge_direction = facing_direction if is_zero_approx(input_direction) else (1 if input_direction > 0.0 else -1)
-	set_facing_direction(dodge_direction)
-	dodge_phase = DodgePhase.STARTUP
-	dodge_phase_time_remaining = maxf(dodge_startup, 0.0)
-	dodge_elapsed_time = 0.0
-	was_invulnerable_before_dodge = _is_health_invulnerable()
-	dodge_invulnerability_applied = false
-	current_state = PlayerState.DODGE
-	dodge_started.emit()
-	_clear_combo_buffer()
-	_update_dodge_invulnerability()
-	presentation_controller.refresh_from_player(self)
-
-	if dodge_phase_time_remaining <= 0.0:
-		_advance_dodge_phase()
+	defense_controller.start_ground_dodge()
 
 
-func _update_dodge_timing(delta: float) -> void:
-	if dodge_phase == DodgePhase.NONE:
-		return
-
-	dodge_elapsed_time += delta
-	dodge_phase_time_remaining -= delta
-	_update_dodge_invulnerability()
-
-	while dodge_phase != DodgePhase.NONE and dodge_phase_time_remaining <= 0.0:
-		var overflow := -dodge_phase_time_remaining
-		_advance_dodge_phase()
-		if dodge_phase == DodgePhase.NONE:
-			return
-		dodge_phase_time_remaining -= overflow
-		_update_dodge_invulnerability()
+func _start_counter() -> void:
+	defense_controller.start_counter()
 
 
-func _advance_dodge_phase() -> void:
-	match dodge_phase:
-		DodgePhase.STARTUP:
-			dodge_phase = DodgePhase.ACTIVE
-			dodge_phase_time_remaining = maxf(dodge_duration, 0.0)
-			velocity.x = dodge_speed * float(dodge_direction)
-		DodgePhase.ACTIVE:
-			dodge_phase = DodgePhase.RECOVERY
-			dodge_phase_time_remaining = maxf(dodge_recovery, 0.0)
-		DodgePhase.RECOVERY:
-			_finish_dodge()
-		_:
-			_finish_dodge()
+func _start_taunt() -> void:
+	taunt_controller.start_taunt()
 
 
-func _finish_dodge() -> void:
-	dodge_phase = DodgePhase.NONE
-	dodge_phase_time_remaining = 0.0
-	dodge_elapsed_time = 0.0
-	_restore_dodge_invulnerability()
-	dodge_cooldown_time_remaining = maxf(dodge_cooldown, 0.0)
-	dodge_finished.emit()
-	presentation_controller.refresh_from_player(self)
-	_update_locomotion_state(input_controller.move_axis)
+func _update_dodge_invulnerability() -> void:
+	defense_controller.update_dodge_invulnerability()
+
+
+func _update_taunt_vulnerability() -> void:
+	taunt_controller.update_taunt_vulnerability()
 
 
 func _cancel_dodge(next_state: int = PlayerState.IDLE) -> void:
-	dodge_phase = DodgePhase.NONE
-	dodge_phase_time_remaining = 0.0
-	dodge_elapsed_time = 0.0
-	_restore_dodge_invulnerability()
-	presentation_controller.refresh_from_player(self)
-	current_state = next_state
+	defense_controller.cancel_dodge(next_state)
+
+
+func _cancel_counter(next_state: int = PlayerState.IDLE) -> void:
+	defense_controller.cancel_counter(next_state)
+
+
+func _cancel_taunt(next_state: int = PlayerState.IDLE) -> void:
+	taunt_controller.cancel_taunt(next_state)
 
 
 func _update_locomotion_state(input_direction: float) -> void:
 	state_coordinator.update_locomotion(input_direction)
 
 
-func _handle_counter_input() -> void:
-	if input_controller.counter_just_pressed and _can_start_counter():
-		_start_counter()
-
-
-func _handle_taunt_input() -> void:
-	if input_controller.taunt_just_pressed and _can_start_taunt():
-		_start_taunt()
-
-
-func _can_start_taunt() -> bool:
-	if _is_dead() or _is_taunting() or _is_dodging() or _is_countering() or _is_charging_brand_breaker():
-		return false
-
-	if taunt_cooldown_time_remaining > 0.0:
-		return false
-
-	if not is_on_floor():
-		return false
-
-	match current_state:
-		PlayerState.HURT, PlayerState.DEAD, PlayerState.INTERACT, PlayerState.COUNTER, PlayerState.TAUNT, PlayerState.DODGE:
-			return false
-		PlayerState.ATTACK:
-			return attack_phase == AttackPhase.RECOVERY
-		PlayerState.IDLE, PlayerState.RUN, PlayerState.FALL:
-			return true
-		_:
-			return false
-
-
-func _start_taunt() -> void:
-	if _is_attacking():
-		hitbox_component.call("deactivate")
-		current_attack = null
-		attack_phase = AttackPhase.NONE
-		attack_phase_time_remaining = 0.0
-		attack_elapsed_time = 0.0
-		_clear_combo_buffer()
-
-	current_taunt_phrase = _pick_taunt_phrase()
-	current_taunt_line_id = StringName("taunt_%d" % _get_taunt_line_index(current_taunt_phrase))
-	taunt_time_remaining = maxf(taunt_duration, 0.0)
-	taunt_elapsed_time = 0.0
-	was_invulnerable_before_taunt = _is_health_invulnerable()
-	taunt_vulnerability_applied = false
-	current_state = PlayerState.TAUNT
-	velocity.x = 0.0
-	_update_taunt_vulnerability()
-	presentation_controller.refresh_from_player(self)
-
-	var context := {
-		"line_id": current_taunt_line_id,
-		"duration": taunt_duration,
-		"vulnerable_start": taunt_vulnerable_start,
-		"vulnerable_end": taunt_vulnerable_end,
-		"response_tags": PackedStringArray(["provocation", "calder"]),
-	}
-	taunt_started.emit(current_taunt_phrase, current_taunt_line_id)
-	taunt_performed.emit(current_taunt_phrase, context)
-
-	if taunt_time_remaining <= 0.0:
-		_finish_taunt()
-
-
-func _update_taunt_cooldown(delta: float) -> void:
-	if taunt_cooldown_time_remaining <= 0.0:
-		return
-
-	taunt_cooldown_time_remaining = maxf(taunt_cooldown_time_remaining - delta, 0.0)
-
-
-func _update_taunt_timing(delta: float) -> void:
-	if not _is_taunting():
-		return
-
-	taunt_elapsed_time += delta
-	taunt_time_remaining -= delta
-	_update_taunt_vulnerability()
-
-	if taunt_time_remaining <= 0.0:
-		_finish_taunt()
-
-
-func _finish_taunt() -> void:
-	taunt_time_remaining = 0.0
-	taunt_elapsed_time = 0.0
-	current_taunt_phrase = ""
-	current_taunt_line_id = &""
-	_restore_taunt_invulnerability()
-	taunt_cooldown_time_remaining = maxf(taunt_cooldown, 0.0)
-	presentation_controller.refresh_from_player(self)
-	_update_locomotion_state(input_controller.move_axis)
-
-
-func _cancel_taunt(next_state: int = PlayerState.IDLE) -> void:
-	if not _is_taunting():
-		return
-
-	taunt_time_remaining = 0.0
-	taunt_elapsed_time = 0.0
-	current_taunt_phrase = ""
-	current_taunt_line_id = &""
-	_restore_taunt_invulnerability()
-	presentation_controller.refresh_from_player(self)
-	current_state = next_state
-
-
-func _update_taunt_vulnerability() -> void:
-	var should_be_vulnerable := _is_taunt_vulnerability_window_active()
-	if should_be_vulnerable:
-		_set_health_invulnerable(false)
-		taunt_vulnerability_applied = true
-	elif taunt_vulnerability_applied:
-		_restore_taunt_invulnerability()
-
-
-func _is_taunt_vulnerability_window_active() -> bool:
-	return _is_taunting() and taunt_vulnerable_end > taunt_vulnerable_start and taunt_elapsed_time >= taunt_vulnerable_start and taunt_elapsed_time <= taunt_vulnerable_end
-
-
-func _restore_taunt_invulnerability() -> void:
-	if not taunt_vulnerability_applied:
-		return
-
-	_set_health_invulnerable(was_invulnerable_before_taunt)
-	taunt_vulnerability_applied = false
-
-
-func _is_taunting() -> bool:
-	return taunt_time_remaining > 0.0
-
-
-func _pick_taunt_phrase() -> String:
-	var available_phrases := _get_valid_taunt_phrases()
-	if available_phrases.is_empty():
-		return "Vamos, eu ainda nem comecei."
-
-	if _taunt_phrase_bag.is_empty():
-		_taunt_phrase_bag = available_phrases.duplicate()
-		_taunt_phrase_bag.shuffle()
-		if _taunt_phrase_bag.size() > 1 and _taunt_phrase_bag[0] == _last_taunt_phrase:
-			_taunt_phrase_bag.reverse()
-
-	var phrase: String = _taunt_phrase_bag.pop_front()
-	_last_taunt_phrase = phrase
-	return phrase
-
-
-func _get_valid_taunt_phrases() -> Array[String]:
-	var phrases: Array[String] = []
-	for phrase in taunt_phrases:
-		if not String(phrase).strip_edges().is_empty():
-			phrases.append(String(phrase))
-	return phrases
-
-
-func _get_taunt_line_index(phrase: String) -> int:
-	for index in taunt_phrases.size():
-		if String(taunt_phrases[index]) == phrase:
-			return index
-	return 0
-
-
-func _handle_brand_breaker_input(_delta: float) -> void:
-	if brand_breaker_phase == BrandBreakerPhase.CHARGING:
-		if not input_controller.special_pressed:
-			_release_brand_breaker()
-		return
-
-	if input_controller.special_just_pressed and _can_start_brand_charge():
-		_start_brand_charge()
-
-
-func _can_start_brand_charge() -> bool:
-	if _is_dead() or _is_charging_brand_breaker() or _is_dodging() or _is_countering() or _is_taunting():
-		return false
-
-	if red_brand_component == null or red_brand_component.config == null:
-		return false
-
-	if not red_brand_component.can_consume(red_brand_component.config.min_energy_to_charge):
-		return false
-
-	if not is_on_floor():
-		return false
-
-	match current_state:
-		PlayerState.HURT, PlayerState.DEAD, PlayerState.INTERACT, PlayerState.COUNTER, PlayerState.TAUNT, PlayerState.DODGE:
-			return false
-		PlayerState.ATTACK:
-			return attack_phase == AttackPhase.RECOVERY
-		PlayerState.IDLE, PlayerState.RUN, PlayerState.FALL:
-			return true
-		_:
-			return false
-
-
-func _start_brand_charge() -> void:
-	if _is_attacking():
-		hitbox_component.call("deactivate")
-		current_attack = null
-		attack_phase = AttackPhase.NONE
-		attack_phase_time_remaining = 0.0
-		attack_elapsed_time = 0.0
-		_clear_combo_buffer()
-
-	brand_breaker_phase = BrandBreakerPhase.CHARGING
-	brand_charge_time = 0.0
-	brand_charge_level = 0
-	brand_breaker_release_cost = 0.0
-	velocity.x = 0.0
-	brand_breaker_charge_started.emit()
-	presentation_controller.update_brand_hand(true, 0)
-
-
-func _update_brand_breaker_charge(delta: float) -> void:
-	if brand_breaker_phase != BrandBreakerPhase.CHARGING:
-		return
-
-	if not input_controller.special_pressed:
-		return
-
-	brand_charge_time += delta
-	var preview_level := _get_preview_charge_level(brand_charge_time)
-	if preview_level != brand_charge_level:
-		brand_charge_level = preview_level
-		presentation_controller.update_brand_hand(true, preview_level)
-
-	brand_breaker_charge_updated.emit(brand_charge_time, preview_level)
-
-
-func _release_brand_breaker() -> void:
-	if brand_breaker_phase != BrandBreakerPhase.CHARGING:
-		return
-
-	var desired_level := _get_preview_charge_level(brand_charge_time)
-	if desired_level <= 0:
-		_cancel_brand_breaker_charge()
-		return
-
-	var resolved := _resolve_brand_breaker_release(desired_level)
-	if resolved.is_empty():
-		_cancel_brand_breaker_charge()
-		return
-
-	var level: int = resolved["level"]
-	var attack_data: Resource = resolved["attack"]
-	var cost: float = resolved["cost"]
-
-	brand_breaker_phase = BrandBreakerPhase.NONE
-	brand_charge_level = level
-	brand_breaker_release_cost = cost
-
-	if not red_brand_component.consume_energy(cost, &"brand_breaker"):
-		_cancel_brand_breaker_charge()
-		return
-
-	brand_breaker_released.emit(level, cost)
-	_start_brand_breaker_attack(attack_data, level)
-
-
-func _resolve_brand_breaker_release(desired_level: int) -> Dictionary:
-	# Insufficient energy: downgrade to the strongest affordable level instead of blocking entirely.
-	if desired_level >= 2 and _can_pay_brand_breaker_cost(2):
-		return {
-			"level": 2,
-			"attack": red_brand_breaker_level_2,
-			"cost": _get_brand_breaker_cost(2),
-		}
-
-	if desired_level >= 1 and _can_pay_brand_breaker_cost(1):
-		return {
-			"level": 1,
-			"attack": red_brand_breaker_level_1,
-			"cost": _get_brand_breaker_cost(1),
-		}
-
-	return {}
-
-
-func _can_pay_brand_breaker_cost(level: int) -> bool:
-	if red_brand_component == null:
-		return false
-
-	return red_brand_component.can_consume(_get_brand_breaker_cost(level))
-
-
-func _get_brand_breaker_cost(level: int) -> float:
-	var attack_data := red_brand_breaker_level_2 if level >= 2 else red_brand_breaker_level_1
-	if attack_data != null and float(attack_data.get("red_brand_cost")) > 0.0:
-		return float(attack_data.get("red_brand_cost"))
-
-	if red_brand_component == null or red_brand_component.config == null:
-		return 0.0
-
-	return red_brand_component.config.charge_level_2_cost if level >= 2 else red_brand_component.config.charge_level_1_cost
-
-
-func _get_preview_charge_level(charge_time: float) -> int:
-	if red_brand_component == null or red_brand_component.config == null:
-		return 0
-
-	var config := red_brand_component.config
-	if charge_time >= config.charge_level_2_time and _can_pay_brand_breaker_cost(2):
-		return 2
-	if charge_time >= config.charge_level_1_time and _can_pay_brand_breaker_cost(1):
-		return 1
-	return 0
-
-
-func _start_brand_breaker_attack(attack_data: Resource, level: int) -> void:
-	if attack_data == null:
-		return
-
-	is_executing_brand_breaker = true
-	brand_charge_level = level
-	_clear_combo_buffer()
-	presentation_controller.update_brand_hand(false, level)
-	_start_attack(attack_data)
-
-
-func _cancel_brand_breaker_charge(next_state: int = PlayerState.IDLE) -> void:
-	if brand_breaker_phase == BrandBreakerPhase.NONE and not is_executing_brand_breaker:
-		return
-
-	var was_charging := brand_breaker_phase == BrandBreakerPhase.CHARGING
-	brand_breaker_phase = BrandBreakerPhase.NONE
-	brand_charge_time = 0.0
-	brand_charge_level = 0
-	brand_breaker_release_cost = 0.0
-	presentation_controller.update_brand_hand(false, 0)
-
-	if was_charging:
-		brand_breaker_charge_cancelled.emit()
-
-	if is_executing_brand_breaker:
-		hitbox_component.call("deactivate")
-		current_attack = null
-		attack_phase = AttackPhase.NONE
-		attack_phase_time_remaining = 0.0
-		attack_elapsed_time = 0.0
-		is_executing_brand_breaker = false
-
-	current_state = next_state
-
-
-func _is_charging_brand_breaker() -> bool:
-	return brand_breaker_phase == BrandBreakerPhase.CHARGING
-
-
-func _request_brand_breaker_shake() -> void:
-	if red_brand_component == null or red_brand_component.config == null:
-		return
-
-	for node in get_tree().get_nodes_in_group(CAMERA_CONTROLLER_GROUP):
-		if node.has_method("request_shake"):
-			node.call("request_shake", red_brand_component.config.breaker_shake_intensity, red_brand_component.config.breaker_shake_duration)
-			return
-
-
-func _can_start_counter() -> bool:
-	if not is_on_floor() or _is_dead() or current_attack != null or _is_dodging() or _is_countering() or _is_taunting() or _is_charging_brand_breaker():
-		return false
-
-	if counter_cooldown_time_remaining > 0.0:
-		return false
-
-	match current_state:
-		PlayerState.HURT, PlayerState.DEAD, PlayerState.INTERACT, PlayerState.COUNTER:
-			return false
-		_:
-			return true
-
-
-func _start_counter() -> void:
-	counter_phase = CounterPhase.STARTUP
-	counter_phase_time_remaining = maxf(counter_startup, 0.0)
-	counter_elapsed_time = 0.0
-	last_counter_result = "pending"
-	last_incoming_attack_name = "none"
-	last_incoming_counterable = false
-	current_state = PlayerState.COUNTER
-	_clear_combo_buffer()
-	presentation_controller.refresh_from_player(self)
-
-	if counter_phase_time_remaining <= 0.0:
-		_advance_counter_phase()
-
-
-func _update_counter_timing(delta: float) -> void:
-	if counter_phase == CounterPhase.NONE or counter_phase == CounterPhase.COUNTER_ATTACK:
-		return
-
-	counter_elapsed_time += delta
-	counter_phase_time_remaining -= delta
-
-	while counter_phase != CounterPhase.NONE and counter_phase != CounterPhase.COUNTER_ATTACK and counter_phase_time_remaining <= 0.0:
-		var overflow := -counter_phase_time_remaining
-		_advance_counter_phase()
-		if counter_phase == CounterPhase.NONE or counter_phase == CounterPhase.COUNTER_ATTACK:
-			return
-		counter_phase_time_remaining -= overflow
-
-
-func _advance_counter_phase() -> void:
-	match counter_phase:
-		CounterPhase.STARTUP:
-			counter_phase = CounterPhase.WINDOW
-			counter_phase_time_remaining = maxf(counter_window, 0.0)
-		CounterPhase.WINDOW:
-			if last_counter_result != "success":
-				last_counter_result = "miss"
-				counter_resolved.emit(last_counter_result)
-			counter_phase = CounterPhase.RECOVERY
-			counter_phase_time_remaining = maxf(counter_recovery, 0.0)
-		CounterPhase.RECOVERY:
-			_finish_counter()
-		_:
-			_finish_counter()
-
-	presentation_controller.refresh_from_player(self)
-
-
-func _finish_counter() -> void:
-	counter_phase = CounterPhase.NONE
-	counter_phase_time_remaining = 0.0
-	counter_elapsed_time = 0.0
-	is_executing_counter_attack = false
-	counter_cooldown_time_remaining = maxf(counter_cooldown, 0.0)
-	presentation_controller.refresh_from_player(self)
-	_update_locomotion_state(input_controller.move_axis)
-
-
-func _cancel_counter(next_state: int = PlayerState.IDLE) -> void:
-	if counter_phase == CounterPhase.NONE and not is_executing_counter_attack:
-		return
-
-	if is_executing_counter_attack:
-		hitbox_component.call("deactivate")
-		current_attack = null
-		attack_phase = AttackPhase.NONE
-		attack_phase_time_remaining = 0.0
-		attack_elapsed_time = 0.0
-		is_executing_counter_attack = false
-
-	counter_phase = CounterPhase.NONE
-	counter_phase_time_remaining = 0.0
-	counter_elapsed_time = 0.0
-	presentation_controller.refresh_from_player(self)
-	current_state = next_state
-
-
-func _begin_counter_attack() -> void:
-	if counter_attack == null:
-		_finish_counter()
-		return
-
-	counter_phase = CounterPhase.COUNTER_ATTACK
-	is_executing_counter_attack = true
-	presentation_controller.refresh_from_player(self)
-	_start_attack(counter_attack)
-
-
-func _request_counter_hitstop(_attack_data: Resource) -> void:
-	var duration := counter_hitstop_duration
-	if duration <= 0.0:
-		return
-
-	for node in get_tree().get_nodes_in_group(HITSTOP_GROUP):
-		if node.has_method("request_hitstop"):
-			node.call("request_hitstop", duration)
-			return
-
-
-func _request_screen_shake() -> void:
-	for node in get_tree().get_nodes_in_group(CAMERA_CONTROLLER_GROUP):
-		if node.has_method("request_shake"):
-			node.call("request_shake", counter_shake_intensity, counter_shake_duration)
-			return
-
-
 func _is_countering() -> bool:
-	return counter_phase != CounterPhase.NONE
+	return defense_controller.is_countering()
 
 
 func _is_in_counter_window() -> bool:
-	return counter_phase == CounterPhase.WINDOW
+	return defense_controller.is_in_counter_window()
 
 
-func _get_counter_phase_name(phase: int) -> String:
-	match phase:
-		CounterPhase.STARTUP:
-			return "startup"
-		CounterPhase.WINDOW:
-			return "window"
-		CounterPhase.RECOVERY:
-			return "recovery"
-		CounterPhase.COUNTER_ATTACK:
-			return "counter_attack"
-		_:
-			return "none"
-
-
-func _get_counter_recovery_time_remaining() -> float:
-	return counter_phase_time_remaining if counter_phase == CounterPhase.RECOVERY else 0.0
-
-
-func _on_hit_countered(attack_data: Resource, _hitbox: Area2D, attacker: Node) -> void:
-	counter_success.emit(attack_data, attacker)
-	_request_counter_hitstop(attack_data)
-	_request_screen_shake()
-	_begin_counter_attack()
-
-
-func _update_dodge_invulnerability() -> void:
-	var should_be_invulnerable := _is_dodge_invulnerability_window_active()
-	if should_be_invulnerable:
-		_set_health_invulnerable(true)
-		dodge_invulnerability_applied = true
-	elif dodge_invulnerability_applied:
-		_restore_dodge_invulnerability()
-
-
-func _is_dodge_invulnerability_window_active() -> bool:
-	return dodge_phase != DodgePhase.NONE and invulnerability_end > invulnerability_start and dodge_elapsed_time >= invulnerability_start and dodge_elapsed_time <= invulnerability_end
-
-
-func _restore_dodge_invulnerability() -> void:
-	if not dodge_invulnerability_applied:
-		return
-
-	_set_health_invulnerable(was_invulnerable_before_dodge)
-	dodge_invulnerability_applied = false
-
-
-func _set_health_invulnerable(is_invulnerable: bool) -> void:
-	if health_component != null:
-		health_component.set("invulnerable", is_invulnerable)
+func _is_taunting() -> bool:
+	return taunt_controller.is_taunting()
 
 
 func _is_health_invulnerable() -> bool:
@@ -1502,11 +1004,15 @@ func _is_health_invulnerable() -> bool:
 
 
 func _is_dodging() -> bool:
-	return dodge_phase != DodgePhase.NONE
+	return defense_controller.is_dodging()
 
 
 func _is_attacking() -> bool:
-	return current_attack != null
+	return attack_controller.is_attacking()
+
+
+func _is_charging_brand_breaker() -> bool:
+	return red_brand_controller.is_charging_brand_breaker()
 
 
 func _is_dead() -> bool:
@@ -1515,36 +1021,6 @@ func _is_dead() -> bool:
 
 func _apply_horizontal_movement(input_direction: float, delta: float) -> void:
 	movement_controller.apply_horizontal_movement(input_direction, delta)
-
-
-func _get_attack_display_name(attack_data: Resource) -> String:
-	if attack_data == null:
-		return "none"
-
-	var display_name := String(attack_data.get("display_name"))
-	if not display_name.is_empty():
-		return display_name
-
-	return String(attack_data.get("attack_id"))
-
-
-func _get_buffered_attack_display_name() -> String:
-	if not _has_buffered_combo_input():
-		return "none"
-
-	return _get_attack_display_name(_get_combo_attack(buffered_combo_attack_index))
-
-
-func _get_dodge_recovery_time_remaining() -> float:
-	return dodge_phase_time_remaining if dodge_phase == DodgePhase.RECOVERY else 0.0
-
-
-func _get_brand_breaker_state_name() -> String:
-	if is_executing_brand_breaker:
-		return "attacking"
-	if _is_charging_brand_breaker():
-		return "charging"
-	return "none"
 
 
 func _get_state_name(state: int) -> String:
@@ -1575,48 +1051,51 @@ func _get_state_name(state: int) -> String:
 			return "unknown"
 
 
-func _get_attack_phase_name(phase: int) -> String:
-	match phase:
-		AttackPhase.STARTUP:
-			return "startup"
-		AttackPhase.ACTIVE:
-			return "active"
-		AttackPhase.RECOVERY:
-			return "recovery"
-		_:
-			return "none"
-
-
-func _get_dodge_phase_name(phase: int) -> String:
-	match phase:
-		DodgePhase.STARTUP:
-			return "startup"
-		DodgePhase.ACTIVE:
-			return "active"
-		DodgePhase.RECOVERY:
-			return "recovery"
-		_:
-			return "none"
-
-
-func _on_hit_landed(target: Node, _hurtbox: Area2D, attack_data: Resource) -> void:
-	last_hit_target_name = target.name
-	if is_executing_brand_breaker:
-		_request_brand_breaker_shake()
-
-
 func _on_player_damaged(_amount: float, _source: Node) -> void:
 	if current_state == PlayerState.DEAD:
 		return
 
-	if _is_in_counter_window() and not last_incoming_counterable:
-		counter_resolved.emit("not_counterable")
-
+	defense_controller.on_player_damaged_during_counter_window()
 	interrupt_attack(PlayerState.HURT)
 
 
 func _on_player_died() -> void:
 	interrupt_attack(PlayerState.DEAD)
+	velocity = Vector2.ZERO
 	_bind_lock_manager()
 	if _lock_manager != null and (_death_lock_token == null or not _death_lock_token.valid):
 		_death_lock_token = _lock_manager.acquire_lock(GameplayLockManager.LockReason.DEATH, self)
+	_schedule_death_respawn()
+
+
+func _schedule_death_respawn() -> void:
+	if _death_respawn_pending:
+		return
+	_death_respawn_pending = true
+
+	var tree := get_tree()
+	if tree == null:
+		_death_respawn_pending = false
+		return
+
+	var timer := tree.create_timer(DEATH_RESPAWN_DELAY, true)
+	timer.timeout.connect(_perform_death_respawn, CONNECT_ONE_SHOT)
+
+
+func _perform_death_respawn() -> void:
+	_death_respawn_pending = false
+	if not is_inside_tree() or health_component == null:
+		return
+	if not bool(health_component.get("is_dead")):
+		_release_death_lock()
+		return
+
+	var respawn_position := spawn_position
+	if respawn_position == Vector2.ZERO:
+		respawn_position = global_position
+
+	apply_checkpoint(respawn_position, true, false)
+	current_state = PlayerState.IDLE
+	_release_death_lock()
+	_reset_combat_on_recovery()
+	_refresh_presentation_and_debug()

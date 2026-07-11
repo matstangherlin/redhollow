@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ContentManifest" load_steps=8 format=3 uid="uid://manifest_full_game"]
+
+[ext_resource type="Script" path="res://scripts/content/content_manifest.gd" id="1_manifest"]
+[ext_resource type="Resource" path="res://resources/content/chapters/chapter_zero_bell_before_nightfall.tres" id="2_chapter_zero"]
+[ext_resource type="Resource" path="res://resources/content/chapters/act1_silas_crow.tres" id="3_act1"]
+[ext_resource type="Resource" path="res://resources/content/chapters/act2_rosa_la_serpiente.tres" id="4_act2"]
+[ext_resource type="Resource" path="res://resources/content/chapters/act3_magnus_vane.tres" id="5_act3"]
+[ext_resource type="Resource" path="res://resources/content/chapters/act4_arcturus_vale.tres" id="6_act4"]
+[ext_resource type="Resource" path="res://resources/content/chapters/finale_mol_khar.tres" id="7_finale"]
+
+[resource]
+script = ExtResource("1_manifest")
+manifest_id = &"full_game"
+display_name = "Red Hollow — Jogo Completo"
+game_shell_scene_path = "res://scenes/demo/vertical_slice_greybox.tscn"
+save_profile_id = &"full_game"
+chapters = [ExtResource("2_chapter_zero"), ExtResource("3_act1"), ExtResource("4_act2"), ExtResource("5_act3"), ExtResource("6_act4"), ExtResource("7_finale")]
+playable_chapter_ids = PackedStringArray("chapter_zero_bell_before_nightfall")
+starting_chapter_id = &"chapter_zero_bell_before_nightfall"
+beta_end_chapter_id = &""
+migrate_beta_saves_to_full = false

@@ -105,6 +105,10 @@ func _destroy_barrier(attack_data: Resource, hitbox: Area2D, attacker: Node) -> 
 	_apply_destroyed_state(true)
 	barrier_destroyed.emit(barrier_id)
 
+	for node in get_tree().get_nodes_in_group("narrative_director"):
+		if node.has_method("notify_barrier_destroyed"):
+			node.call("notify_barrier_destroyed", barrier_id)
+
 	var registry := _get_barrier_registry()
 	if registry != null:
 		registry.mark_destroyed(barrier_id)

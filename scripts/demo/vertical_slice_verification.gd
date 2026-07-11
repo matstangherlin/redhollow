@@ -6,6 +6,7 @@ const VS_STREET := "res://scenes/areas/vertical_slice_street.tscn"
 const VS_CHURCH := "res://scenes/areas/vertical_slice_church.tscn"
 const VS_UNDERGROUND := "res://scenes/areas/vertical_slice_underground.tscn"
 const VS_MAIN := "res://scenes/demo/vertical_slice_greybox.tscn"
+const PRODUCT_MAIN := "res://scenes/product/main_menu.tscn"
 const DIALOGUE_PATH := "res://data/dialogues/dialogues_pt_br.json"
 
 
@@ -21,16 +22,17 @@ func _run_verification() -> void:
 	_verify_area_chain(failures)
 	_verify_dialogue_ids(failures)
 	_verify_demo_scene_nodes(failures)
+	_verify_narrative_data(failures)
 	_verify_no_autoload_duplicates(failures)
 	_verify_boss_encounter_paths(failures)
 
-	suite.finish(failures, 6)
+	suite.finish(failures, 7)
 
 
 func _verify_main_scene(failures: PackedStringArray) -> void:
 	var main_scene: String = String(ProjectSettings.get_setting("application/run/main_scene", ""))
-	if main_scene != VS_MAIN:
-		failures.append("Main scene should be vertical_slice_greybox.tscn.")
+	if main_scene != PRODUCT_MAIN:
+		failures.append("Main scene should be main_menu.tscn for beta shell.")
 
 
 func _verify_area_chain(failures: PackedStringArray) -> void:
@@ -83,8 +85,26 @@ func _verify_dialogue_ids(failures: PackedStringArray) -> void:
 		return
 	var data: Dictionary = parsed as Dictionary
 	var dialogues: Dictionary = data.get("dialogues", {}) as Dictionary
-	if not dialogues.has("elias_vertical_slice_intro"):
-		failures.append("Missing elias_vertical_slice_intro dialogue.")
+	for required_id in [
+		"cz_elias_opening",
+		"cz_deacon_intro",
+		"cz_partner_medallion",
+	]:
+		if not dialogues.has(required_id):
+			failures.append("Missing chapter zero dialogue id: %s." % required_id)
+
+
+func _verify_narrative_data(failures: PackedStringArray) -> void:
+	if not FileAccess.file_exists("res://data/narrative/chapter_zero_objectives.json"):
+		failures.append("Chapter zero objectives JSON missing.")
+	if not FileAccess.file_exists("res://data/narrative/chapter_zero_events.json"):
+		failures.append("Chapter zero events JSON missing.")
+
+	var library := ObjectiveLibrary.new()
+	if not library.load_from_file():
+		failures.append("ObjectiveLibrary failed to load chapter zero objectives.")
+	elif library.get_objectives().is_empty():
+		failures.append("Chapter zero objectives list is empty.")
 
 
 func _verify_demo_scene_nodes(failures: PackedStringArray) -> void:
@@ -95,8 +115,14 @@ func _verify_demo_scene_nodes(failures: PackedStringArray) -> void:
 	var root := demo.instantiate()
 	if root.get_node_or_null("VerticalSliceController/CompletionOverlay") == null:
 		failures.append("Completion overlay missing in demo scene.")
+	if root.get_node_or_null("NarrativeDirector") == null:
+		failures.append("NarrativeDirector missing in demo scene.")
+	if root.get_node_or_null("ObjectiveHud") == null:
+		failures.append("ObjectiveHud missing in demo scene.")
 	if root.get_node_or_null("%SaveManager") == null:
 		failures.append("SaveManager unique name missing in demo scene.")
+	if root.get_node_or_null("ProductShell/PauseMenu") == null:
+		failures.append("ProductShell pause menu missing in demo scene.")
 	if root.get_node_or_null("%AreaTransitionManager") == null:
 		failures.append("AreaTransitionManager unique name missing in demo scene.")
 	root.queue_free()
@@ -104,8 +130,12 @@ func _verify_demo_scene_nodes(failures: PackedStringArray) -> void:
 
 func _verify_no_autoload_duplicates(failures: PackedStringArray) -> void:
 	var autoloads: Variant = ProjectSettings.get_setting("autoload", {})
-	if autoloads is Dictionary and (autoloads as Dictionary).size() > 0:
-		failures.append("Prototype expects no autoloads; found %s." % (autoloads as Dictionary).size())
+	if not (autoloads is Dictionary):
+		return
+	var names: PackedStringArray = PackedStringArray((autoloads as Dictionary).keys())
+	for required in ["SettingsManager", "GameBootState", "InputDeviceManager", "InputSetup"]:
+		if not names.has(required):
+			failures.append("Expected autoload missing: %s." % required)
 
 
 func _verify_boss_encounter_paths(failures: PackedStringArray) -> void:

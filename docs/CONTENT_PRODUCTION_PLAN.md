@@ -25,6 +25,7 @@ Ordem de produção alinhada ao estado técnico (tag `greybox-vertical-slice-v0.
 
 | # | Tarefa | Doc |
 | --- | --- | --- |
+| B0 | Arquitetura de conteúdo data-driven | `ARCHITECTURE.md` ✅ |
 | B1 | Runtime errors headless → zero inesperados | `TECH_DEBT.md` P0 |
 | B2 | Morte/respawn consolidado | P0 |
 | B3 | Reduzir panic unlock | P0 |
@@ -33,6 +34,30 @@ Ordem de produção alinhada ao estado técnico (tag `greybox-vertical-slice-v0.
 | B6 | Decisão auto-load beta | `DECISIONS.md` D-013 |
 
 **Gate:** roteiro greybox sem softlock; `test_runner.gd` limpo.
+
+## Fase F — Jogo final 📋
+
+Novos capítulos **sem** copiar managers:
+
+1. Criar `AreaData` + cenas em `scenes/areas/` (art final substitui greybox incrementalmente).
+2. Criar/atualizar `ChapterData` `.tres` com paths JSON de diálogo/objetivos/eventos.
+3. Registrar boss via `BossData` na cena existente `boss_encounter.tscn`.
+4. Adicionar `chapter_id` a `playable_chapter_ids` no manifesto `full_game.tres`.
+5. QA headless + roteiro manual do capítulo.
+
+**Não:** duplicar Player, duplicar shell, copiar mapas só para demo.
+
+Ordem narrativa macro:
+
+1. Prólogo ritual  
+2. Arco Silas Crow  
+3. Arco Rosa La Serpiente  
+4. Arco Magnus Vane  
+5. Arco Arcturus → Arauto  
+6. Palácio Rubro  
+7. Confronto Mol-Khar + finais  
+
+Ver `FINAL_GAME_SCOPE.md`.
 
 ## Fase C — Arte Capítulo Zero 📋
 
@@ -58,18 +83,6 @@ HUD skin, mapa, objetivos, diário, pausa, Red Brand (≤3 habilidades) — `UI_
 ## Fase E — Integração beta 📋
 
 Roteiro 30–45 min, áudio placeholder→produção, QA `TEST_MATRIX.md`, build Windows.
-
-## Fase F — Jogo final 📋
-
-1. Prólogo ritual  
-2. Arco Silas Crow  
-3. Arco Rosa La Serpiente  
-4. Arco Magnus Vane  
-5. Arco Arcturus → Arauto  
-6. Palácio Rubro  
-7. Confronto Mol-Khar + finais  
-
-Ver `FINAL_GAME_SCOPE.md`.
 
 ## Não produzir agora
 

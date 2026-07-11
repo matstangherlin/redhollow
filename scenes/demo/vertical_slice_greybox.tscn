@@ -14,15 +14,28 @@
 [ext_resource type="PackedScene" path="res://scenes/core/camera_controller.tscn" id="11_camera"]
 [ext_resource type="PackedScene" path="res://scenes/areas/vertical_slice_street.tscn" id="12_street"]
 [ext_resource type="Script" path="res://scripts/demo/vertical_slice_controller.gd" id="13_demo"]
+[ext_resource type="Script" path="res://scripts/core/game_services.gd" id="14_services"]
+[ext_resource type="Script" path="res://scripts/product/product_shell.gd" id="15_shell"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="16_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/loading_screen.tscn" id="17_loading"]
+[ext_resource type="Script" path="res://scripts/narrative/narrative_director.gd" id="18_narrative"]
+[ext_resource type="PackedScene" path="res://scenes/ui/objective_hud.tscn" id="19_objective"]
+[ext_resource type="Script" path="res://scripts/narrative/chapter_zero_finale.gd" id="20_finale"]
+[ext_resource type="PackedScene" path="res://scenes/core/feedback_system.tscn" id="21_feedback"]
 
 [node name="vertical_slice_greybox" type="Node"]
 script = ExtResource("1_game")
+
+[node name="GameServices" type="Node" parent="."]
+script = ExtResource("14_services")
 
 [node name="HitstopController" type="Node" parent="."]
 script = ExtResource("2_hitstop")
 
 [node name="GameplayLockManager" type="Node" parent="."]
 script = ExtResource("2_lock")
+
+[node name="FeedbackSystem" parent="." instance=ExtResource("21_feedback")]
 
 [node name="StyleManager" parent="." instance=ExtResource("3_style")]
 
@@ -51,6 +64,15 @@ initial_spawn_id = &"default"
 [node name="VerticalSliceController" type="Node" parent="."]
 script = ExtResource("13_demo")
 street_scene = ExtResource("12_street")
+finale_controller_path = NodePath("ChapterZeroFinale")
+
+[node name="ChapterZeroFinale" type="Node" parent="VerticalSliceController"]
+script = ExtResource("20_finale")
+
+[node name="NarrativeDirector" type="Node" parent="."]
+script = ExtResource("18_narrative")
+
+[node name="ObjectiveHud" parent="." instance=ExtResource("19_objective")]
 
 [node name="DemoHints" type="CanvasLayer" parent="VerticalSliceController"]
 layer = 5
@@ -65,7 +87,14 @@ offset_bottom = -10.0
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 0.85)
 theme_override_font_sizes/font_size = 12
-text = "A/D mover | Espaço pular | J atacar | K esquivar | L contra-atacar | T provocar | E interagir | U (segurar) Red Brand | Esc destravar | F7 reiniciar"
+text = "Use o controle ou teclado. Menu/Pausa: Esc ou Start."
+
+[node name="ProductShell" type="Node" parent="."]
+script = ExtResource("15_shell")
+
+[node name="PauseMenu" parent="ProductShell" instance=ExtResource("16_pause")]
+
+[node name="LoadingScreen" parent="ProductShell" instance=ExtResource("17_loading")]
 
 [node name="CompletionOverlay" type="CanvasLayer" parent="VerticalSliceController"]
 visible = false
@@ -99,14 +128,14 @@ theme_override_constants/separation = 12
 theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 1
-text = "Demonstração Técnica Concluída"
+text = "Capítulo Zero — O Sino Antes do Anoitecer"
 
 [node name="Body" type="Label" parent="VerticalSliceController/CompletionOverlay/Panel/VBox"]
 theme_override_colors/font_color = Color(0.82, 0.82, 0.86, 1)
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 autowrap_mode = 2
-text = "Você percorreu combate, estilo, Red Brand, diálogo, checkpoint, transições e o mini-chefe Deacon Rusk. Pressione F7 para recomeçar do início."
+text = "Você investigou Red Hollow, atravessou o distrito da igreja, desceu às catacumbas e derrotou Deacon Rusk. Algo antigo despertou — a beta termina aqui. Pressione F7 para recomeçar."
 
 [node name="WorldHost" type="Node2D" parent="."]
 unique_name_in_owner = true

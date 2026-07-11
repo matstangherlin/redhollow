@@ -43,6 +43,38 @@ const SUITES: Array[Dictionary] = [
 		"name": "vertical_slice_regression_tests",
 		"path": "res://scripts/demo/vertical_slice_regression_tests.gd",
 	},
+	{
+		"name": "product_shell_tests",
+		"path": "res://scripts/product/product_shell_tests.gd",
+	},
+	{
+		"name": "narrative_chapter_zero_tests",
+		"path": "res://scripts/narrative/narrative_chapter_zero_tests.gd",
+	},
+	{
+		"name": "vermilite_gunslinger_tests",
+		"path": "res://scripts/enemies/vermilite_gunslinger_tests.gd",
+	},
+	{
+		"name": "chain_penitent_tests",
+		"path": "res://scripts/enemies/chain_penitent_tests.gd",
+	},
+	{
+		"name": "enemy_encounter_tests",
+		"path": "res://scripts/demo/enemy_encounter_tests.gd",
+	},
+	{
+		"name": "player_visual_pipeline_tests",
+		"path": "res://scripts/visual/player_visual_pipeline_tests.gd",
+	},
+	{
+		"name": "feedback_system_tests",
+		"path": "res://scripts/feedback/feedback_system_tests.gd",
+	},
+	{
+		"name": "content_registry_tests",
+		"path": "res://scripts/content/content_registry_tests.gd",
+	},
 ]
 
 

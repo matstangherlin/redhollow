@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://dis6ngrs7e2m3"]
+
+[ext_resource type="Script" path="res://scripts/enemies/chain_penitent.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox_component.gd" id="3_hurtbox"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox_component.gd" id="4_hitbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(38, 58)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(42, 62)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(72, 32)
+
+[node name="ChainPenitent" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Visual" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="BodyVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+color = Color(0.34, 0.3, 0.38, 1)
+polygon = PackedVector2Array(-19, -29, 19, -29, 22, -4, 18, 29, -18, 29)
+
+[node name="HoodVisual" type="Polygon2D" parent="Visual"]
+color = Color(0.22, 0.2, 0.26, 1)
+polygon = PackedVector2Array(-14, -46, 14, -46, 16, -28, -16, -28)
+
+[node name="ChainVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+color = Color(0.72, 0.68, 0.62, 0.85)
+polygon = PackedVector2Array(10, -8, 70, -4, 68, 0, 10, 4, 12, 12, 64, 16, 62, 20, 10, 16)
+
+[node name="TelegraphVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+visible = false
+color = Color(0.95, 0.32, 0.18, 0.35)
+polygon = PackedVector2Array(-36, -20, 72, -20, 78, 20, -36, 20)
+
+[node name="FloorAheadRay" type="RayCast2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, 26)
+target_position = Vector2(28, 48)
+collision_mask = 1
+
+[node name="Components" type="Node2D" parent="."]
+
+[node name="HealthComponent" type="Node" parent="Components"]
+unique_name_in_owner = true
+script = ExtResource("2_health")
+max_health = 18.0
+current_health = 18.0
+
+[node name="HurtboxComponent" type="Area2D" parent="Components"]
+unique_name_in_owner = true
+collision_layer = 64
+collision_mask = 8
+monitoring = false
+script = ExtResource("3_hurtbox")
+owner_node_path = NodePath("../..")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Components/HurtboxComponent"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="HitboxComponent" type="Area2D" parent="Components"]
+unique_name_in_owner = true
+collision_layer = 16
+collision_mask = 32
+monitorable = false
+monitoring = false
+script = ExtResource("4_hitbox")
+owner_node_path = NodePath("../..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Components/HitboxComponent"]
+shape = SubResource("RectangleShape2D_hitbox")
+disabled = true
+
+[node name="DebugLabel" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false

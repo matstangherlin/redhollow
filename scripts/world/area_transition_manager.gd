@@ -2,12 +2,12 @@ extends Node
 class_name AreaTransitionManager
 
 signal area_changed(area_id: StringName, area_scene_path: String)
+signal area_loaded(area: AreaRoot)
+signal area_unloaded(area: AreaRoot)
 signal transition_started(from_area_id: StringName, to_scene_path: String)
 signal transition_finished(area_id: StringName, spawn_id: StringName)
 
 const MANAGER_GROUP := "area_transition_manager"
-const PLAYER_GROUP := "player"
-const PROGRESSION_GROUP := "progression_component"
 
 const STREET_SCENE := "res://scenes/areas/street_test.tscn"
 const CHURCH_SCENE := "res://scenes/areas/church_entrance_test.tscn"
@@ -23,9 +23,10 @@ const UNDERGROUND_SCENE := "res://scenes/areas/underground_test.tscn"
 var is_transitioning: bool = false
 
 var _game_root: Node = null
+var _game_services: GameServices = null
 var _world_host: Node2D = null
 var _player: CharacterBody2D = null
-var _camera_controller: Node2D = null
+var _camera_controller: CameraController = null
 var _progression: ProgressionComponent = null
 var _current_area: AreaRoot = null
 var _current_spawn_id: StringName = &"default"
@@ -41,18 +42,33 @@ func _ready() -> void:
 		return
 
 	add_to_group(MANAGER_GROUP)
-	call_deferred("_bind_lock_manager")
 
 
-func initialize(game_root: Node) -> void:
+func initialize(game_root: Node, services: GameServices = null) -> void:
 	if _initialized:
 		return
 
 	_game_root = game_root
+	_game_services = services
 	_world_host = get_node_or_null(world_host_path) as Node2D
 	_player = get_node_or_null(player_path) as CharacterBody2D
-	_camera_controller = get_node_or_null(camera_controller_path) as Node2D
-	_progression = _find_progression_component()
+	_camera_controller = get_node_or_null(camera_controller_path) as CameraController
+
+	if _game_services != null:
+		if _game_services.progression != null:
+			_progression = _game_services.progression
+		if _game_services.gameplay_lock_manager != null:
+			_lock_manager = _game_services.gameplay_lock_manager
+		if _game_services.player != null:
+			_player = _game_services.player
+		if _game_services.camera_controller != null:
+			_camera_controller = _game_services.camera_controller
+		if _game_services.world_host != null:
+			_world_host = _game_services.world_host
+
+	if _progression == null:
+		_progression = _find_progression_component()
+
 	_initialized = true
 
 	if _current_area == null:
@@ -92,8 +108,7 @@ func restore_area_from_save(area_scene_path: String, spawn_position: Vector2) ->
 	_swap_area_scene(packed_scene, &"default", false)
 	if _player != null:
 		_player.global_position = spawn_position
-		if _player.has_method("set_spawn_position"):
-			_player.call("set_spawn_position", spawn_position)
+		_player.set_spawn_position(spawn_position)
 	_configure_camera_for_current_area(true)
 
 
@@ -108,6 +123,14 @@ func request_transition(exit: AreaExit, _body: Node) -> void:
 	var packed_scene := load(exit.target_scene) as PackedScene
 	if packed_scene == null:
 		push_warning("Area exit '%s' points to missing scene: %s" % [String(exit.exit_id), exit.target_scene])
+		return
+
+	var registry := ContentRegistry.get_active()
+	if registry != null and not registry.can_load_area_scene(exit.target_scene):
+		push_warning(
+			"Area exit '%s' blocked — scene not in active manifest: %s"
+			% [String(exit.exit_id), exit.target_scene]
+		)
 		return
 
 	is_transitioning = true
@@ -176,17 +199,24 @@ func _swap_area_scene(packed_scene: PackedScene, spawn_id: StringName, animate_c
 	_apply_area_settings_to_player()
 	_configure_camera_for_current_area(animate_camera)
 	area_changed.emit(_current_area.area_id, _current_area.get_area_scene_path())
+	area_loaded.emit(_current_area)
 
 
 func _clear_current_area() -> void:
 	if _current_area == null:
 		return
 
-	for exit in _current_area.get_exits():
+	var unloading_area := _current_area
+	area_unloaded.emit(unloading_area)
+
+	for exit in unloading_area.get_exits():
 		if exit.is_connected("exit_triggered", Callable(self, "_on_exit_triggered")):
 			exit.disconnect("exit_triggered", Callable(self, "_on_exit_triggered"))
 
-	_current_area.queue_free()
+	if _game_services != null:
+		_game_services.on_area_unloaded(unloading_area)
+
+	unloading_area.queue_free()
 	_current_area = null
 
 
@@ -208,35 +238,26 @@ func _place_player_at_spawn(spawn_id: StringName) -> void:
 
 	var spawn_position: Vector2 = _current_area.get_spawn_position(spawn_id)
 	_player.global_position = spawn_position
-	if _player.has_method("set_spawn_position"):
-		_player.call("set_spawn_position", spawn_position)
+	_player.set_spawn_position(spawn_position)
 
 
 func _apply_area_settings_to_player() -> void:
 	if _player == null or _current_area == null:
 		return
 
-	if _player.has_method("apply_area_settings"):
-		_player.call(
-			"apply_area_settings",
-			{
-				"fall_recovery_y": _current_area.fall_recovery_y,
-				"area_id": _current_area.area_id,
-			}
-		)
+	_player.apply_area_settings(
+		{
+			"fall_recovery_y": _current_area.fall_recovery_y,
+			"area_id": _current_area.area_id,
+		}
+	)
 
 
 func _configure_camera_for_current_area(animate_camera: bool) -> void:
 	if _camera_controller == null or _current_area == null:
 		return
 
-	if _camera_controller.has_method("configure_for_area"):
-		_camera_controller.call(
-			"configure_for_area",
-			_current_area.camera_limits,
-			_player,
-			not animate_camera
-		)
+	_camera_controller.configure_for_area(_current_area.camera_limits, _player, not animate_camera)
 
 
 func _lock_player() -> void:
@@ -249,8 +270,8 @@ func _lock_player() -> void:
 			)
 		return
 
-	if _player != null and _player.has_method("enter_transition_mode"):
-		_player.call("enter_transition_mode")
+	if _player != null:
+		_player.enter_transition_mode()
 
 
 func _unlock_player() -> void:
@@ -260,13 +281,18 @@ func _unlock_player() -> void:
 		_transition_lock_token = null
 		return
 
-	if _player != null and _player.has_method("exit_transition_mode"):
-		_player.call("exit_transition_mode")
+	if _player != null:
+		_player.exit_transition_mode()
 
 
 func _bind_lock_manager() -> void:
 	if _lock_manager != null:
 		return
+
+	if _game_services != null and _game_services.gameplay_lock_manager != null:
+		_lock_manager = _game_services.gameplay_lock_manager
+		return
+
 	var tree := get_tree()
 	if tree == null:
 		return
@@ -280,24 +306,34 @@ func _notify_world_rebound() -> void:
 	_force_close_dialogue()
 	_unlock_player()
 
-	for node in get_tree().get_nodes_in_group("save_manager"):
-		if node.has_method("rebind_current_area"):
-			node.call("rebind_current_area", _current_area)
+	if _game_services != null:
+		_game_services.on_area_loaded(_current_area)
 
-	for node in get_tree().get_nodes_in_group("style_manager"):
-		if node.has_method("refresh_world_bindings"):
-			node.call("refresh_world_bindings", _current_area)
-
-	for node in get_tree().get_nodes_in_group("red_brand_director"):
-		if node.has_method("refresh_world_bindings"):
-			node.call("refresh_world_bindings")
+	if _current_area != null:
+		for node in get_tree().get_nodes_in_group("narrative_director"):
+			if node.has_method("notify_area_entered"):
+				node.call("notify_area_entered", _current_area.area_id)
 
 
 func _find_progression_component() -> ProgressionComponent:
-	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
+	if _game_services != null and _game_services.progression != null:
+		return _game_services.progression
+
+	for node in get_tree().get_nodes_in_group("progression_component"):
 		if node is ProgressionComponent:
 			return node
 	return null
+
+
+func _force_close_dialogue() -> void:
+	if _game_services != null and _game_services.dialogue_controller != null:
+		_game_services.dialogue_controller.force_reset()
+		return
+
+	for node in get_tree().get_nodes_in_group("dialogue_controller"):
+		if node is DialogueController:
+			(node as DialogueController).force_reset()
+			return
 
 
 func _has_duplicate_manager() -> bool:
@@ -305,9 +341,3 @@ func _has_duplicate_manager() -> bool:
 		if node != self:
 			return true
 	return false
-
-
-func _force_close_dialogue() -> void:
-	for node in get_tree().get_nodes_in_group("dialogue_controller"):
-		if node.has_method("force_reset"):
-			node.call("force_reset")

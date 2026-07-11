@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://dmenbdux67c1e"]
+
+[ext_resource type="Script" path="res://scripts/enemies/vermilite_gunslinger.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/combat/hurtbox_component.gd" id="3_hurtbox"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox_component.gd" id="4_hitbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(32, 54)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(36, 58)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(36, 24)
+
+[node name="VermiliteGunslinger" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Visual" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="BodyVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+color = Color(0.38, 0.22, 0.14, 1)
+polygon = PackedVector2Array(-16, -27, 16, -27, 18, -4, 14, 27, -14, 27)
+
+[node name="CoatVisual" type="Polygon2D" parent="Visual"]
+color = Color(0.28, 0.18, 0.12, 1)
+polygon = PackedVector2Array(-20, -10, 20, -10, 22, 20, -22, 20)
+
+[node name="GunVisual" type="Polygon2D" parent="Visual"]
+color = Color(0.55, 0.55, 0.58, 1)
+polygon = PackedVector2Array(8, -6, 28, -4, 28, 0, 8, 2)
+
+[node name="VermiliteTip" type="Polygon2D" parent="Visual"]
+color = Color(0.92, 0.28, 0.12, 1)
+polygon = PackedVector2Array(24, -3, 30, -3, 30, 1, 24, 1)
+
+[node name="AimVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+visible = false
+color = Color(1, 0.35, 0.12, 0.45)
+polygon = PackedVector2Array(12, -2, 120, -2, 120, 2, 12, 2)
+
+[node name="AlertVisual" type="Polygon2D" parent="Visual"]
+unique_name_in_owner = true
+visible = false
+color = Color(1, 0.42, 0.12, 0.45)
+polygon = PackedVector2Array(-8, -50, 8, -50, 0, -38)
+
+[node name="FloorAheadRay" type="RayCast2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, 24)
+target_position = Vector2(28, 48)
+collision_mask = 1
+
+[node name="Components" type="Node2D" parent="."]
+
+[node name="HealthComponent" type="Node" parent="Components"]
+unique_name_in_owner = true
+script = ExtResource("2_health")
+max_health = 12.0
+current_health = 12.0
+
+[node name="HurtboxComponent" type="Area2D" parent="Components"]
+unique_name_in_owner = true
+collision_layer = 64
+collision_mask = 8
+monitoring = false
+script = ExtResource("3_hurtbox")
+owner_node_path = NodePath("../..")
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Components/HurtboxComponent"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="HitboxComponent" type="Area2D" parent="Components"]
+unique_name_in_owner = true
+collision_layer = 16
+collision_mask = 32
+monitorable = false
+monitoring = false
+script = ExtResource("4_hitbox")
+owner_node_path = NodePath("../..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Components/HitboxComponent"]
+shape = SubResource("RectangleShape2D_hitbox")
+disabled = true
+
+[node name="DebugLabel" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+offset_left = -104.0
+offset_top = -156.0
+offset_right = 180.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 12

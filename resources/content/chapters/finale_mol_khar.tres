@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3 uid="uid://finale_mol_khar"]
+
+[ext_resource type="Script" path="res://scripts/content/chapter_data.gd" id="1_chapter"]
+
+[resource]
+script = ExtResource("1_chapter")
+chapter_id = &"finale_mol_khar"
+title = "Mol-Khar"
+act_label = "Final"
+sort_order = 500
+is_playable = false

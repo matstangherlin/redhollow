@@ -232,6 +232,10 @@ func _reconcile_orphan_dialogue_box() -> void:
 		_hide_dialogue_box()
 
 
+func reload_dialogue_data() -> bool:
+	return _load_dialogue_data()
+
+
 func _load_dialogue_data() -> bool:
 	if not _library.load_from_file(dialogue_data_path):
 		push_warning("DialogueController failed to load dialogue data from %s" % dialogue_data_path)
@@ -303,4 +307,13 @@ func _meets_future_conditions(entry: Dictionary) -> bool:
 	var conditions := entry.get("conditions", {}) as Dictionary
 	if conditions.is_empty():
 		return true
+
+	var tree := get_tree()
+	if tree == null:
+		return true
+
+	for node in tree.get_nodes_in_group("narrative_director"):
+		if node.has_method("meets_dialogue_conditions"):
+			return bool(node.call("meets_dialogue_conditions", conditions))
+
 	return true

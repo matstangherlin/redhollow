@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3 uid="uid://act4_arcturus"]
+
+[ext_resource type="Script" path="res://scripts/content/chapter_data.gd" id="1_chapter"]
+
+[resource]
+script = ExtResource("1_chapter")
+chapter_id = &"act4_arcturus_vale"
+title = "Arcturus Vale"
+act_label = "Ato IV"
+sort_order = 400
+is_playable = false

@@ -1,81 +1,107 @@
 # Red Hollow — Technical Debt
 
-Dívida técnica conhecida. Baseline: tag `greybox-vertical-slice-v0.1` (`ae65a5084c1cbece80672a67d4bc0a6b4d40e5df`). Atualizar quando itens forem resolvidos.
+Dívida técnica conhecida. Baseline histórica: tag `greybox-vertical-slice-v0.1` (`ae65a5084c1cbece80672a67d4bc0a6b4d40e5df`).  
+**Gate de estabilização:** 2026-07-11 — ver `STABILIZATION_REPORT.md`, `KNOWN_ISSUES.md`.
 
 Prioridade:
 
-- **P0** — bloqueia beta estável ou mascara bugs graves
-- **P1** — corrigir antes de escalar conteúdo
+- **P0** — bloqueia release beta ou causa perda/corrupção de progresso sem recuperação
+- **P1** — corrigir antes de escalar conteúdo ou ship beta
 - **P2** — manutenção; aumenta custo se ignorado
+- **P3** — cosmético / documentação
 
 ## P0 — Bloqueadores
 
-### Testes passam com runtime errors residuais
+*Nenhum P0 confirmado pelo gate automatizado de 2026-07-11 (10/10 suítes, 0 unexpected issues).*
 
-- **Estado:** melhorado com `test_runner.gd` + `runtime_error_monitor.gd`; 10 suítes passam no baseline.
-- **Problema:** `combat_arena_tests` ainda declara erros permitidos (`Can't change this state while flushing queries`, warnings de inimigo removido).
-- **Risco:** regressão real mascarada por allowlist.
-- **Direção:** corrigir toggles de colisão com `call_deferred` na produção; reduzir allowlist até zero.
+Itens abaixo eram P0 históricos; reclassificados após refatoração e testes.
 
-### Locks e hitstop — mecanismos globais de emergência
+## P1 — Antes de escalar conteúdo / ship beta
 
-- **Estado:** `GameplayLockManager` + tokens implementados; hitstop não congela `Engine.time_scale`.
-- **Problema:** `Esc` / panic unlock em `game.gd` e demo ainda existem como escape hatch.
-- **Risco:** mascarar softlocks em vez de corrigi-los.
-- **Direção:** auditar cada panic path; remover quando locks cobrirem 100% dos casos.
-
-### Fluxo de morte e respawn não consolidado
+### Fluxo de morte e respawn não consolidado (KI-001)
 
 - **Arquivos:** `player.gd`, `health_component.gd`, `game.gd`
-- **Problema:** morte aplica lock DEATH; respawn por checkpoint/queda/recuperação não unifica estado de combate, locks e HUD.
-- **Risco:** softlock ou estado inválido após morte na beta.
-- **Direção:** `PlayerRespawn` ou serviço único: reset combate, locks, posição, vida, flags de chefe.
+- **Problema:** morte aplica lock DEATH; não há serviço único de respawn (checkpoint automático, overlay, reset HUD/chefe).
+- **Workaround:** **R**, **F7**, **F9**, **Esc** (panic).
+- **Cobertura auto:** `player_regression_tests`, `gameplay_lock_tests` (morte durante hitstop).
+- **Direção:** `PlayerRespawn` ou serviço único na shell.
 
-## P1 — Antes de escalar conteúdo
+### Arena — spawn durante flush de física (KI-002)
 
-### `player.gd` concentra responsabilidades
+- **Arquivo:** `combat_arena_controller.gd` — `_spawn_configured_enemies`
+- **Problema:** headless emite `Can't change this state while flushing queries` (36 erros **permitidos** em `combat_arena_tests`).
+- **Risco:** instabilidade de colisão em runtime real.
+- **Direção:** `call_deferred` para spawn ou ativação pós-frame.
 
-- **Baseline:** ~1700 linhas — entrada, movimento, combate, Red Brand, locks, debug, save-restore.
-- **Direção:** componentes `PlayerInputController`, `PlayerMovementController`, `PlayerStateCoordinator`, `PlayerPresentationController`, `PlayerDebugView` (refatoração em andamento no working tree).
-- **Risco:** regressão em qualquer feature nova.
+### Refatoração local não commitada (KI-003)
 
-### Dependência excessiva de grupos e chamadas dinâmicas
+- **Estado:** commit base `1c8e89d`; controllers + `GameServices` só no working tree.
+- **Risco:** baseline de equipe divergente.
+- **Ação:** commit + tag de gate antes de produção artística paralela.
 
-- **Padrão:** `get_nodes_in_group`, `has_method` + `call`, strings de grupo espalhadas.
-- **Risco:** ordem de init, renome, múltiplas instâncias.
-- **Direção:** sinais, referências exportadas na shell, APIs tipadas.
+### Playthrough manual completo pendente (KI-004)
 
-### SaveManager depende de paths internos
+- **Problema:** checklist 20 passos + stress tests não assinados neste gate.
+- **Ação:** humano segue `VERTICAL_SLICE_TEST_PLAN.md` antes de declarar beta shippable.
 
-- **Baseline:** `_capture_player_state` usa `Components/HealthComponent` e `Components/RedBrandComponent`.
-- **Direção:** `capture_persistence_state()`, `get_health_component()`, `get_red_brand_component()` no player (parcialmente implementado no working tree, não no tag).
+### `player.gd` ainda coordena demais
 
-### StyleManager — dependência rígida de HUD
-
-- **Problema:** espera `$StyleHud`; introspecção de métodos privados do player (`_is_dodging`).
-- **Direção:** sinais públicos; HUD opcional em fixtures de teste.
-
-### AreaTransitionManager — rebinding global frágil
-
-- **Problema:** após swap de área, percorre grupos para save, style, Red Brand, diálogo, checkpoints.
-- **Direção:** contrato `on_area_loaded(area)` na shell ou barramento de eventos tipado.
-
-### Auto-load desativado na vertical slice
-
-- **Cena:** `vertical_slice_greybox.tscn` — `SaveManager.auto_load_on_ready = false`
-- **Intencional:** evitar load de saves incompatíveis; **F9** manual.
-- **Beta:** auto-load só após validação de área + versão + API estável.
+- **Estado:** ~791 linhas (baseline ~1700); combate/defesa/taunt/brand extraídos para controllers.
+- **Restante:** locks, save API, proxies de teste, orquestração.
+- **Direção:** continuar extração conforme `PLAYER_BEHAVIOR_CONTRACT.md`.
 
 ## P2 — Manutenção
 
-| Item | Notas |
+### Locks e hitstop — panic unlock (KI-101)
+
+- **Estado:** `GameplayLockManager` + tokens OK; hitstop não altera `Engine.time_scale`.
+- **Problema:** **Esc** / `enable_debug_panic_unlock` em `game.gd` ainda ativos.
+- **Direção:** remover em builds release; auditar softlocks reais.
+
+### Auto-load desativado na vertical slice (KI-102)
+
+- **Cena:** `vertical_slice_greybox.tscn` — `SaveManager.auto_load_on_ready = false`
+- **Intencional** na demo; beta exige decisão D-013 (`DECISIONS.md`).
+
+### Controllers — `_player.call("_is_*")` residual (KI-103)
+
+- **Arquivos:** `player_*_controller.gd`
+- **Direção:** expandir API pública tipada no player.
+
+### Hitstop via grupo (KI-104)
+
+- **Padrão:** `get_nodes_in_group("hitstop_controller")` + `call` em hitbox/barreira.
+- **Direção:** referência via `GameServices` ou sinal único.
+
+### Debug acoplado ao gameplay (KI-105)
+
+- **Arquivo:** `PlayerDebugView`, overlay **F**
+- **Direção:** desligável em release.
+
+### Grupos como fallback secundário
+
+- **Estado:** `GameServices` + sinais `area_loaded`/`area_unloaded` são primários pós-refatoração.
+- **Restante:** grupos em hitstop, alguns binds legados.
+- **Direção:** reduzir gradualmente.
+
+### Scripts médios crescendo
+
+- `deacon_rusk.gd`, `area_transition_manager.gd`, `vertical_slice_controller.gd`
+
+### Cenas `*_test` vs `vertical_slice_*` (KI-201)
+
+- Consolidar nomenclatura quando áreas legadas forem aposentadas.
+
+## Resolvido (gate 2026-07-11)
+
+| Item | Solução |
 | --- | --- |
-| Documentação desatualizada | Corrigido neste ciclo (`CURRENT_IMPLEMENTATION.md`, etc.) |
-| Caminhos absolutos em docs de teste | Substituir por comandos portáveis (`TEST_MATRIX.md`) |
-| Scripts médios crescendo | `deacon_rusk.gd`, `area_transition_manager.gd`, `vertical_slice_controller.gd` |
-| Debug acoplado ao gameplay | Label enorme no player; mover para overlay desligável em release |
-| Cenas `*_test` vs `vertical_slice_*` | Consolidar nomenclatura quando áreas legadas forem aposentadas |
-| Duplicação de reset | `game.gd`, `vertical_slice_controller.gd`, `dialogue_controller.gd` |
+| SaveManager paths internos | `export_save_state` / `import_save_state` + `PlayerStateSnapshot` |
+| StyleManager `$StyleHud` rígido | `bind_style_hud()` opcional |
+| AreaTransition rebinding por grupos | `GameServices.on_area_loaded` / `on_area_unloaded` |
+| Arena fail-safe silencioso | `arena_integrity_failed` + abort |
+| Zero unexpected runtime errors | 10/10 suítes PASS; allowlist documentada em `TEST_MATRIX.md` |
+| Monolito player ~1700 linhas | Parcial: 791 linhas + 6 controllers dedicados |
 
 ## Funcionalidades congeladas durante refatoração
 
@@ -92,10 +118,11 @@ Não alterar comportamento sem teste completo:
 
 ## Ordem recomendada de pagamento
 
-1. P0 restante: morte/respawn; reduzir allowlist de runtime errors
-2. P1: split player + API save; contratos de rebinding
-3. P1: StyleManager desacoplado
+1. Commit + tag gate; playthrough manual (KI-003, KI-004)
+2. P1: morte/respawn; arena spawn deferred (KI-001, KI-002)
+3. P1: continuar split player se necessário
 4. Decisão auto-load para beta (`DECISIONS.md` D-013)
-5. P2 conforme capacidade
+5. P2: panic unlock, hitstop via serviço, debug release
+6. P2 conforme capacidade
 
-Ver `ARCHITECTURE.md`, `CONTENT_PRODUCTION_PLAN.md`, `DECISIONS.md`.
+Ver `ARCHITECTURE.md`, `CONTENT_PRODUCTION_PLAN.md`, `DECISIONS.md`, `STABILIZATION_REPORT.md`.

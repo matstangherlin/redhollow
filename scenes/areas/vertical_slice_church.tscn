@@ -6,6 +6,11 @@
 [ext_resource type="PackedScene" path="res://scenes/world/red_barrier.tscn" id="4_red_barrier"]
 [ext_resource type="PackedScene" path="res://scenes/world/combat_arena.tscn" id="5_combat_arena"]
 [ext_resource type="PackedScene" path="res://scenes/demo/red_brand_cache.tscn" id="6_red_brand_cache"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/story_prop.tscn" id="7_story_prop"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/chain_penitent.tscn" id="8_penitent"]
+[ext_resource type="PackedScene" path="res://scenes/world/red_barrier.tscn" id="9_red_passage"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/checkpoint.tscn" id="10_checkpoint"]
+[ext_resource type="PackedScene" path="res://scenes/world/narrative_gate.tscn" id="11_gate"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(1800, 48)
@@ -16,7 +21,7 @@ size = Vector2(24, 96)
 [node name="VerticalSliceChurch" type="Node2D"]
 script = ExtResource("1_area_root")
 area_id = &"vs_greybox_church"
-area_display_name = "Entrada da Igreja"
+area_display_name = "Distrito da Igreja"
 camera_limits = Rect2(0, 200, 1800, 1000)
 fall_recovery_y = 1320.0
 area_tint = Color(0.42, 0.4, 0.44, 1)
@@ -28,7 +33,7 @@ offset_right = 360.0
 offset_bottom = 56.0
 theme_override_colors/font_color = Color(0.82, 0.82, 0.86, 1)
 theme_override_font_sizes/font_size = 20
-text = "ENTRADA DA IGREJA"
+text = "DISTRITO DA IGREJA"
 
 [node name="GuideLabel" type="Label" parent="."]
 offset_left = 24.0
@@ -37,7 +42,7 @@ offset_right = 620.0
 offset_bottom = 84.0
 theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 1)
 theme_override_font_sizes/font_size = 13
-text = "Derrote os cultistas do pátio, absorva o Coração Rubro e segure [U] perto da barreira para quebrá-la."
+text = "Penitente, arena combinada, Coração Rubro e passagem Red Brand."
 
 [node name="Solids" type="Node2D" parent="."]
 
@@ -75,6 +80,39 @@ arena_id = &"vs_church_yard"
 completion_flag_id = &"arena_vs_church_yard_complete"
 blocked_exit_paths = Array[NodePath]([NodePath("../../Exits/ToStreetExit"), NodePath("../../Exits/ToUndergroundExit")])
 
+[node name="ChainPenitentAlcove" parent="WorldObjects" groups=["chapter_zero_chain_penitent"] instance=ExtResource("8_penitent")]
+position = Vector2(320, 848)
+
+[node name="PenitentPrompt" type="Label" parent="WorldObjects"]
+offset_left = 220.0
+offset_top = 800.0
+offset_right = 420.0
+offset_bottom = 824.0
+theme_override_font_sizes/font_size = 11
+text = "Penitente — telegraph amplo, pune erro"
+
+[node name="ChurchCheckpoint" parent="WorldObjects" instance=ExtResource("10_checkpoint")]
+position = Vector2(480, 848)
+checkpoint_id = &"vs_church_checkpoint"
+restore_red_brand = false
+
+[node name="RedBrandPassage" parent="WorldObjects" instance=ExtResource("9_red_passage")]
+position = Vector2(880, 836)
+barrier_id = &"vs_church_red_brand_passage"
+
+[node name="PassagePrompt" type="Label" parent="WorldObjects"]
+offset_left = 820.0
+offset_top = 780.0
+offset_right = 980.0
+offset_bottom = 804.0
+theme_override_font_sizes/font_size = 11
+text = "Passagem Red Brand — segure [U]"
+
+[node name="ShortcutToStreet" parent="WorldObjects" instance=ExtResource("11_gate")]
+position = Vector2(1260, 848)
+required_flag = &"cz_red_brand_passage_open"
+gate_label = "Atalho para a rua"
+
 [node name="RedBrandCache" parent="WorldObjects" instance=ExtResource("6_red_brand_cache")]
 position = Vector2(1020, 848)
 required_narrative_flag = &"arena_vs_church_yard_complete"
@@ -82,6 +120,19 @@ required_narrative_flag = &"arena_vs_church_yard_complete"
 [node name="CultRedBarrier" parent="WorldObjects" instance=ExtResource("4_red_barrier")]
 position = Vector2(1150, 836)
 barrier_id = &"vs_church_gate_01"
+
+[node name="OrderDocument" parent="WorldObjects" instance=ExtResource("7_story_prop")]
+position = Vector2(640, 848)
+interaction_id = &"cz_order_document"
+prompt_text = "Ler documento"
+dialogue_id = &"cz_order_document"
+
+[node name="VermiliteReaction" parent="WorldObjects" instance=ExtResource("7_story_prop")]
+position = Vector2(1080, 848)
+interaction_id = &"cz_vermilite_reaction"
+prompt_text = "Tocar Vermilite"
+dialogue_id = &"cz_vermilite_reaction"
+required_flag = &"vs_red_brand_cache_used"
 
 [node name="Exits" type="Node2D" parent="."]
 

@@ -11,10 +11,23 @@ config_version=5
 [application]
 
 config/name="Red Hollow"
-run/main_scene="res://scenes/demo/vertical_slice_greybox.tscn"
+config/version="0.2.0-beta.1"
+config/description="Capítulo Zero — O Sino Antes do Anoitecer (beta local)"
+run/main_scene="res://scenes/product/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 run/max_fps=60
 config/icon="res://icon.svg"
+
+[autoload]
+
+SettingsManager="*res://scripts/settings/settings_manager.gd"
+GameBootState="*res://scripts/product/game_boot_state.gd"
+InputDeviceManager="*res://scripts/input/input_device_manager.gd"
+InputSetup="*res://scripts/input/input_setup.gd"
+
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
 
 [display]
 
@@ -96,6 +109,11 @@ debug_shake={
 demo_return_start={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194331,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+pause={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194305,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
 

@@ -1,7 +1,171 @@
 {
-  "version": 1,
+  "version": 2,
   "locale": "pt_BR",
   "dialogues": {
+    "cz_elias_opening": {
+      "dialogue_id": "cz_elias_opening",
+      "speaker": "Elias",
+      "lines": [
+        "Calder... antes do anoitecer, os sinos tocaram sozinhos. Ninguém estava na torre.",
+        "A igreja fechou. Gente entrou e não voltou. A Ordem tomou as ruas.",
+        "Ergueram uma estátua durante a madrugada — como se sempre tivesse estado aqui.",
+        "Se veio por seu parceiro... ou pelos desaparecidos... não vá sozinho."
+      ],
+      "portrait": null,
+      "actions_on_start": [
+        {"type": "fire_event", "event_id": "cz_evt_chapter_start"}
+      ],
+      "actions_on_end": [
+        {"type": "fire_event", "event_id": "cz_evt_met_elias"}
+      ],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_calder_street_bark": {
+      "dialogue_id": "cz_calder_street_bark",
+      "speaker": "Calder",
+      "lines": [
+        "Red Hollow cheira a pó e ferro. Algo aqui mudou desde a última vez.",
+        "Se meu parceiro passou por aqui, deixou rastro — ou alguém apagou."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
+      "conditions": {"excludes_flags": ["cz_met_elias"]},
+      "choices": []
+    },
+    "cz_street_statue": {
+      "dialogue_id": "cz_street_statue",
+      "lines": [
+        "Uma estátua nova. Rosto liso, mãos cruzadas sobre um vazio em forma de coração.",
+        "Calder: Isso não estava aqui quando saí da cidade."
+      ],
+      "speaker": "Calder",
+      "portrait": null,
+      "actions_on_end": [
+        {"type": "fire_event", "event_id": "cz_evt_statue"}
+      ],
+      "actions_on_start": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_partner_medallion": {
+      "dialogue_id": "cz_partner_medallion",
+      "speaker": "Calder",
+      "lines": [
+        "Medalhão entortado. Iniciais apagadas — mas o encaixe é do meu parceiro.",
+        "Há sangue seco na borda. Não quero concluir o que isso significa... ainda."
+      ],
+      "portrait": null,
+      "actions_on_end": [
+        {"type": "fire_event", "event_id": "cz_evt_partner_clue"}
+      ],
+      "actions_on_start": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_church_door_locked": {
+      "dialogue_id": "cz_church_door_locked",
+      "speaker": "Calder",
+      "lines": [
+        "Porta da igreja trancada por dentro. Marcas de arrasto recentes na soleira.",
+        "Preciso entender o que aconteceu na rua antes de forçar essa entrada."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
+      "conditions": {"excludes_flags": ["cz_met_elias"]},
+      "choices": []
+    },
+    "cz_order_document": {
+      "dialogue_id": "cz_order_document",
+      "speaker": "Documento da Ordem",
+      "lines": [
+        "Relatório parcial — Ordem do Coração Rubro.",
+        "Capturas autorizadas. Interrogatório por exposição prolongada à dor.",
+        "Assinado: Deacon Rusk, executor do distrito."
+      ],
+      "portrait": null,
+      "actions_on_end": [
+        {"type": "fire_event", "event_id": "cz_evt_order_doc"}
+      ],
+      "actions_on_start": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_vermilite_reaction": {
+      "dialogue_id": "cz_vermilite_reaction",
+      "speaker": "Calder",
+      "lines": [
+        "A Vermilite vibra quando passo a mão... como se me reconhecesse.",
+        "A Red Brand responde. Isso não é coincidência."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
+      "conditions": {"requires_flags_any": ["vs_red_brand_cache_used"]},
+      "choices": []
+    },
+    "cz_partner_diary_page": {
+      "dialogue_id": "cz_partner_diary_page",
+      "speaker": "Página rasgada",
+      "lines": [
+        "\"...não confie nos sinos. A igreja não está vazia — está esperando.\"",
+        "\"Se algo me acontecer, procure Rusk. Ele sabe onde levam os que desaparecem.\"",
+        "Calder: Você estava certo, parceiro. Eu devia ter chegado antes."
+      ],
+      "portrait": null,
+      "actions_on_end": [
+        {"type": "fire_event", "event_id": "cz_evt_partner_evidence"}
+      ],
+      "actions_on_start": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_deacon_intro": {
+      "dialogue_id": "cz_deacon_intro",
+      "speaker": "Deacon Rusk",
+      "lines": [
+        "Calder Knox. A Ordem esperava que a Red Brand tivesse feito de você um servo.",
+        "Você deveria ter se curvado quando a marca queimou. Em vez disso, veio investigar desaparecidos.",
+        "Eu capturo. Eu extraio. A dor revela o que os lábios escondem.",
+        "Estas catacumbas não são túmulo — são corredor. E eu sou o guardião."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_marked_cartridge": {
+      "dialogue_id": "cz_marked_cartridge",
+      "speaker": "Calder",
+      "lines": [
+        "Cartucho marcado à mão. Não é meu — mas alguém deixou de propósito.",
+        "Iniciais do meu parceiro raspadas no metal. Pista, não resposta."
+      ],
+      "portrait": null,
+      "actions_on_end": [
+        {"type": "fire_event", "event_id": "cz_evt_marked_cartridge"},
+        {"type": "fire_event", "event_id": "cz_evt_secret_found"}
+      ],
+      "actions_on_start": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_alley_bulletin": {
+      "dialogue_id": "cz_alley_bulletin",
+      "speaker": "Aviso rasgado",
+      "lines": [
+        "Pela ordem do Deacon Rusk, ninguém circula após o sino vespertino.",
+        "Contravenientes serão conduzidos à igreja para interrogatório."
+      ],
+      "portrait": null,
+      "actions_on_end": [],
+      "actions_on_start": [],
+      "conditions": {},
+      "choices": []
+    },
     "elias_church_warning": {
       "dialogue_id": "elias_church_warning",
       "speaker": "Elias",

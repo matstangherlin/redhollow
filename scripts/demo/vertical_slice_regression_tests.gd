@@ -3,6 +3,7 @@ extends SceneTree
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
 const VS_MAIN := "res://scenes/demo/vertical_slice_greybox.tscn"
+const PRODUCT_MAIN := "res://scenes/product/main_menu.tscn"
 const VS_STREET := "res://scenes/areas/vertical_slice_street.tscn"
 const VS_CHURCH := "res://scenes/areas/vertical_slice_church.tscn"
 const VS_UNDERGROUND := "res://scenes/areas/vertical_slice_underground.tscn"
@@ -30,14 +31,19 @@ func _run_tests() -> void:
 	_test_gameplay_lock_presence(failures)
 	_test_completion_controller(failures)
 	_test_player_reset_contract(failures)
+	_test_narrative_scene_contract(failures)
 
-	suite.finish(failures, 13)
+	suite.finish(failures, 14)
 
 
 func _test_main_scene(failures: PackedStringArray) -> void:
 	var main_scene := String(ProjectSettings.get_setting("application/run/main_scene", ""))
-	if main_scene != VS_MAIN:
-		failures.append("Main scene must remain vertical_slice_greybox for slice regression.")
+	if main_scene != PRODUCT_MAIN:
+		failures.append("Main scene must be main_menu.tscn for beta product shell.")
+
+	var menu := load(PRODUCT_MAIN) as PackedScene
+	if menu == null:
+		failures.append("main_menu.tscn must load.")
 
 
 func _test_demo_scene_contract(failures: PackedStringArray) -> void:
@@ -50,6 +56,11 @@ func _test_demo_scene_contract(failures: PackedStringArray) -> void:
 	for path in [
 		"VerticalSliceController",
 		"VerticalSliceController/CompletionOverlay",
+		"VerticalSliceController/ChapterZeroFinale",
+		"NarrativeDirector",
+		"ObjectiveHud",
+		"ProductShell",
+		"ProductShell/PauseMenu",
 		"%SaveManager",
 		"%AreaTransitionManager",
 		"HitstopController",
@@ -114,6 +125,12 @@ func _test_street_flow_nodes(failures: PackedStringArray) -> void:
 
 	if street.get_node_or_null("WorldObjects/CultBrawlerStreet") == null:
 		failures.append("Street must keep CultBrawler encounter for slice flow.")
+	if street.get_node_or_null("WorldObjects/Elias") == null:
+		failures.append("Street must keep Elias for chapter zero opening.")
+	if street.get_node_or_null("WorldObjects/PartnerMedallion") == null:
+		failures.append("Street must keep partner medallion story prop.")
+	if street.get_node_or_null("WorldObjects/NightStatue") == null:
+		failures.append("Street must keep night statue story prop.")
 
 	street.queue_free()
 
@@ -124,6 +141,10 @@ func _test_church_flow_nodes(failures: PackedStringArray) -> void:
 		failures.append("Church must keep CultRedBarrier for slice flow.")
 	if church.get_node_or_null("WorldObjects/ChurchYardArena") == null:
 		failures.append("Church must keep CombatArena for slice flow.")
+	if church.get_node_or_null("WorldObjects/OrderDocument") == null:
+		failures.append("Church must keep Order document story prop.")
+	if church.get_node_or_null("WorldObjects/VermiliteReaction") == null:
+		failures.append("Church must keep Vermilite reaction story prop.")
 
 	church.queue_free()
 
@@ -138,6 +159,10 @@ func _test_underground_flow_nodes(failures: PackedStringArray) -> void:
 		failures.append("Underground must keep Deacon Rusk.")
 	if underground.get_node_or_null("WorldObjects/DeaconRuskEncounter") == null:
 		failures.append("Underground must keep boss encounter controller.")
+	if underground.get_node_or_null("WorldObjects/PartnerDiaryPage") == null:
+		failures.append("Underground must keep partner diary story prop.")
+	if underground.get_node_or_null("WorldObjects/ColossalStatue") == null:
+		failures.append("Underground must keep colossal statue prop for finale.")
 
 	underground.queue_free()
 
@@ -153,7 +178,12 @@ func _test_dialogue_contract(failures: PackedStringArray) -> void:
 		return
 
 	var dialogues: Dictionary = (parsed as Dictionary).get("dialogues", {})
-	for required_id in ["elias_vertical_slice_intro", "elias_church_warning"]:
+	for required_id in [
+		"cz_elias_opening",
+		"cz_deacon_intro",
+		"cz_partner_medallion",
+		"cz_partner_diary_page",
+	]:
 		if not dialogues.has(required_id):
 			failures.append("Missing required dialogue id: %s." % required_id)
 
@@ -225,3 +255,14 @@ func _test_player_reset_contract(failures: PackedStringArray) -> void:
 		failures.append("return_to_start flow must release gameplay locks via GameplayLockManager.")
 	if not source.contains("begin_new_session"):
 		failures.append("return_to_start flow must begin a new gameplay session.")
+
+
+func _test_narrative_scene_contract(failures: PackedStringArray) -> void:
+	if not FileAccess.file_exists("res://data/narrative/chapter_zero_objectives.json"):
+		failures.append("Chapter zero objectives data missing.")
+	if not FileAccess.file_exists("res://data/narrative/chapter_zero_events.json"):
+		failures.append("Chapter zero events data missing.")
+
+	var tracker := ObjectiveTracker.new()
+	if not tracker.load_objectives():
+		failures.append("ObjectiveTracker must load chapter zero objectives.")

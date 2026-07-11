@@ -186,8 +186,10 @@ func _test_scene_contract(failures: PackedStringArray, player: CharacterBody2D) 
 			failures.append("Missing required unique node '%s'." % node_name)
 
 	for controller_name in [
-		"PlayerInputController", "PlayerMovementController", "PlayerStateCoordinator",
-		"PlayerPresentationController", "PlayerDebugView",
+		"PlayerInputController", "PlayerMovementController", "PlayerAttackController",
+		"PlayerRedBrandController", "PlayerDefenseController", "PlayerTauntController",
+		"PlayerStateCoordinator", "PlayerPresentationController",
+		"PlayerDebugView",
 	]:
 		if player.get_node_or_null("Controllers/" + controller_name) == null:
 			failures.append("Missing controller node '%s'." % controller_name)

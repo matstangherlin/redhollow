@@ -81,7 +81,9 @@ func _add_exit(parent: Node2D, position: Vector2, exit_name: String) -> AreaExit
 func _wire_arena(
 	arena: CombatArenaController,
 	exits: Array[AreaExit],
-	reset_state: bool = true
+	reset_state: bool = true,
+	style_manager: StyleManager = null,
+	progression: ProgressionComponent = null
 ) -> void:
 	var gate_left: CombatArenaGate = CombatArenaGateScene.instantiate()
 	var gate_right: CombatArenaGate = CombatArenaGateScene.instantiate()
@@ -96,6 +98,7 @@ func _wire_arena(
 		NodePath(exits[1].get_path()),
 	]
 	arena._resolve_nodes()
+	arena.bind_combat_services(style_manager, progression)
 	if reset_state:
 		arena._set_state(CombatArenaController.ArenaState.INACTIVE)
 	if arena._activation_zone != null and not arena._activation_zone.body_entered.is_connected(
@@ -175,7 +178,7 @@ func _test_activation_and_blocking(
 	var arena := _build_test_arena(parent)
 	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
 	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
-	_wire_arena(arena, [exit_left, exit_right])
+	_wire_arena(arena, [exit_left, exit_right], true, style_manager as StyleManager, progression as ProgressionComponent)
 
 	var messages: Array[String] = []
 	arena.arena_message_shown.connect(func(message: String) -> void: messages.append(message))
@@ -205,7 +208,7 @@ func _test_partial_defeat(failures: PackedStringArray, parent: Node2D) -> void:
 	var arena := _build_test_arena(parent)
 	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
 	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
-	_wire_arena(arena, [exit_left, exit_right])
+	_wire_arena(arena, [exit_left, exit_right], true, null, null)
 
 	var player := _add_player(parent, Vector2(720, 848))
 	await TestHelpers.await_frames(self, 2)
@@ -238,7 +241,7 @@ func _test_full_completion(
 	var arena := _build_test_arena(parent)
 	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
 	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
-	_wire_arena(arena, [exit_left, exit_right])
+	_wire_arena(arena, [exit_left, exit_right], true, style_manager as StyleManager, progression as ProgressionComponent)
 
 	var completion_tracker := {"done": false}
 	arena.arena_completed.connect(
@@ -285,7 +288,7 @@ func _test_no_reactivation(failures: PackedStringArray, parent: Node2D, progress
 	var arena := _build_test_arena(parent)
 	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
 	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
-	_wire_arena(arena, [exit_left, exit_right], false)
+	_wire_arena(arena, [exit_left, exit_right], false, null, progression as ProgressionComponent)
 	await TestHelpers.await_frames(self, 1)
 
 	if arena.state != CombatArenaController.ArenaState.COMPLETED:
@@ -327,7 +330,7 @@ func _test_foreign_enemy_ignored(failures: PackedStringArray, parent: Node2D) ->
 	var arena := _build_test_arena(parent)
 	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
 	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
-	_wire_arena(arena, [exit_left, exit_right])
+	_wire_arena(arena, [exit_left, exit_right], true, null, null)
 
 	var foreign_brawler: Node = CultBrawlerScene.instantiate()
 	foreign_brawler.global_position = Vector2(1200, 848)

@@ -3,6 +3,8 @@ class_name BossEncounterController
 
 signal encounter_started(encounter_id: StringName)
 signal boss_defeated(boss_id: StringName)
+signal encounter_completed(encounter_id: StringName)
+signal boss_hud_bound(boss_id: StringName)
 signal encounter_message_shown(message: String)
 
 enum EncounterState {
@@ -35,6 +37,9 @@ var _feedback_label: Label = null
 var _gates: Array[CombatArenaGate] = []
 var _blocked_exits: Array[AreaExit] = []
 var _status_timer: SceneTreeTimer = null
+var _style_manager: StyleManager = null
+var _progression: ProgressionComponent = null
+var _boss_health_hud: BossHealthHud = null
 
 
 func _ready() -> void:
@@ -48,6 +53,16 @@ func _ready() -> void:
 	_set_state(EncounterState.INACTIVE)
 	if _activation_zone != null:
 		_activation_zone.body_entered.connect(_on_activation_body_entered)
+
+
+func bind_encounter_services(
+	style_manager: StyleManager = null,
+	progression: ProgressionComponent = null,
+	boss_health_hud: BossHealthHud = null
+) -> void:
+	_style_manager = style_manager
+	_progression = progression
+	_boss_health_hud = boss_health_hud
 
 
 func is_blocking_exits() -> bool:
@@ -92,6 +107,7 @@ func _start_encounter() -> void:
 		_boss.activate_boss()
 	_show_status_message("Deacon Rusk")
 	encounter_started.emit(encounter_id)
+	_start_intro_dialogue()
 
 	if _boss != null and not _boss.boss_defeated.is_connected(_on_boss_defeated):
 		_boss.boss_defeated.connect(_on_boss_defeated, CONNECT_ONE_SHOT)
@@ -111,7 +127,19 @@ func _complete_encounter(boss_id: StringName) -> void:
 	_mark_complete_in_progression()
 	_grant_style_completion_bonus()
 	_show_status_message("Executor caído")
+	encounter_completed.emit(encounter_id)
 	boss_defeated.emit(boss_id)
+
+
+func _start_intro_dialogue() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group("dialogue_controller"):
+		if node is DialogueController:
+			var player := tree.get_first_node_in_group("player")
+			(node as DialogueController).try_start_dialogue(&"cz_deacon_intro", player, self)
+			return
 
 
 func _apply_completed_state() -> void:
@@ -120,18 +148,22 @@ func _apply_completed_state() -> void:
 	_set_exits_blocked(false)
 	_disable_activation_zone()
 	if _boss != null:
-		if _boss.has_method("mark_encounter_cleared"):
-			_boss.call("mark_encounter_cleared")
-		elif _boss.has_method("_set_dormant"):
-			_boss.call("_set_dormant", true)
+		_boss.mark_encounter_cleared()
 
 
 func _bind_boss_hud() -> void:
 	if _boss == null:
 		return
+
+	if _boss_health_hud != null:
+		_boss_health_hud.bind_boss(_boss)
+		boss_hud_bound.emit(_boss.boss_id if _boss.boss_id != &"" else encounter_id)
+		return
+
 	for node in get_tree().get_nodes_in_group(BOSS_HUD_GROUP):
-		if node.has_method("bind_boss"):
-			node.call("bind_boss", _boss)
+		if node is BossHealthHud:
+			(node as BossHealthHud).bind_boss(_boss)
+			boss_hud_bound.emit(_boss.boss_id if _boss.boss_id != &"" else encounter_id)
 			return
 
 
@@ -179,26 +211,39 @@ func _hide_status_message() -> void:
 func _grant_style_completion_bonus() -> void:
 	if style_completion_bonus <= 0.0:
 		return
+
+	if _style_manager != null:
+		_style_manager.grant_style_reward(style_completion_bonus, "Boss +%.0f" % style_completion_bonus)
+		return
+
 	for node in get_tree().get_nodes_in_group(STYLE_MANAGER_GROUP):
-		if node.has_method("grant_style_reward"):
-			node.call("grant_style_reward", style_completion_bonus, "Boss +%.0f" % style_completion_bonus)
+		if node is StyleManager:
+			(node as StyleManager).grant_style_reward(style_completion_bonus, "Boss +%.0f" % style_completion_bonus)
 			return
 
 
 func _mark_complete_in_progression() -> void:
 	if completion_flag_id == &"":
 		return
+
+	if _progression != null:
+		_progression.set_narrative_flag(completion_flag_id, true)
+		return
+
 	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
-		if node.has_method("set_narrative_flag"):
-			node.call("set_narrative_flag", completion_flag_id, true)
+		if node is ProgressionComponent:
+			(node as ProgressionComponent).set_narrative_flag(completion_flag_id, true)
 			return
 
 
 func _is_marked_complete_in_progression() -> bool:
 	if completion_flag_id == &"":
 		return false
+
+	if _progression != null:
+		return bool(_progression.narrative_flags.get(String(completion_flag_id), false))
+
 	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
-		if node.get("narrative_flags") is Dictionary:
-			var flags: Dictionary = node.get("narrative_flags")
-			return bool(flags.get(String(completion_flag_id), false))
+		if node is ProgressionComponent:
+			return bool((node as ProgressionComponent).narrative_flags.get(String(completion_flag_id), false))
 	return false

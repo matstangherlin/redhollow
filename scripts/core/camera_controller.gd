@@ -1,4 +1,5 @@
 extends Node2D
+class_name CameraController
 
 const CAMERA_CONTROLLER_GROUP := "camera_controller"
 const DEFAULT_TARGET_SPEED_REFERENCE := 240.0
@@ -16,6 +17,8 @@ const DEFAULT_TARGET_SPEED_REFERENCE := 240.0
 @export var look_ahead_speed: float = 4.5
 @export var max_shake_offset: float = 18.0
 @export var shake_decay: float = 42.0
+@export var max_punch_zoom: float = 0.05
+@export var punch_zoom_decay: float = 8.0
 @export var debug_shake_action: StringName = &"debug_shake"
 @export var debug_shake_intensity: float = 10.0
 @export var debug_shake_duration: float = 0.30
@@ -26,6 +29,8 @@ var target: Node2D
 var base_position: Vector2 = Vector2.ZERO
 var look_ahead_offset: float = 0.0
 var active_shakes: Array = []
+var _punch_zoom_offset: float = 0.0
+var _base_zoom: Vector2 = Vector2.ONE
 
 
 func _ready() -> void:
@@ -40,6 +45,28 @@ func _ready() -> void:
 
 	_apply_camera_limits()
 	camera.make_current()
+	_base_zoom = camera.zoom
+
+
+func request_punch_zoom(amount: float, duration: float) -> void:
+	if camera == null or amount <= 0.0 or duration <= 0.0:
+		return
+
+	var accessibility_scale := FeedbackSettingsAccess.get_screen_shake_multiplier()
+
+	if accessibility_scale <= 0.0:
+		return
+
+	var safe_amount := minf(amount * accessibility_scale, max_punch_zoom)
+	_punch_zoom_offset = maxf(_punch_zoom_offset, safe_amount)
+	var tween := create_tween()
+	tween.tween_method(_set_punch_zoom_offset, _punch_zoom_offset, 0.0, duration)
+
+
+func _set_punch_zoom_offset(value: float) -> void:
+	_punch_zoom_offset = maxf(value, 0.0)
+	if camera != null:
+		camera.zoom = _base_zoom * (1.0 + _punch_zoom_offset)
 
 
 func _physics_process(delta: float) -> void:
@@ -55,12 +82,14 @@ func configure_for_area(limits: Rect2, new_target: Node2D = null, snap_immediate
 	area_limits = limits
 	look_ahead_offset = 0.0
 	active_shakes.clear()
+	_punch_zoom_offset = 0.0
 
 	if camera == null:
 		camera = get_node_or_null("%Camera2D") as Camera2D
 
 	if camera != null:
 		camera.offset = Vector2.ZERO
+		camera.zoom = _base_zoom
 
 	_apply_camera_limits()
 
@@ -74,6 +103,14 @@ func configure_for_area(limits: Rect2, new_target: Node2D = null, snap_immediate
 
 func request_shake(intensity: float, duration: float) -> void:
 	if intensity <= 0.0 or duration <= 0.0:
+		return
+
+	if FeedbackSettingsAccess.get_screen_shake_multiplier() <= 0.0:
+		return
+
+	var accessibility_scale := FeedbackSettingsAccess.get_screen_shake_multiplier()
+	intensity *= accessibility_scale
+	if intensity <= 0.0:
 		return
 
 	active_shakes.append({

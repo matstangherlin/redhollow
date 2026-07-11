@@ -1,0 +1,128 @@
+[gd_scene load_steps=7 format=3 uid="uid://cmainmenu001"]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu_controller.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/options_menu.tscn" id="2_options"]
+[ext_resource type="PackedScene" path="res://scenes/ui/credits_screen.tscn" id="3_credits"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirmation_dialog.tscn" id="4_confirm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/loading_screen.tscn" id="5_loading"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.07, 0.09, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.22, 0.16, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 24.0
+content_margin_top = 24.0
+content_margin_right = 24.0
+content_margin_bottom = 24.0
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.04, 0.06, 1)
+
+[node name="Layout" type="HBoxContainer" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 48
+alignment = 1
+
+[node name="TitleBlock" type="VBoxContainer" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Layout/TitleBlock"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 56
+text = "RED HOLLOW"
+
+[node name="SubtitleLabel" type="Label" parent="Layout/TitleBlock"]
+theme_override_colors/font_color = Color(0.72, 0.68, 0.64, 1)
+theme_override_font_sizes/font_size = 18
+text = "Capítulo Zero — Beta Pública"
+
+[node name="MenuPanel" type="PanelContainer" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MenuVBox" type="VBoxContainer" parent="Layout/MenuPanel"]
+theme_override_constants/separation = 12
+
+[node name="NewGameButton" type="Button" parent="Layout/MenuPanel/MenuVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 44)
+text = "Novo Jogo"
+
+[node name="ContinueButton" type="Button" parent="Layout/MenuPanel/MenuVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 44)
+text = "Continuar"
+
+[node name="OptionsButton" type="Button" parent="Layout/MenuPanel/MenuVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 44)
+text = "Opções"
+
+[node name="CreditsButton" type="Button" parent="Layout/MenuPanel/MenuVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 44)
+text = "Créditos"
+
+[node name="QuitButton" type="Button" parent="Layout/MenuPanel/MenuVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 44)
+text = "Sair"
+
+[node name="StatusLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -40.0
+offset_right = 300.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 0.85)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="OptionsMenu" parent="." instance=ExtResource("2_options")]
+unique_name_in_owner = true
+
+[node name="CreditsScreen" parent="." instance=ExtResource("3_credits")]
+unique_name_in_owner = true
+
+[node name="ConfirmationDialog" parent="." instance=ExtResource("4_confirm")]
+unique_name_in_owner = true
+
+[node name="LoadingScreen" parent="." instance=ExtResource("5_loading")]
+unique_name_in_owner = true

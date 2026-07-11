@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PlayerVisualProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/visual/player_visual_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"calder_placeholder"
+visual_mode = 0
+use_procedural_pilot_frames = false
+attack_animation_map = {}

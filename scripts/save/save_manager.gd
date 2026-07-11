@@ -28,13 +28,14 @@ const DEFAULT_SCENE_PATH := "res://scenes/demo/vertical_slice_greybox.tscn"
 
 var _game_root: Node = null
 var _arena: Node = null
-var _player: Node = null
+var _player: CharacterBody2D = null
 var _progression: ProgressionComponent = null
 var _barrier_registry: BarrierRegistry = null
 var _current_save: Dictionary = SaveData.create_default()
 var _scene_ready: bool = false
 var _pending_load: bool = false
 var _transition_manager: AreaTransitionManager = null
+var _services: GameServices = null
 var _last_debug_message: String = ""
 
 
@@ -62,9 +63,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			_set_debug_message("Load failed. See debug output.")
 
 
-func bind_game(game_root: Node, arena: Node = null, transition_manager: AreaTransitionManager = null) -> void:
+func bind_game(
+	game_root: Node,
+	arena: Node = null,
+	transition_manager: AreaTransitionManager = null,
+	services: GameServices = null
+) -> void:
 	_game_root = game_root
 	_transition_manager = transition_manager
+	_services = services
 	_arena = arena
 	if _arena == null and _transition_manager != null:
 		_arena = _transition_manager.get_current_area()
@@ -136,6 +143,17 @@ func load_game() -> bool:
 		save_validation_warning.emit(warning)
 		_set_debug_message(warning)
 
+	var registry := ContentRegistry.get_active()
+	if registry != null and not registry.is_save_compatible_with_manifest(loaded):
+		var manifest_warning := (
+			"Save profile/manifest incompatible with active build (%s)."
+			% String(registry.get_manifest_id())
+		)
+		push_warning(manifest_warning)
+		save_validation_warning.emit(manifest_warning)
+		save_failed.emit(slot_id, "manifest_incompatible")
+		return false
+
 	_current_save = loaded
 	_apply_save_state(_current_save)
 	save_loaded.emit(slot_id)
@@ -159,6 +177,38 @@ func delete_save() -> bool:
 
 func has_save() -> bool:
 	return FileAccess.file_exists(get_slot_save_path()) or FileAccess.file_exists(get_slot_backup_path())
+
+
+static func inspect_slot(slot: String = DEFAULT_SLOT_ID) -> Dictionary:
+	var save_path := "%s/%s.save.json" % [SAVE_DIR, slot]
+	var backup_path := "%s/%s.save.bak" % [SAVE_DIR, slot]
+	var path := save_path if FileAccess.file_exists(save_path) else backup_path
+	if not FileAccess.file_exists(path):
+		return {"status": "none", "message": ""}
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {"status": "corrupted", "message": "Save corrompido — use Novo Jogo."}
+
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed == null:
+		return {"status": "corrupted", "message": "Save corrompido — use Novo Jogo."}
+
+	var validation := SaveData.validate(parsed)
+	if not validation.get("valid", false):
+		return {
+			"status": "corrupted",
+			"message": "Save inválido (%s)." % String(validation.get("reason", "unknown")),
+		}
+
+	if not validation.get("compatible", true):
+		return {
+			"status": "incompatible",
+			"message": "Save incompatível com esta versão — use Novo Jogo.",
+		}
+
+	return {"status": "valid", "message": "Progresso encontrado."}
 
 
 func create_backup() -> bool:
@@ -220,13 +270,9 @@ func _apply_checkpoint_to_player(
 	restore_health: bool,
 	restore_red_brand: bool
 ) -> void:
-	var player := interactor if interactor != null and interactor.is_in_group(PLAYER_GROUP) else _player
-	if player == null:
-		return
-
-	if player.has_method("apply_checkpoint"):
-		player.call(
-			"apply_checkpoint",
+	var player_node := interactor if interactor != null and interactor.is_in_group(PLAYER_GROUP) else _player
+	if player_node is CharacterBody2D:
+		(player_node as CharacterBody2D).apply_checkpoint(
 			checkpoint_position,
 			restore_health,
 			restore_red_brand
@@ -254,6 +300,13 @@ func _capture_game_state() -> Dictionary:
 	if _barrier_registry != null:
 		save_data["destroyed_barriers"] = _barrier_registry.export_destroyed_state()
 
+	var registry := ContentRegistry.get_active()
+	if registry != null:
+		save_data["content_manifest_id"] = String(registry.get_manifest_id())
+		var chapter_id := registry.get_chapter_id_for_area_scene(String(save_data.get("current_scene", "")))
+		if chapter_id != &"":
+			save_data["chapter_id"] = String(chapter_id)
+
 	if _player != null:
 		var player_state := _capture_player_state(_player)
 		if not String(save_data.get("checkpoint_id", "")).is_empty():
@@ -271,37 +324,9 @@ func _capture_game_state() -> Dictionary:
 
 
 func _capture_player_state(player: Node) -> Dictionary:
-	if player.has_method("capture_persistence_state"):
-		return player.call("capture_persistence_state") as Dictionary
-
-	var state := {
-		"spawn_position": {"x": 0.0, "y": 0.0},
-		"max_health": 12.0,
-		"current_health": 12.0,
-		"red_brand_energy": 0.0,
-	}
-
-	if player.has_method("get_spawn_position"):
-		var spawn_position: Vector2 = player.call("get_spawn_position")
-		state["spawn_position"] = {"x": spawn_position.x, "y": spawn_position.y}
-	elif player is Node2D:
-		var node_2d := player as Node2D
-		state["spawn_position"] = {"x": node_2d.global_position.x, "y": node_2d.global_position.y}
-
-	var health: Node = null
-	if player.has_method("get_health_component"):
-		health = player.call("get_health_component") as Node
-	if health != null:
-		state["max_health"] = float(health.get("max_health"))
-		state["current_health"] = float(health.get("current_health"))
-
-	var red_brand: Node = null
-	if player.has_method("get_red_brand_component"):
-		red_brand = player.call("get_red_brand_component") as Node
-	if red_brand != null:
-		state["red_brand_energy"] = float(red_brand.get("current_energy"))
-
-	return state
+	if player is CharacterBody2D:
+		return PlayerStateSnapshot.capture(player as CharacterBody2D)
+	return PlayerStateSnapshot.capture(null)
 
 
 func _apply_save_state(save_data: Dictionary) -> void:
@@ -339,12 +364,12 @@ func _apply_save_state(save_data: Dictionary) -> void:
 			save_validation_warning.emit(warning)
 			_set_debug_message(warning)
 
-	if _player != null and _player.has_method("apply_save_state"):
+	if _player is CharacterBody2D:
 		var player_save := save_data
 		if not area_restored:
 			player_save = save_data.duplicate(true)
 			player_save.erase("checkpoint_position")
-		_player.call("apply_save_state", player_save)
+		PlayerStateSnapshot.apply(_player as CharacterBody2D, player_save, area_restored)
 
 	_release_loading_lock(loading_token)
 	call_deferred("_sync_checkpoint_visuals_from_save")
@@ -429,9 +454,28 @@ func _bind_runtime_systems() -> void:
 	if not is_inside_tree():
 		return
 
-	_player = _find_player()
-	_progression = _find_progression_component()
-	_barrier_registry = _find_barrier_registry()
+	if _services != null:
+		if _services.player != null:
+			_player = _services.player
+		if _services.progression != null:
+			_progression = _services.progression
+		if _services.barrier_registry != null:
+			_barrier_registry = _services.barrier_registry
+
+	if _player == null:
+		_player = _find_player()
+	if _progression == null:
+		_progression = _find_progression_component()
+	if _barrier_registry == null:
+		_barrier_registry = _find_barrier_registry()
+
+
+func _find_player() -> CharacterBody2D:
+	if _services != null and _services.player != null:
+		return _services.player
+
+	var grouped := get_tree().get_first_node_in_group(PLAYER_GROUP)
+	return grouped as CharacterBody2D
 
 
 func _connect_checkpoints() -> void:
@@ -459,16 +503,10 @@ func _on_checkpoint_activated(
 	on_checkpoint_activated(checkpoint_id, checkpoint_position, interactor, restore_health, restore_red_brand)
 
 
-func _find_player() -> Node:
-	if _arena != null:
-		var arena_player := _arena.get_node_or_null("Player")
-		if arena_player != null:
-			return arena_player
-
-	return get_tree().get_first_node_in_group(PLAYER_GROUP)
-
-
 func _find_progression_component() -> ProgressionComponent:
+	if _services != null and _services.progression != null:
+		return _services.progression
+
 	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
 		if node is ProgressionComponent:
 			return node
@@ -476,6 +514,8 @@ func _find_progression_component() -> ProgressionComponent:
 
 
 func _find_barrier_registry() -> BarrierRegistry:
+	if _services != null and _services.barrier_registry != null:
+		return _services.barrier_registry
 	for node in get_tree().get_nodes_in_group(REGISTRY_GROUP):
 		if node is BarrierRegistry:
 			return node
@@ -497,12 +537,10 @@ func _has_duplicate_manager() -> bool:
 func _is_saved_area_restorable(area_scene_path: String) -> bool:
 	if area_scene_path.is_empty() or not ResourceLoader.exists(area_scene_path):
 		return false
-
-	var main_scene := String(ProjectSettings.get_setting("application/run/main_scene", ""))
-	if main_scene.ends_with("vertical_slice_greybox.tscn"):
-		return area_scene_path.find("vertical_slice_") != -1
-
-	return true
+	var registry := ContentRegistry.get_active()
+	if registry != null:
+		return registry.can_load_area_scene(area_scene_path)
+	return area_scene_path.find("vertical_slice_") != -1
 
 
 func _set_debug_message(message: String) -> void:
@@ -531,6 +569,9 @@ func _release_loading_lock(token: GameplayLockToken) -> void:
 
 
 func _find_gameplay_lock_manager() -> GameplayLockManager:
+	if _services != null and _services.gameplay_lock_manager != null:
+		return _services.gameplay_lock_manager
+
 	var tree := get_tree()
 	if tree == null:
 		return null

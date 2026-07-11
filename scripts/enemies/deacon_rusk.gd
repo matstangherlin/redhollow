@@ -39,9 +39,10 @@ const NOT_COUNTERABLE_TAGS := ["not_counterable"]
 const FLOOR_VELOCITY_RESET_THRESHOLD := 0.0
 
 const TAUNT_LINES := [
-	"A dor revela o que você realmente é.",
-	"Mol-Khar já conhece seu nome.",
-	"Ajoelhe-se, Knox.",
+	"Calder Knox. A Red Brand deveria tê-lo transformado — não libertado.",
+	"A dor revela a verdade. Eu capturo. Eu extraio.",
+	"Você veio pelos desaparecidos? Eu guardo o que sobra deles.",
+	"Ajoelhe-se, Knox — ou quebre-se de pé.",
 ]
 
 @export var boss_id: StringName = &"deacon_rusk"
@@ -575,6 +576,7 @@ func _on_died() -> void:
 	_enter_state(RuskState.DEAD)
 	_interrupt_attack()
 	_set_dormant(true)
+	CorpseCollisionHelper.disable_body_collision(self)
 	velocity = Vector2.ZERO
 	boss_defeated.emit(boss_id)
 

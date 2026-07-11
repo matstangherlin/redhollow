@@ -59,13 +59,23 @@ Detalhe jogável: `VERTICAL_SLICE_TEST_PLAN.md`, `CURRENT_IMPLEMENTATION.md`.
 | R3 | Contratos rebinding troca de área |
 | R4 | StyleManager desacoplado do HUD |
 
-### 3. Produto (decisões beta) 📋
+### 3. Produto (decisões beta) 🎯
 
 | # | Entrega |
 | --- | --- |
 | P1 | Decisão auto-load save (`DECISIONS.md` D-013) |
 | P2 | Critérios aceite beta formalizados |
-| P3 | Branch/scene beta vs greybox (ou substituição incremental) |
+| P3 | ~~Branch/scene beta vs greybox~~ → **ContentManifest** (`beta_demo` / `full_game`) ✅ |
+
+### 3b. Arquitetura de conteúdo ✅
+
+| # | Entrega |
+| --- | --- |
+| C0 | Resources: Chapter, Area, Manifest, Boss, Encounter, Objective, Event |
+| C1 | Capítulo Zero registrado — compatível com beta e jogo final |
+| C2 | Manifestos `beta_demo.tres` + `full_game.tres` |
+| C3 | Gate centralizado (`ContentRegistry`) — sem `if demo` espalhado |
+| C4 | Testes `content_registry_tests.gd` |
 
 ### 4. Conteúdo da beta 📋
 

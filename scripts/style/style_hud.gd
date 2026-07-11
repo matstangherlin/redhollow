@@ -1,4 +1,5 @@
 extends CanvasLayer
+class_name StyleHud
 
 const FEEDBACK_VISIBLE_TIME := 1.35
 const TAUNT_LINE_VISIBLE_TIME := 2.75
@@ -13,9 +14,12 @@ const TAUNT_LINE_VISIBLE_TIME := 2.75
 @onready var red_brand_bar: ProgressBar = %RedBrandBar
 @onready var red_brand_value_label: Label = %RedBrandValueLabel
 @onready var brand_charge_label: Label = %BrandChargeLabel
+@onready var health_bar: ProgressBar = %HealthBar
+@onready var health_value_label: Label = %HealthValueLabel
 
-var _style_manager: Node = null
+var _style_manager: StyleManager = null
 var _red_brand_component: Node = null
+var _health_component: Node = null
 var _feedback_timer: float = 0.0
 var _taunt_line_timer: float = 0.0
 
@@ -56,6 +60,44 @@ func bind_red_brand_component(red_brand_component: Node) -> void:
 
 	_red_brand_component.connect("energy_changed", Callable(self, "_on_red_brand_changed"))
 	_refresh_red_brand()
+
+
+func bind_health_component(health_component: Node) -> void:
+	if _health_component != null and _health_component.has_signal("health_changed"):
+		if _health_component.is_connected("health_changed", Callable(self, "_on_health_changed")):
+			_health_component.disconnect("health_changed", Callable(self, "_on_health_changed"))
+
+	_health_component = health_component
+	if _health_component == null:
+		return
+
+	_health_component.connect("health_changed", Callable(self, "_on_health_changed"))
+	_refresh_health()
+
+
+func _on_health_changed(current_health: float, max_health: float) -> void:
+	_refresh_health_values(current_health, max_health)
+
+
+func _refresh_health() -> void:
+	if _health_component == null:
+		return
+	_refresh_health_values(
+		float(_health_component.get("current_health")),
+		float(_health_component.get("max_health"))
+	)
+
+
+func _refresh_health_values(current_health: float, max_health: float) -> void:
+	var ratio := 0.0
+	if max_health > 0.0:
+		ratio = clampf(current_health / max_health, 0.0, 1.0)
+
+	if health_bar != null:
+		health_bar.value = ratio * 100.0
+
+	if health_value_label != null:
+		health_value_label.text = "%.0f / %.0f" % [current_health, max_health]
 
 
 func show_brand_charge(is_visible: bool) -> void:
@@ -99,20 +141,18 @@ func _refresh_red_brand() -> void:
 		red_brand_value_label.text = "%.0f / %.0f" % [current_energy, max_energy]
 
 
-func bind_style_manager(style_manager: Node) -> void:
-	if _style_manager != null and _style_manager.has_signal("style_changed"):
-		if _style_manager.is_connected("style_changed", Callable(self, "_on_style_changed")):
-			_style_manager.disconnect("style_changed", Callable(self, "_on_style_changed"))
-	if _style_manager != null and _style_manager.has_signal("style_feedback"):
-		if _style_manager.is_connected("style_feedback", Callable(self, "_on_style_feedback")):
-			_style_manager.disconnect("style_feedback", Callable(self, "_on_style_feedback"))
+func bind_style_manager(style_manager: StyleManager) -> void:
+	if _style_manager != null and _style_manager.style_changed.is_connected(Callable(self, "_on_style_changed")):
+		_style_manager.style_changed.disconnect(Callable(self, "_on_style_changed"))
+	if _style_manager != null and _style_manager.style_feedback.is_connected(Callable(self, "_on_style_feedback")):
+		_style_manager.style_feedback.disconnect(Callable(self, "_on_style_feedback"))
 
 	_style_manager = style_manager
 	if _style_manager == null:
 		return
 
-	_style_manager.connect("style_changed", Callable(self, "_on_style_changed"))
-	_style_manager.connect("style_feedback", Callable(self, "_on_style_feedback"))
+	_style_manager.style_changed.connect(Callable(self, "_on_style_changed"))
+	_style_manager.style_feedback.connect(Callable(self, "_on_style_feedback"))
 	_refresh_from_manager()
 
 
@@ -137,10 +177,10 @@ func _refresh_from_manager() -> void:
 	if _style_manager == null:
 		return
 
-	var score := float(_style_manager.get("style_score"))
-	var rank := StringName(_style_manager.get("style_rank"))
-	var multiplier := float(_style_manager.call("get_reward_multiplier"))
-	var progress := float(_style_manager.call("get_rank_progress"))
+	var score := _style_manager.style_score
+	var rank := _style_manager.style_rank
+	var multiplier := _style_manager.get_reward_multiplier()
+	var progress := _style_manager.get_rank_progress()
 
 	if rank_label != null:
 		rank_label.text = String(rank)

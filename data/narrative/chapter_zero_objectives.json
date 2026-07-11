@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "chapter_id": "chapter_zero_bell_before_nightfall",
+  "objectives": [
+    {
+      "id": "cz_obj_opening",
+      "order": 10,
+      "title": "O sino antes do anoitecer",
+      "text": "Fale com Elias na rua de Red Hollow.",
+      "complete_flags_any": ["cz_met_elias"]
+    },
+    {
+      "id": "cz_obj_street",
+      "order": 20,
+      "title": "Sinais na rua",
+      "text": "Investigue a rua: estátua, pista do parceiro e o cultista.",
+      "complete_flags_all": ["cz_street_statue_observed", "cz_partner_clue_found", "cz_street_brawler_defeated"]
+    },
+    {
+      "id": "cz_obj_gunslinger",
+      "order": 25,
+      "title": "Pistoleiro Vermilite",
+      "text": "Suba pela rota opcional e elimine o pistoleiro.",
+      "complete_flags_any": ["cz_gunslinger_defeated"]
+    },
+    {
+      "id": "cz_obj_duo",
+      "order": 28,
+      "title": "Beco da Ordem",
+      "text": "Derrote o brawler e o pistoleiro juntos.",
+      "complete_flags_any": ["cz_duo_encounter_cleared"]
+    },
+    {
+      "id": "cz_obj_church",
+      "order": 30,
+      "title": "Distrito da igreja",
+      "text": "Derrote o Penitente e limpe a arena combinada.",
+      "complete_flags_all": ["cz_chain_penitent_defeated", "arena_vs_church_yard_complete"]
+    },
+    {
+      "id": "cz_obj_red_brand",
+      "order": 40,
+      "title": "Coração Rubro",
+      "text": "Absorva o Coração Rubro e leia o documento da Ordem.",
+      "complete_flags_all": ["vs_red_brand_cache_used", "cz_order_document_read"]
+    },
+    {
+      "id": "cz_obj_barrier",
+      "order": 50,
+      "title": "Barreira Vermilite",
+      "text": "Destrua a barreira e desça às catacumbas.",
+      "complete_flags_any": ["cz_underground_reached"]
+    },
+    {
+      "id": "cz_obj_underground",
+      "order": 60,
+      "title": "Catacumbas",
+      "text": "Ative o checkpoint e encontre a pista do parceiro.",
+      "complete_flags_all": ["cz_checkpoint_activated", "cz_partner_evidence_found"]
+    },
+    {
+      "id": "cz_obj_boss",
+      "order": 70,
+      "title": "Executor da Ordem",
+      "text": "Enfrente Deacon Rusk nas catacumbas.",
+      "complete_flags_any": ["boss_vs_deacon_rusk_defeated"]
+    },
+    {
+      "id": "cz_obj_finale",
+      "order": 80,
+      "title": "O que despertou",
+      "text": "Observe o que a derrota de Rusk despertou em Red Hollow.",
+      "complete_flags_any": ["cz_chapter_zero_completed"]
+    }
+  ]
+}

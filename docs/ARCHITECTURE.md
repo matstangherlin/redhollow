@@ -45,15 +45,63 @@ vertical_slice_greybox (game.gd)
 
 Fluxo: exit → lock transição → pausa → remove área → instancia `AreaRoot` → spawn → câmera → rebind (save, style, Red Brand, diálogo) → unlock.
 
-Áreas vertical slice:
+**[implemented]** Disponibilidade de áreas centralizada em `ContentRegistry` — exits e restore de save consultam o manifesto ativo; áreas fora do perfil **não são carregadas**.
 
-- `vertical_slice_street.tscn`
-- `vertical_slice_church.tscn`
-- `vertical_slice_underground.tscn`
+Áreas Capítulo Zero (registradas em `ChapterData`):
 
-Legado teste: `street_test`, `church_entrance_test`, `underground_test`.
+- `vertical_slice_street.tscn` → `vs_greybox_street`
+- `vertical_slice_church.tscn` → `vs_greybox_church`
+- `vertical_slice_underground.tscn` → `vs_greybox_underground`
+
+Legado teste: `street_test`, `church_entrance_test`, `underground_test` (fora do manifesto).
 
 Ver `AREA_TRANSITIONS.md`.
+
+## Arquitetura de conteúdo (data-driven)
+
+**[implemented]** Capítulo Zero é parte do jogo final via **um único projeto**, **um Player**, **uma shell** — sem duplicar sistemas nem copiar mapas para demo.
+
+```text
+ContentManifest (beta_demo | full_game)
+└── ChapterData[]
+    ├── AreaData[]           → scene_path, area_id, checkpoints
+    ├── BossData[]           → boss_id, encounter_id, completion_flag
+    ├── EncounterData[]      → arena packs, enemy_groups
+    ├── AbilityData[]        → unlock gates
+    ├── ObjectiveData[]      → template (JSON ou embedded)
+    └── WorldEventData[]     → eventos + condições
+
+ContentRegistry (runtime gate)
+├── is_chapter_available()
+├── can_load_area_scene()
+├── get_starting_area_scene()
+└── is_save_compatible_with_manifest()
+```
+
+| Resource | Script | Papel |
+| --- | --- | --- |
+| `ContentManifest` | `content_manifest.gd` | Perfil do produto (`beta_demo`, `full_game`) |
+| `ChapterData` | `chapter_data.gd` | Capítulo / ato narrativo |
+| `AreaData` | `area_data.gd` | Área jogável + cena |
+| `ObjectiveData` | `objective_data.gd` | Objetivos com estados (`ObjectiveState`) |
+| `WorldEventData` | `world_event_data.gd` | Eventos com condições |
+| `BossData` / `EncounterData` | `boss_data.gd`, `encounter_data.gd` | Chefes e encontros |
+| `AbilityData` / `CollectibleData` | `ability_data.gd`, `collectible_data.gd` | Progressão futura |
+
+Manifestos:
+
+- `resources/content/manifests/beta_demo.tres` — só Capítulo Zero; `beta_end_chapter_id` = fim da beta
+- `resources/content/manifests/full_game.tres` — Capítulo Zero jogável + stubs Atos I–IV + Mol-Khar
+
+**Regra:** nenhum `if demo:` espalhado — consultar `ContentRegistry.get_active()`.
+
+Boot: `GameBootState` carrega manifesto → `game.gd` ativa registry → `AreaTransitionManager`, `NarrativeDirector`, `DialogueController`, `SaveManager` e `VerticalSliceController` leem paths/flags do capítulo ativo.
+
+Diálogo: `DialogueLibrary` já suporta `locale` por arquivo JSON (`dialogues_pt_br.json`).
+
+Objetivos: estados implícitos em `ObjectiveTracker` (`LOCKED` → `ACTIVE` → `COMPLETED`); template em JSON ou `ObjectiveData` embedded.
+
+Chefes: mesma base (`BossEncounterController`, `AttackData`, IA inimigo) — `BossData` só registra IDs e flags.
 
 ## Jogador
 
@@ -105,6 +153,10 @@ Player permanece **coordenador**; combate/hitbox ficam no script principal até 
 
 Persiste: área, posição, vida, Red Brand, flags, checkpoints, barreiras.
 
+Campos opcionais v1 (content architecture): `content_manifest_id`, `chapter_id` — ver `SAVE_COMPATIBILITY.md`.
+
+Restore de área validado via `ContentRegistry.can_load_area_scene()` (não carrega mundo inteiro).
+
 **Importante:** `auto_load_on_ready = false` na greybox — **sem** load automático ao abrir o jogo. F9 manual.
 
 **[target]** `capture_persistence_state()` no player; auto-load beta com validação de área.
@@ -121,7 +173,8 @@ Persiste: área, posição, vida, Red Brand, flags, checkpoints, barreiras.
 
 | Artefato | Função |
 | --- | --- |
-| `scripts/tests/test_runner.gd` | 10 suítes, exit code |
+| `scripts/tests/test_runner.gd` | 18 suítes, exit code |
+| `content_registry_tests.gd` | Manifesto beta/full, gate de áreas, save policy |
 | `scripts/tests/test_helpers.gd` | Fixtures, allowlist |
 | `scripts/tests/runtime_error_monitor.gd` | Erros/warnings inesperados |
 | `player_regression_tests.gd` | 26 contratos player |

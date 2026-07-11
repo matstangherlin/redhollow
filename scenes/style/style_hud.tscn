@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://stylehudredhollow"]
+[gd_scene load_steps=6 format=3 uid="uid://stylehudredhollow"]
 
 [ext_resource type="Script" path="res://scripts/style/style_hud.gd" id="1_style_hud"]
 
@@ -33,6 +33,13 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_fill"]
+bg_color = Color(0.18, 0.78, 0.34, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [node name="StyleHud" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1_style_hud")
@@ -51,12 +58,33 @@ layout_mode = 0
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 286.0
-offset_bottom = 214.0
+offset_bottom = 254.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBox" type="VBoxContainer" parent="HudRoot/StylePanel"]
 layout_mode = 2
 theme_override_constants/separation = 6
+
+[node name="HealthLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.92, 0.72, 1)
+theme_override_font_sizes/font_size = 13
+text = "Vida"
+
+[node name="HealthBar" type="ProgressBar" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 16)
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
+
+[node name="HealthValueLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "12 / 12"
 
 [node name="RankLabel" type="Label" parent="HudRoot/StylePanel/VBox"]
 unique_name_in_owner = true

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AttackData" format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_data.gd" id="1_attack_data"]
+
+[resource]
+script = ExtResource("1_attack_data")
+attack_id = &"chain_penitent_sweep"
+display_name = "Chain Sweep"
+damage = 6.0
+startup_time = 0.72
+active_time = 0.16
+recovery_time = 0.55
+hitbox_size = Vector2(72, 32)
+hitbox_offset = Vector2(38, 0)
+hitstun_time = 0.28
+knockback = Vector2(200, -20)
+attacker_hitstop = 0.05
+target_hitstop = 0.06
+counterable = true
+tags = PackedStringArray("melee", "enemy", "order", "chain", "telegraphed", "wide")

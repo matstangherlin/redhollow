@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3 uid="uid://act2_rosa"]
+
+[ext_resource type="Script" path="res://scripts/content/chapter_data.gd" id="1_chapter"]
+
+[resource]
+script = ExtResource("1_chapter")
+chapter_id = &"act2_rosa_la_serpiente"
+title = "Rosa La Serpiente"
+act_label = "Ato II"
+sort_order = 200
+is_playable = false

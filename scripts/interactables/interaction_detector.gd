@@ -18,6 +18,14 @@ var _scan_time_remaining: float = 0.0
 func _ready() -> void:
 	_scan_time_remaining = 0.0
 	_refresh_focused_interactable()
+	if InputDeviceManager != null:
+		InputDeviceManager.device_changed.connect(_on_input_device_changed)
+
+
+func _on_input_device_changed(_device_kind: int) -> void:
+	_update_prompt_label()
+	if current_interactable != null:
+		current_interactable.set_focused(true)
 
 
 func _physics_process(delta: float) -> void:
@@ -144,4 +152,9 @@ func _update_prompt_label() -> void:
 		return
 
 	_prompt_label.visible = true
-	_prompt_label.text = "[E] %s" % current_interactable.get_prompt_text(_player)
+	if InputDeviceManager != null:
+		_prompt_label.text = InputDeviceManager.format_interaction_prompt(
+			current_interactable.get_prompt_text(_player)
+		)
+	else:
+		_prompt_label.text = "[E] %s" % current_interactable.get_prompt_text(_player)

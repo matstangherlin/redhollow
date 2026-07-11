@@ -4,6 +4,8 @@ class_name CombatArenaController
 signal arena_activated(arena_id: StringName)
 signal arena_completed(arena_id: StringName)
 signal arena_message_shown(message: String)
+signal arena_integrity_failed(arena_id: StringName, reason: String)
+signal arena_debug_recovered(arena_id: StringName)
 
 enum ArenaState {
 	INACTIVE,
@@ -40,6 +42,9 @@ var _tracked_enemies: Array[Node] = []
 var _defeated_instance_ids: Dictionary = {}
 var _spawned_count: int = 0
 var _status_timer: SceneTreeTimer = null
+var _integrity_compromised: bool = false
+var _style_manager: StyleManager = null
+var _progression: ProgressionComponent = null
 
 
 func _ready() -> void:
@@ -55,7 +60,27 @@ func _ready() -> void:
 		_activation_zone.body_entered.connect(_on_activation_body_entered)
 
 
+func bind_combat_services(
+	style_manager: StyleManager = null,
+	progression: ProgressionComponent = null
+) -> void:
+	_style_manager = style_manager
+	_progression = progression
+
+
+func debug_force_recover_arena() -> void:
+	if state != ArenaState.ACTIVE:
+		return
+
+	_integrity_compromised = false
+	_tracked_enemies = _tracked_enemies.filter(func(enemy: Node) -> bool: return is_instance_valid(enemy))
+	_show_status_message("Debug: arena recuperada")
+	arena_debug_recovered.emit(arena_id)
+
+
 func try_complete_if_enemies_cleared() -> bool:
+	if _integrity_compromised:
+		return false
 	if state != ArenaState.ACTIVE:
 		return false
 	if _spawned_count <= 0:
@@ -128,7 +153,7 @@ func _activate_arena() -> void:
 		_abort_arena_activation("Falha ao iniciar combate")
 		return
 
-	_show_status_message("Derrote os cultistas para abrir as portas")
+	_show_status_message("Derrote os três arquetipos para abrir as portas")
 	arena_activated.emit(arena_id)
 
 
@@ -156,13 +181,24 @@ func _spawn_configured_enemies() -> void:
 		return
 
 	for spawn_point in _spawn_points:
-		var enemy := enemy_scene.instantiate() as Node
+		var scene_to_spawn := _resolve_enemy_scene_for_spawn(spawn_point)
+		if scene_to_spawn == null:
+			continue
+		var enemy := scene_to_spawn.instantiate() as Node
 		if enemy == null:
 			continue
 		_enemies_container.add_child(enemy)
 		enemy.global_position = spawn_point.global_position
 		_register_enemy(enemy)
 		_spawned_count += 1
+
+
+func _resolve_enemy_scene_for_spawn(spawn_point: Node2D) -> PackedScene:
+	if spawn_point is CombatArenaSpawnPoint:
+		var typed := spawn_point as CombatArenaSpawnPoint
+		if typed.enemy_scene != null:
+			return typed.enemy_scene
+	return enemy_scene
 
 
 func _register_enemy(enemy: Node) -> void:
@@ -196,14 +232,26 @@ func _on_enemy_tree_exiting(enemy: Node) -> void:
 
 	var health := _find_health_component(enemy)
 	if health != null and not health.is_dead:
-		push_warning(
-			"CombatArena '%s' lost a living enemy from the scene tree." % String(arena_id)
-		)
+		_handle_integrity_failure(enemy)
 		return
 	_check_for_completion()
 
 
+func _handle_integrity_failure(enemy: Node) -> void:
+	if state != ArenaState.ACTIVE or _integrity_compromised:
+		return
+
+	_integrity_compromised = true
+	var enemy_name: String = String(enemy.name) if enemy != null else "unknown"
+	var reason := "living_enemy_despawned:%s" % enemy_name
+	push_error("CombatArena '%s' integrity failure: %s" % [String(arena_id), reason])
+	arena_integrity_failed.emit(arena_id, reason)
+	_abort_arena_activation("Combate interrompido — inimigo removido indevidamente")
+
+
 func _check_for_completion() -> void:
+	if _integrity_compromised:
+		return
 	if state != ArenaState.ACTIVE:
 		return
 	if _spawned_count <= 0:
@@ -284,13 +332,13 @@ func _grant_style_completion_bonus() -> void:
 	if style_completion_bonus <= 0.0:
 		return
 
+	if _style_manager != null:
+		_style_manager.grant_style_reward(style_completion_bonus, "Arena +%.0f" % style_completion_bonus)
+		return
+
 	for node in get_tree().get_nodes_in_group(STYLE_MANAGER_GROUP):
-		if node.has_method("grant_style_reward"):
-			node.call(
-				"grant_style_reward",
-				style_completion_bonus,
-				"Arena +%.0f" % style_completion_bonus
-			)
+		if node is StyleManager:
+			(node as StyleManager).grant_style_reward(style_completion_bonus, "Arena +%.0f" % style_completion_bonus)
 			return
 
 
@@ -298,9 +346,13 @@ func _mark_complete_in_progression() -> void:
 	if completion_flag_id == &"":
 		return
 
+	if _progression != null:
+		_progression.set_narrative_flag(completion_flag_id, true)
+		return
+
 	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
-		if node.has_method("set_narrative_flag"):
-			node.call("set_narrative_flag", completion_flag_id, true)
+		if node is ProgressionComponent:
+			(node as ProgressionComponent).set_narrative_flag(completion_flag_id, true)
 			return
 
 
@@ -308,9 +360,16 @@ func _is_marked_complete_in_progression() -> bool:
 	if completion_flag_id == &"":
 		return false
 
+	if _progression != null:
+		if bool(_progression.narrative_flags.get(String(completion_flag_id), false)):
+			return true
+		if completion_flag_id == &"arena_vs_church_yard_complete":
+			return bool(_progression.narrative_flags.get("arena_church_yard_01_complete", false))
+		return false
+
 	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
-		if node.get("narrative_flags") is Dictionary:
-			var flags: Dictionary = node.get("narrative_flags")
+		if node is ProgressionComponent:
+			var flags: Dictionary = (node as ProgressionComponent).narrative_flags
 			if bool(flags.get(String(completion_flag_id), false)):
 				return true
 			if completion_flag_id == &"arena_vs_church_yard_complete":

@@ -73,21 +73,59 @@ var _is_decaying: bool = false
 var _active_pressure_count: int = 0
 var _dodge_threat_overlap: bool = false
 var _bound_nodes: Array[Node] = []
-var _player: Node = null
+var _player: CharacterBody2D = null
+var _style_hud: StyleHud = null
+var _area_trackables: Array[Node] = []
 var _recent_taunt_times: Array[float] = []
 var _last_combat_timestamp: float = -999.0
-
-@onready var style_hud: CanvasLayer = $StyleHud
 
 
 func _ready() -> void:
 	add_to_group("style_manager")
 	await get_tree().process_frame
-	_bind_arena_combat()
-	if style_hud != null and style_hud.has_method("bind_style_manager"):
-		style_hud.call("bind_style_manager", self)
+	if _player == null:
+		_player = get_tree().get_first_node_in_group(PLAYER_GROUP) as CharacterBody2D
+	if _player != null:
+		_bind_player(_player)
 	_publish_style_state()
 	_show_feedback("Style Ready", 0.0)
+
+
+func bind_player(player: CharacterBody2D) -> void:
+	if player == null:
+		return
+	_player = player
+	_bind_player(player)
+
+
+func bind_style_hud(hud: StyleHud) -> void:
+	_style_hud = hud
+	if _style_hud != null:
+		_style_hud.bind_style_manager(self)
+
+
+func on_area_unloaded(_area: AreaRoot = null) -> void:
+	_area_trackables.clear()
+	_prune_bound_nodes()
+	_active_pressure_count = 0
+
+
+func on_area_loaded(area: AreaRoot = null) -> void:
+	refresh_world_bindings(area)
+
+
+func refresh_world_bindings(area: AreaRoot = null) -> void:
+	_prune_bound_nodes()
+	_active_pressure_count = 0
+	_area_trackables.clear()
+
+	if area == null:
+		return
+
+	for node in get_tree().get_nodes_in_group(STYLE_TRACKABLE_GROUP):
+		if area.is_ancestor_of(node):
+			_area_trackables.append(node)
+			_bind_style_trackable(node)
 
 
 func _process(delta: float) -> void:
@@ -133,68 +171,45 @@ func get_rank_progress() -> float:
 	return clampf((style_score - current_threshold) / (next_threshold - current_threshold), 0.0, 1.0)
 
 
-func refresh_world_bindings(_area: AreaRoot = null) -> void:
-	_prune_bound_nodes()
-	_active_pressure_count = 0
-	for node in get_tree().get_nodes_in_group(STYLE_TRACKABLE_GROUP):
-		_bind_style_trackable(node)
+func refresh_world_bindings_legacy(_area: AreaRoot = null) -> void:
+	refresh_world_bindings(_area)
 
 
 func _bind_arena_combat() -> void:
-	_player = get_tree().get_first_node_in_group(PLAYER_GROUP)
-	if _player == null:
-		var arena := get_node_or_null(arena_path)
-		if arena != null:
-			_player = _find_player_in_arena(arena)
-
-	if _player == null:
-		push_warning("StyleManager could not find player.")
-		return
-
-	_bind_player(_player)
-
-	for node in get_tree().get_nodes_in_group(STYLE_TRACKABLE_GROUP):
-		_bind_style_trackable(node)
+	bind_player(get_tree().get_first_node_in_group(PLAYER_GROUP) as CharacterBody2D)
 
 
-func _find_player_in_arena(arena: Node) -> Node:
-	var player := arena.get_node_or_null("Player")
-	if player != null:
-		return player
-
-	return get_tree().get_first_node_in_group(PLAYER_GROUP)
-
-
-func _bind_player(player: Node) -> void:
+func _bind_player(player: CharacterBody2D) -> void:
 	_track_bound_node(player)
 
 	var hitbox := _find_component(player, "HitboxComponent")
 	if hitbox != null and hitbox.has_signal("hit_landed"):
-		hitbox.connect("hit_landed", Callable(self, "_on_player_hit_landed"))
+		if not hitbox.is_connected("hit_landed", Callable(self, "_on_player_hit_landed")):
+			hitbox.connect("hit_landed", Callable(self, "_on_player_hit_landed"))
 
-	if player.has_signal("counter_success"):
+	if player.has_signal("counter_success") and not player.is_connected("counter_success", Callable(self, "_on_counter_success")):
 		player.connect("counter_success", Callable(self, "_on_counter_success"))
 
-	if player.has_signal("combo_completed"):
+	if player.has_signal("combo_completed") and not player.is_connected("combo_completed", Callable(self, "_on_combo_completed")):
 		player.connect("combo_completed", Callable(self, "_on_combo_completed"))
 
-	if player.has_signal("dodge_started"):
+	if player.has_signal("dodge_started") and not player.is_connected("dodge_started", Callable(self, "_on_dodge_started")):
 		player.connect("dodge_started", Callable(self, "_on_dodge_started"))
 
-	if player.has_signal("dodge_finished"):
+	if player.has_signal("dodge_finished") and not player.is_connected("dodge_finished", Callable(self, "_on_dodge_finished")):
 		player.connect("dodge_finished", Callable(self, "_on_dodge_finished"))
 
-	if player.has_signal("counter_resolved"):
+	if player.has_signal("counter_resolved") and not player.is_connected("counter_resolved", Callable(self, "_on_counter_resolved")):
 		player.connect("counter_resolved", Callable(self, "_on_counter_resolved"))
 
-	if player.has_signal("taunt_performed"):
+	if player.has_signal("taunt_performed") and not player.is_connected("taunt_performed", Callable(self, "_on_taunt_performed")):
 		player.connect("taunt_performed", Callable(self, "_on_taunt_performed"))
 
-	if player.has_signal("taunt_started"):
+	if player.has_signal("taunt_started") and not player.is_connected("taunt_started", Callable(self, "_on_taunt_started")):
 		player.connect("taunt_started", Callable(self, "_on_taunt_started"))
 
 	var health := _find_component(player, "HealthComponent")
-	if health != null and health.has_signal("damaged"):
+	if health != null and health.has_signal("damaged") and not health.is_connected("damaged", Callable(self, "_on_player_damaged")):
 		health.connect("damaged", Callable(self, "_on_player_damaged"))
 
 
@@ -279,8 +294,8 @@ func _on_counter_resolved(result: String) -> void:
 
 
 func _on_taunt_started(phrase: String, _line_id: StringName) -> void:
-	if style_hud != null and style_hud.has_method("show_taunt_line"):
-		style_hud.call("show_taunt_line", phrase)
+	if _style_hud != null:
+		_style_hud.show_taunt_line(phrase)
 
 
 func _on_taunt_performed(phrase: String, context: Dictionary) -> void:
@@ -304,7 +319,7 @@ func _can_award_taunt_style() -> bool:
 
 
 func _has_valid_enemy() -> bool:
-	for node in get_tree().get_nodes_in_group(STYLE_TRACKABLE_GROUP):
+	for node in _area_trackables:
 		if _is_valid_enemy(node):
 			return true
 	return false
@@ -316,11 +331,11 @@ func _has_nearby_valid_enemy() -> bool:
 
 func _get_nearby_valid_enemies() -> Array:
 	var targets: Array = []
-	if _player == null or not (_player is Node2D):
+	if _player == null:
 		return targets
 
-	var player_position := (_player as Node2D).global_position
-	for node in get_tree().get_nodes_in_group(STYLE_TRACKABLE_GROUP):
+	var player_position := _player.global_position
+	for node in _area_trackables:
 		if not _is_valid_enemy(node) or not (node is Node2D):
 			continue
 
@@ -335,10 +350,10 @@ func _is_valid_enemy(node: Node) -> bool:
 		return false
 
 	var health := _find_component(node, "HealthComponent")
-	if health == null:
-		return false
+	if health is HealthComponent:
+		return not (health as HealthComponent).is_dead
 
-	return not bool(health.get("is_dead"))
+	return false
 
 
 func _is_in_combat() -> bool:
@@ -403,12 +418,12 @@ func _on_enemy_died(enemy: Node) -> void:
 	if enemy == null:
 		return
 
-	var health := _find_component(enemy, "HealthComponent")
 	var bonus := enemy_defeat_bonus
-	if health != null:
-		var max_health := float(health.get("max_health"))
-		if max_health > 0.0:
-			bonus = maxf(enemy_defeat_bonus, max_health * 3.5)
+	var health_component := _find_component(enemy, "HealthComponent")
+	if health_component is HealthComponent:
+		var health := health_component as HealthComponent
+		if health.max_health > 0.0:
+			bonus = maxf(enemy_defeat_bonus, health.max_health * 3.5)
 
 	_add_style(bonus, "Defeat +%.0f" % bonus)
 
@@ -515,10 +530,10 @@ func _update_narrow_dodge_tracking() -> void:
 	if _player == null:
 		return
 
-	if not _player.has_method("_is_dodging") or not bool(_player.call("_is_dodging")):
+	if not _player.has_method("is_player_dodging") or not _player.is_player_dodging():
 		return
 
-	if not _player.has_method("_is_health_invulnerable") or not bool(_player.call("_is_health_invulnerable")):
+	if not _player.has_method("is_player_invulnerable") or not _player.is_player_invulnerable():
 		return
 
 	if _active_pressure_count > 0:

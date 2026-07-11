@@ -133,6 +133,8 @@ func _on_died() -> void:
 	current_state = DummyState.DEAD
 	hitstun_remaining = 0.0
 	_enable_hurtbox(false)
+	CorpseCollisionHelper.disable_body_collision(self)
+	velocity = Vector2.ZERO
 	_update_visual()
 	_update_debug_label()
 

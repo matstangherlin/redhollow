@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://cloading001"]
+
+[ext_resource type="Script" path="res://scripts/ui/loading_screen.gd" id="1_script"]
+
+[node name="LoadingScreen" type="CanvasLayer"]
+layer = 40
+script = ExtResource("1_script")
+
+[node name="LoadingRoot" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dim" type="ColorRect" parent="LoadingRoot"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.04, 0.92)
+
+[node name="Center" type="VBoxContainer" parent="LoadingRoot"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -40.0
+offset_right = 220.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="StatusLabel" type="Label" parent="LoadingRoot/Center"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+text = "Carregando..."
+
+[node name="ProgressBar" type="ProgressBar" parent="LoadingRoot/Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 18)
+max_value = 100.0
+show_percentage = false

@@ -22,6 +22,8 @@ static func create_default(current_scene: String = "res://scenes/core/game.tscn"
 	return {
 		"save_version": CURRENT_SAVE_VERSION,
 		"current_scene": current_scene,
+		"content_manifest_id": "",
+		"chapter_id": "",
 		"checkpoint_id": "",
 		"checkpoint_position": {"x": 0.0, "y": 0.0},
 		"player_max_health": 12.0,

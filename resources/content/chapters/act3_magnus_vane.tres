@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3 uid="uid://act3_magnus"]
+
+[ext_resource type="Script" path="res://scripts/content/chapter_data.gd" id="1_chapter"]
+
+[resource]
+script = ExtResource("1_chapter")
+chapter_id = &"act3_magnus_vane"
+title = "Magnus Vane"
+act_label = "Ato III"
+sort_order = 300
+is_playable = false

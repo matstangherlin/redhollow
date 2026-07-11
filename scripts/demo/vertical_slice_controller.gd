@@ -12,7 +12,10 @@ const RED_BRAND_DIRECTOR_GROUP := "red_brand_director"
 
 const VS_STREET_SCENE := "res://scenes/areas/vertical_slice_street.tscn"
 const VS_MAIN_SCENE := "res://scenes/demo/vertical_slice_greybox.tscn"
-const COMPLETION_FLAG := &"vertical_slice_completed"
+
+@export var finale_controller_path: NodePath = NodePath("ChapterZeroFinale")
+
+var _finale: ChapterZeroFinale = null
 
 @export var street_scene: PackedScene
 @export var street_spawn_id: StringName = &"default"
@@ -24,13 +27,35 @@ var _completion_lock_token: GameplayLockToken = null
 
 func _ready() -> void:
 	add_to_group(DEMO_GROUP)
-	if street_scene == null:
-		street_scene = load(VS_STREET_SCENE) as PackedScene
+	_apply_content_defaults()
 	call_deferred("_initialize_demo")
+
+
+func _apply_content_defaults() -> void:
+	var registry := ContentRegistry.get_active()
+	if registry == null:
+		if street_scene == null:
+			street_scene = load(VS_STREET_SCENE) as PackedScene
+		return
+
+	var starting_scene := registry.get_starting_area_scene()
+	if starting_scene != null:
+		street_scene = starting_scene
+		street_spawn_id = registry.get_starting_spawn_id()
+	elif street_scene == null:
+		street_scene = load(VS_STREET_SCENE) as PackedScene
+
+
+func _get_completion_flag() -> StringName:
+	var registry := ContentRegistry.get_active()
+	if registry != null:
+		return registry.get_completion_flag_id()
+	return ChapterZeroFlags.CHAPTER_COMPLETED
 
 
 func _initialize_demo() -> void:
 	_bind_lock_manager()
+	_finale = get_node_or_null(finale_controller_path) as ChapterZeroFinale
 	await get_tree().process_frame
 	_connect_runtime_signals()
 	_check_existing_completion()
@@ -97,23 +122,39 @@ func _on_node_added(node: Node) -> void:
 
 
 func _on_boss_defeated(_boss_id: StringName) -> void:
+	var completion_flag := _get_completion_flag()
 	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
 		if node.has_method("set_narrative_flag"):
-			node.call("set_narrative_flag", COMPLETION_FLAG, true)
+			node.call("set_narrative_flag", completion_flag, true)
+			node.call("set_narrative_flag", ChapterZeroFlags.LEGACY_DEMO_COMPLETED, true)
+			node.call("set_narrative_flag", ChapterZeroFlags.DEACON_DEFEATED, true)
 
 	var save_manager := _find_node_in_group(SAVE_MANAGER_GROUP)
 	if save_manager != null and save_manager.has_method("save_game"):
 		save_manager.call("save_game")
 
-	_show_completion_overlay()
+	if _finale != null:
+		var flags: Dictionary = {}
+		for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
+			flags = node.get("narrative_flags")
+		await _finale.play_if_needed(flags)
+	else:
+		_show_completion_overlay()
+
 	demo_completed.emit()
 
 
 func _check_existing_completion() -> void:
+	var completion_flag := _get_completion_flag()
 	for node in get_tree().get_nodes_in_group(PROGRESSION_GROUP):
 		var flags: Dictionary = node.get("narrative_flags")
-		if bool(flags.get(String(COMPLETION_FLAG), false)):
-			_show_completion_overlay()
+		if bool(flags.get(String(completion_flag), false)) or bool(
+			flags.get(String(ChapterZeroFlags.LEGACY_DEMO_COMPLETED), false)
+		):
+			if _finale != null:
+				_finale.show_end_card()
+			else:
+				_show_completion_overlay()
 
 
 func _show_completion_overlay() -> void:

@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=9 format=3 uid="uid://chapter_zero_bell"]
+
+[ext_resource type="Script" path="res://scripts/content/chapter_data.gd" id="1_chapter"]
+[ext_resource type="Script" path="res://scripts/content/area_data.gd" id="2_area"]
+[ext_resource type="Script" path="res://scripts/content/boss_data.gd" id="3_boss"]
+[ext_resource type="Script" path="res://scripts/content/encounter_data.gd" id="4_encounter"]
+
+[sub_resource type="Resource" id="Area_street"]
+script = ExtResource("2_area")
+area_id = &"vs_greybox_street"
+display_name = "Rua de Red Hollow"
+chapter_id = &"chapter_zero_bell_before_nightfall"
+scene_path = "res://scenes/areas/vertical_slice_street.tscn"
+sort_order = 10
+checkpoint_ids = PackedStringArray()
+
+[sub_resource type="Resource" id="Area_church"]
+script = ExtResource("2_area")
+area_id = &"vs_greybox_church"
+display_name = "Distrito da Igreja"
+chapter_id = &"chapter_zero_bell_before_nightfall"
+scene_path = "res://scenes/areas/vertical_slice_church.tscn"
+sort_order = 20
+checkpoint_ids = PackedStringArray("vs_church_checkpoint")
+
+[sub_resource type="Resource" id="Area_underground"]
+script = ExtResource("2_area")
+area_id = &"vs_greybox_underground"
+display_name = "Catacumbas"
+chapter_id = &"chapter_zero_bell_before_nightfall"
+scene_path = "res://scenes/areas/vertical_slice_underground.tscn"
+sort_order = 30
+checkpoint_ids = PackedStringArray("vs_underground_checkpoint")
+
+[sub_resource type="Resource" id="Encounter_church_yard"]
+script = ExtResource("4_encounter")
+encounter_id = &"vs_church_yard"
+area_id = &"vs_greybox_church"
+chapter_id = &"chapter_zero_bell_before_nightfall"
+completion_flag_id = &"arena_vs_church_yard_complete"
+enemy_groups = PackedStringArray("chapter_zero_chain_penitent")
+
+[sub_resource type="Resource" id="Boss_deacon_rusk"]
+script = ExtResource("3_boss")
+boss_id = &"deacon_rusk"
+display_name = "Deacon Rusk"
+chapter_id = &"chapter_zero_bell_before_nightfall"
+encounter_id = &"vs_deacon_rusk_encounter"
+completion_flag_id = &"boss_vs_deacon_rusk_defeated"
+enemy_scene_path = "res://scenes/enemies/deacon_rusk.tscn"
+
+[resource]
+script = ExtResource("1_chapter")
+chapter_id = &"chapter_zero_bell_before_nightfall"
+title = "O Sino Antes do Anoitecer"
+act_label = "Capítulo Zero"
+sort_order = 0
+is_playable = true
+areas = [SubResource("Area_street"), SubResource("Area_church"), SubResource("Area_underground")]
+starting_area_id = &"vs_greybox_street"
+starting_spawn_id = &"default"
+dialogue_data_path = "res://data/dialogues/dialogues_pt_br.json"
+events_data_path = "res://data/narrative/chapter_zero_events.json"
+objectives_data_path = "res://data/narrative/chapter_zero_objectives.json"
+completion_flag_id = &"cz_chapter_zero_completed"
+bosses = [SubResource("Boss_deacon_rusk")]
+encounters = [SubResource("Encounter_church_yard")])

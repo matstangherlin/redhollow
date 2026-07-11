@@ -13,15 +13,22 @@
 [ext_resource type="PackedScene" path="res://scenes/core/camera_controller.tscn" id="11_camera_controller"]
 [ext_resource type="PackedScene" path="res://scenes/areas/street_test.tscn" id="12_street_test"]
 [ext_resource type="PackedScene" path="res://scenes/ui/boss_health_hud.tscn" id="13_boss_health_hud"]
+[ext_resource type="Script" path="res://scripts/core/game_services.gd" id="14_game_services"]
+[ext_resource type="PackedScene" path="res://scenes/core/feedback_system.tscn" id="15_feedback"]
 
 [node name="Game" type="Node"]
 script = ExtResource("1_game")
+
+[node name="GameServices" type="Node" parent="."]
+script = ExtResource("14_game_services")
 
 [node name="HitstopController" type="Node" parent="."]
 script = ExtResource("3_hitstop_controller")
 
 [node name="GameplayLockManager" type="Node" parent="."]
 script = ExtResource("3_lock_manager")
+
+[node name="FeedbackSystem" parent="." instance=ExtResource("15_feedback")]
 
 [node name="StyleManager" parent="." instance=ExtResource("4_style_manager")]
 

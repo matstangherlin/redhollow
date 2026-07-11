@@ -13,6 +13,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_cache_nodes()
 	hide_box()
+	if InputDeviceManager != null:
+		InputDeviceManager.device_changed.connect(_on_input_device_changed)
 
 
 func _cache_nodes() -> void:
@@ -52,8 +54,19 @@ func is_box_visible() -> bool:
 	return visible and (_root == null or _root.visible)
 
 
+var _last_is_last_line: bool = false
+
+
+func _on_input_device_changed(_device_kind: int) -> void:
+	if not is_box_visible() or _advance_label == null:
+		return
+	if InputDeviceManager != null:
+		_advance_label.text = InputDeviceManager.format_dialogue_advance_prompt(_last_is_last_line)
+
+
 func present_line(speaker: String, text: String, portrait_path: String, is_last_line: bool) -> bool:
 	_cache_nodes()
+	_last_is_last_line = is_last_line
 	var clean_text := text.strip_edges()
 	if clean_text.is_empty():
 		push_warning("Refusing to present an empty dialogue line.")
@@ -69,7 +82,9 @@ func present_line(speaker: String, text: String, portrait_path: String, is_last_
 		_body_label.text = clean_text
 
 	if _advance_label != null:
-		if is_last_line:
+		if InputDeviceManager != null:
+			_advance_label.text = InputDeviceManager.format_dialogue_advance_prompt(is_last_line)
+		elif is_last_line:
 			_advance_label.text = "[E] Fechar | [Esc] Sair"
 		else:
 			_advance_label.text = "[E] Continuar | [Esc] Sair"

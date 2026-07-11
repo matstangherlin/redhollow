@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://blhenk38evurs"]
+
+[ext_resource type="Script" path="res://scripts/feedback/feedback_system.gd" id="1_system"]
+[ext_resource type="Script" path="res://scripts/audio/audio_manager.gd" id="2_audio"]
+[ext_resource type="Script" path="res://scripts/feedback/combat_vfx_spawner.gd" id="3_vfx"]
+[ext_resource type="Script" path="res://scripts/audio/ambient_audio_controller.gd" id="4_ambient"]
+[ext_resource type="Script" path="res://scripts/feedback/combat_feedback_director.gd" id="5_director"]
+
+[node name="FeedbackSystem" type="Node"]
+script = ExtResource("1_system")
+
+[node name="AudioManager" type="Node" parent="."]
+script = ExtResource("2_audio")
+
+[node name="CombatVfxSpawner" type="Node2D" parent="."]
+script = ExtResource("3_vfx")
+
+[node name="AmbientAudioController" type="Node" parent="."]
+script = ExtResource("4_ambient")
+
+[node name="CombatFeedbackDirector" type="Node" parent="."]
+script = ExtResource("5_director")

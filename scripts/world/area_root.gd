@@ -42,7 +42,7 @@ func get_spawn_point(spawn_id: StringName) -> AreaSpawnPoint:
 
 func get_spawn_points() -> Array[AreaSpawnPoint]:
 	var points: Array[AreaSpawnPoint] = []
-	for node in find_children("*", "AreaSpawnPoint", true, false):
+	for node: Node in find_children("*", "AreaSpawnPoint", true, false):
 		if node is AreaSpawnPoint:
 			points.append(node)
 	return points
@@ -50,7 +50,24 @@ func get_spawn_points() -> Array[AreaSpawnPoint]:
 
 func get_exits() -> Array[AreaExit]:
 	var exits: Array[AreaExit] = []
-	for node in find_children("*", "AreaExit", true, false):
+	for node: Node in find_children("*", "AreaExit", true, false):
 		if node is AreaExit:
 			exits.append(node)
 	return exits
+
+
+func bind_runtime_services(services: GameServices) -> void:
+	if services == null:
+		return
+
+	for node: Node in find_children("*", "CombatArenaController", true, false):
+		if node is CombatArenaController:
+			(node as CombatArenaController).bind_combat_services(services.style_manager, services.progression)
+
+	for node: Node in find_children("*", "BossEncounterController", true, false):
+		if node is BossEncounterController:
+			(node as BossEncounterController).bind_encounter_services(
+				services.style_manager,
+				services.progression,
+				services.boss_health_hud
+			)

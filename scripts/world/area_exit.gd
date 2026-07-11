@@ -47,6 +47,10 @@ func can_be_used(progression: ProgressionComponent = null) -> bool:
 	if target_scene.is_empty():
 		return false
 
+	var registry := ContentRegistry.get_active()
+	if registry != null and not registry.can_load_area_scene(target_scene):
+		return false
+
 	if required_ability_id != &"":
 		if progression == null:
 			return false
@@ -64,6 +68,9 @@ func can_be_used(progression: ProgressionComponent = null) -> bool:
 
 func get_blocked_reason(progression: ProgressionComponent = null) -> String:
 	if not can_be_used(progression):
+		var registry := ContentRegistry.get_active()
+		if registry != null and not target_scene.is_empty() and not registry.can_load_area_scene(target_scene):
+			return "Area not available in this build"
 		if required_ability_id != &"":
 			return "Requires ability: %s" % String(required_ability_id)
 		if required_flag != &"":

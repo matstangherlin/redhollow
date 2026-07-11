@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://physicalprojectile01"]
+
+[ext_resource type="Script" path="res://scripts/combat/physical_projectile.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox_component.gd" id="2_hitbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(14, 6)
+
+[node name="PhysicalProjectile" type="Area2D"]
+collision_layer = 16
+collision_mask = 32
+monitorable = false
+script = ExtResource("1_script")
+
+[node name="Visual" type="Polygon2D" parent="."]
+unique_name_in_owner = true
+color = Color(0.92, 0.42, 0.18, 1)
+polygon = PackedVector2Array(-8, -2, 8, -2, 10, 0, 8, 2, -8, 2)
+
+[node name="HitboxComponent" type="Area2D" parent="."]
+unique_name_in_owner = true
+collision_layer = 16
+collision_mask = 32
+monitorable = false
+monitoring = false
+script = ExtResource("2_hitbox")
+owner_node_path = NodePath("..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent"]
+shape = SubResource("RectangleShape2D_hitbox")
+disabled = true

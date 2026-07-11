@@ -1,0 +1,274 @@
+[gd_scene format=3 uid="uid://coptions001"]
+
+[ext_resource type="Script" path="res://scripts/ui/options_menu.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.07, 0.09, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.22, 0.16, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+
+[node name="OptionsMenu" type="CanvasLayer"]
+layer = 25
+script = ExtResource("1_script")
+
+[node name="OptionsRoot" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="OptionsRoot"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.03, 0.05, 0.78)
+
+[node name="Panel" type="PanelContainer" parent="OptionsRoot"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -280.0
+offset_right = 420.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="OptionsRoot/Panel"]
+theme_override_constants/separation = 10
+
+[node name="OptionsTitle" type="Label" parent="OptionsRoot/Panel/VBox"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+text = "Opções"
+
+[node name="Scroll" type="ScrollContainer" parent="OptionsRoot/Panel/VBox"]
+custom_minimum_size = Vector2(760, 420)
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="VideoHeader" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 18
+text = "Vídeo"
+
+[node name="DisplayRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="DisplayLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/DisplayRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Modo de exibição"
+[node name="DisplayModeOption" type="OptionButton" parent="OptionsRoot/Panel/VBox/Scroll/Content/DisplayRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="ResolutionRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="ResolutionLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/ResolutionRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Resolução"
+[node name="ResolutionOption" type="OptionButton" parent="OptionsRoot/Panel/VBox/Scroll/Content/ResolutionRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="VSyncCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "VSync"
+
+[node name="FpsRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="FpsLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/FpsRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Limite de FPS"
+[node name="FpsOption" type="OptionButton" parent="OptionsRoot/Panel/VBox/Scroll/Content/FpsRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="UiScaleRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="UiScaleLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/UiScaleRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Escala da interface"
+[node name="UiScaleSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/UiScaleRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+min_value = 0.75
+max_value = 2.0
+step = 0.05
+value = 1.0
+[node name="UiScaleValue" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/UiScaleRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+text = "100%"
+
+[node name="AudioHeader" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 18
+text = "Áudio"
+
+[node name="MasterRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="MasterLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/MasterRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Master"
+[node name="MasterSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/MasterRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="MusicRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="MusicLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/MusicRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Music"
+[node name="MusicSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/MusicRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="SfxRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="SfxLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/SfxRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "SFX"
+[node name="SfxSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/SfxRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="VoiceRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="VoiceLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/VoiceRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Voice"
+[node name="VoiceSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/VoiceRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="UiRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="UiLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/UiRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "UI"
+[node name="UiSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/UiRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="AmbienceRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="AmbienceLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/AmbienceRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Ambience"
+[node name="AmbienceSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/AmbienceRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="AccessibilityHeader" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 18
+text = "Acessibilidade"
+
+[node name="ShakeRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="ShakeLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/ShakeRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Screen shake"
+[node name="ShakeSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/ShakeRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="FlashesCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "Flashes reduzidos"
+
+[node name="TelegraphRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="TelegraphLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/TelegraphRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Contraste de telegraphs"
+[node name="TelegraphSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/TelegraphRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+min_value = 0.5
+max_value = 2.0
+step = 0.05
+value = 1.0
+
+[node name="TextSpeedRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="TextSpeedLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/TextSpeedRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Velocidade de texto"
+[node name="TextSpeedSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/TextSpeedRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+min_value = 0.25
+max_value = 3.0
+step = 0.05
+value = 1.0
+
+[node name="InstantTextCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "Texto instantâneo"
+
+[node name="SubtitleRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+[node name="SubtitleLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/SubtitleRow"]
+custom_minimum_size = Vector2(220, 0)
+text = "Tamanho de legenda"
+[node name="SubtitleSlider" type="HSlider" parent="OptionsRoot/Panel/VBox/Scroll/Content/SubtitleRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+min_value = 0.75
+max_value = 2.0
+step = 0.05
+value = 1.0
+
+[node name="VibrationCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+button_pressed = true
+text = "Vibração"
+
+[node name="BrandHoldCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+button_pressed = true
+text = "Segurar para carregar Red Brand"
+
+[node name="SimplifiedCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "Simplificar comandos (futuro)"
+
+[node name="BackButton" type="Button" parent="OptionsRoot/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 40)
+size_flags_horizontal = 4
+text = "Voltar"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3 uid="uid://act1_silas_crow"]
+
+[ext_resource type="Script" path="res://scripts/content/chapter_data.gd" id="1_chapter"]
+
+[resource]
+script = ExtResource("1_chapter")
+chapter_id = &"act1_silas_crow"
+title = "Silas Crow"
+act_label = "Ato I"
+sort_order = 100
+is_playable = false
+starting_area_id = &""
+dialogue_data_path = ""
+events_data_path = ""
+objectives_data_path = ""
+completion_flag_id = &""
