@@ -1,104 +1,101 @@
 # Red Hollow — Technical Debt
 
-Dívida técnica conhecida no repositório. Atualizar quando itens forem resolvidos.
+Dívida técnica conhecida. Baseline: tag `greybox-vertical-slice-v0.1` (`ae65a5084c1cbece80672a67d4bc0a6b4d40e5df`). Atualizar quando itens forem resolvidos.
 
-Legenda de prioridade:
+Prioridade:
 
-- **P0** — bloqueia beta estável ou mascarar bugs graves
-- **P1** — corrigir antes de adicionar conteúdo em escala
-- **P2** — pode esperar, mas aumenta custo de manutenção
+- **P0** — bloqueia beta estável ou mascara bugs graves
+- **P1** — corrigir antes de escalar conteúdo
+- **P2** — manutenção; aumenta custo se ignorado
 
-## P0 — Bloqueadores de beta
+## P0 — Bloqueadores
 
-### Player monolítico
+### Testes passam com runtime errors residuais
 
-- **Arquivo:** `scripts/player/player.gd` (~1700+ linhas)
-- **Problema:** entrada, movimento, combate, Red Brand, locks, respawn, debug e save-restore no mesmo script.
-- **Risco:** regressões em qualquer feature nova.
-- **Direção:** extrair `PlayerInput`, `PlayerMovement`, `PlayerCombat`, `PlayerRedBrand`, `PlayerInteractionLock`, `PlayerRespawn`.
+- **Estado:** melhorado com `test_runner.gd` + `runtime_error_monitor.gd`; 10 suítes passam no baseline.
+- **Problema:** `combat_arena_tests` ainda declara erros permitidos (`Can't change this state while flushing queries`, warnings de inimigo removido).
+- **Risco:** regressão real mascarada por allowlist.
+- **Direção:** corrigir toggles de colisão com `call_deferred` na produção; reduzir allowlist até zero.
 
-### Recuperação global (panic unlock)
+### Locks e hitstop — mecanismos globais de emergência
 
-- **Arquivos:** `scripts/core/game.gd`, `scripts/player/player.gd`, `scripts/demo/vertical_slice_controller.gd`, `scripts/dialogue/dialogue_controller.gd`
-- **Problema:** `Esc`, `_panic_unlock()`, `clear_input_locks()` e resets de arena/diálogo/hitstop corrigem softlocks mas mascaram causas raiz.
-- **Direção:** `GameplayLockManager` com tokens, ownership e timeout auditável.
+- **Estado:** `GameplayLockManager` + tokens implementados; hitstop não congela `Engine.time_scale`.
+- **Problema:** `Esc` / panic unlock em `game.gd` e demo ainda existem como escape hatch.
+- **Risco:** mascarar softlocks em vez de corrigi-los.
+- **Direção:** auditar cada panic path; remover quando locks cobrirem 100% dos casos.
 
-### Hitstop e time scale
+### Fluxo de morte e respawn não consolidado
 
-- **Arquivos:** `scripts/core/hitstop_controller.gd`, `scripts/core/game.gd`, `scripts/player/player.gd`
-- **Problema:** hitstop antigo congelava `Engine.time_scale`; hoje há resets repetidos que impedem freeze mas não modelam feedback de forma limpa.
-- **Direção:** hitstop como efeito local (shake, pause seletivo, frame hold visual) sem depender de `Engine.time_scale` global.
-
-### Testes headless com runtime errors
-
-- **Scripts:** `dialogue_tests.gd`, `area_transition_tests.gd`, suítes que montam nós fora da árvore completa
-- **Problema:** testes imprimem “passed” com erros de `get_tree()` nulo ou nós faltando (`StyleHud`).
-- **Direção:** fixtures mínimas de cena ou falhar teste quando houver erro no console.
+- **Arquivos:** `player.gd`, `health_component.gd`, `game.gd`
+- **Problema:** morte aplica lock DEATH; respawn por checkpoint/queda/recuperação não unifica estado de combate, locks e HUD.
+- **Risco:** softlock ou estado inválido após morte na beta.
+- **Direção:** `PlayerRespawn` ou serviço único: reset combate, locks, posição, vida, flags de chefe.
 
 ## P1 — Antes de escalar conteúdo
 
-### Acoplamento por grupos
+### `player.gd` concentra responsabilidades
 
-- Uso extensivo de `get_nodes_in_group`, `get_first_node_in_group`, `has_method` + `call`.
-- **Risco:** ordem de inicialização, renome de grupo, múltiplas instâncias.
-- **Direção:** interfaces tipadas, sinais, referências exportadas na shell scene.
+- **Baseline:** ~1700 linhas — entrada, movimento, combate, Red Brand, locks, debug, save-restore.
+- **Direção:** componentes `PlayerInputController`, `PlayerMovementController`, `PlayerStateCoordinator`, `PlayerPresentationController`, `PlayerDebugView` (refatoração em andamento no working tree).
+- **Risco:** regressão em qualquer feature nova.
 
-### SaveManager e paths internos
+### Dependência excessiva de grupos e chamadas dinâmicas
 
-- **Arquivo:** `scripts/save/save_manager.gd`
-- **Problema:** captura estado via `Components/HealthComponent` e grupos.
-- **Direção:** API explícita no player (`export_save_state` / `import_save_state`).
+- **Padrão:** `get_nodes_in_group`, `has_method` + `call`, strings de grupo espalhadas.
+- **Risco:** ordem de init, renome, múltiplas instâncias.
+- **Direção:** sinais, referências exportadas na shell, APIs tipadas.
 
-### AreaTransitionManager rebinding
+### SaveManager depende de paths internos
 
-- **Arquivo:** `scripts/world/area_transition_manager.gd`
-- **Problema:** após troca de área, percorre grupos para rebind de save, style, Red Brand, diálogo.
-- **Direção:** contrato `on_area_loaded(area)` na shell ou barramento de eventos.
+- **Baseline:** `_capture_player_state` usa `Components/HealthComponent` e `Components/RedBrandComponent`.
+- **Direção:** `capture_persistence_state()`, `get_health_component()`, `get_red_brand_component()` no player (parcialmente implementado no working tree, não no tag).
 
-### StyleManager e cena
+### StyleManager — dependência rígida de HUD
 
-- **Arquivo:** `scripts/style/style_manager.gd`
-- **Problema:** depende de `$StyleHud` e introspecção de métodos privados do player (`_is_dodging`).
-- **Direção:** sinais públicos do player; HUD opcional em testes.
+- **Problema:** espera `$StyleHud`; introspecção de métodos privados do player (`_is_dodging`).
+- **Direção:** sinais públicos; HUD opcional em fixtures de teste.
+
+### AreaTransitionManager — rebinding global frágil
+
+- **Problema:** após swap de área, percorre grupos para save, style, Red Brand, diálogo, checkpoints.
+- **Direção:** contrato `on_area_loaded(area)` na shell ou barramento de eventos tipado.
 
 ### Auto-load desativado na vertical slice
 
 - **Cena:** `vertical_slice_greybox.tscn` — `SaveManager.auto_load_on_ready = false`
-- **Estado:** intencional para evitar saves quebrados de arena; load apenas com **F9** ou após decisão de arquitetura.
-- **Beta:** reavaliar auto-load com validação de área e versão de save.
-
-### Combat arena fail-safe
-
-- **Arquivo:** `scripts/world/combat_arena_controller.gd`
-- **Problema:** completa arena se inimigos somem — útil contra softlock, pode esconder bug de despawn.
-- **Direção:** log explícito + telemetria em debug; remover fail-safe em build final se estável.
+- **Intencional:** evitar load de saves incompatíveis; **F9** manual.
+- **Beta:** auto-load só após validação de área + versão + API estável.
 
 ## P2 — Manutenção
 
-- Documentação de áreas de teste (`street_test`, `church_entrance_test`) vs vertical slice (`vertical_slice_*`) — consolidar nomenclatura.
-- `player.gd` debug label enorme — mover para overlay opcional.
-- Duplicação de lógica de reset entre `game.gd`, `vertical_slice_controller.gd` e `dialogue_controller.gd`.
-- Falta de pasta `tests/` dedicada; testes vivem como scripts `--script` soltos.
+| Item | Notas |
+| --- | --- |
+| Documentação desatualizada | Corrigido neste ciclo (`CURRENT_IMPLEMENTATION.md`, etc.) |
+| Caminhos absolutos em docs de teste | Substituir por comandos portáveis (`TEST_MATRIX.md`) |
+| Scripts médios crescendo | `deacon_rusk.gd`, `area_transition_manager.gd`, `vertical_slice_controller.gd` |
+| Debug acoplado ao gameplay | Label enorme no player; mover para overlay desligável em release |
+| Cenas `*_test` vs `vertical_slice_*` | Consolidar nomenclatura quando áreas legadas forem aposentadas |
+| Duplicação de reset | `game.gd`, `vertical_slice_controller.gd`, `dialogue_controller.gd` |
 
 ## Funcionalidades congeladas durante refatoração
 
-Não alterar comportamento destes fluxos sem teste completo:
+Não alterar comportamento sem teste completo:
 
-- combo e cancel windows;
-- diálogo + cooldown de reabertura (`REOPEN_BLOCK_MS`);
+- combo e janelas de cancel/buffer;
+- diálogo + cooldown reopen (250 ms);
 - transição rua → igreja → subterrâneo;
 - arena dois Cult Brawlers;
-- barreira + registry persistente;
-- Deacon Rusk fases e stagger;
-- F7 reset demo, F8/F9 save/load.
+- barreira + `BarrierRegistry`;
+- Deacon Rusk fases/stagger;
+- F7 reset demo, F8/F9 save/load;
+- `auto_load_on_ready = false` na greybox.
 
 ## Ordem recomendada de pagamento
 
-1. Testes que falham com erro no console
-2. Gameplay lock manager
-3. Hitstop sem `Engine.time_scale` global
-4. Split de `player.gd`
-5. Contratos de rebinding na troca de área
-6. Save/load e auto-load para beta
+1. P0 restante: morte/respawn; reduzir allowlist de runtime errors
+2. P1: split player + API save; contratos de rebinding
+3. P1: StyleManager desacoplado
+4. Decisão auto-load para beta (`DECISIONS.md` D-013)
+5. P2 conforme capacidade
 
-Ver também `ARCHITECTURE.md` (estado alvo) e `CONTENT_PRODUCTION_PLAN.md` (não adicionar mapas grandes antes de P0/P1 críticos).
+Ver `ARCHITECTURE.md`, `CONTENT_PRODUCTION_PLAN.md`, `DECISIONS.md`.

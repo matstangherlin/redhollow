@@ -1,6 +1,8 @@
-# Player Public API — Red Hollow (Vertical Slice baseline)
+# Player Public API — Red Hollow
 
-Documentação da superfície pública de `scripts/player/player.gd` e da cena `scenes/player/player.tscn` **antes de refatorações**. Refatorações não devem alterar estes contratos sem atualizar testes e docs.
+Superfície pública de `scripts/player/player.gd` e `scenes/player/player.tscn`. **Baseline de regressão** antes e durante refatoração. Alterações exigem atualização de `player_regression_tests.gd` e deste documento.
+
+Tag de referência: `greybox-vertical-slice-v0.1`.
 
 ## Identidade
 
@@ -9,139 +11,169 @@ Documentação da superfície pública de `scripts/player/player.gd` e da cena `
 | Script | `res://scripts/player/player.gd` |
 | Cena | `res://scenes/player/player.tscn` |
 | Tipo raiz | `CharacterBody2D` |
-| Grupo | `player` (registrado em `_ready`) |
+| Grupo | `player` (`PLAYER_GROUP`, registrado em `_ready`) |
+| Grupos consultados | `gameplay_lock_manager`, `camera_controller`, `hitstop_controller` |
 
 ## Sinais emitidos
 
 | Sinal | Payload | Quando |
 | --- | --- | --- |
-| `counter_success` | `attack_data: Resource`, `attacker: Node` | Hurtbox aciona counter bem-sucedido |
-| `combo_completed` | — | Terceiro golpe do combo concluído |
-| `dodge_started` | — | Esquiva inicia fase ativa |
+| `counter_success` | `attack_data`, `attacker` | Counter bem-sucedido (hurtbox) |
+| `combo_completed` | — | Finisher do combo (índice 2) concluído |
+| `dodge_started` | — | Esquiva entra fase ativa |
 | `dodge_finished` | — | Esquiva termina recovery |
-| `counter_resolved` | `result: String` | Counter resolve (`success`, `miss_window`, `not_counterable`, etc.) |
-| `taunt_performed` | `phrase: String`, `context: Dictionary` | Provocação concluída |
-| `taunt_started` | `phrase: String`, `line_id: StringName` | Provocação inicia |
-| `brand_breaker_charge_started` | — | Carga do Red Brand Breaker inicia |
-| `brand_breaker_charge_updated` | `charge_time: float`, `preview_level: int` | Nível de preview muda |
+| `counter_resolved` | `result: String` | `success`, `miss`, `miss_window`, `not_counterable`, `pending`, etc. |
+| `taunt_performed` | `phrase`, `context: Dictionary` | Provocação inicia (contexto inclui `line_id`, duração, janelas) |
+| `taunt_started` | `phrase`, `line_id: StringName` | Provocação inicia |
+| `brand_breaker_charge_started` | — | Carga Red Brand Breaker inicia |
+| `brand_breaker_charge_updated` | `charge_time`, `preview_level` | Preview de nível muda |
 | `brand_breaker_charge_cancelled` | — | Carga cancelada |
-| `brand_breaker_released` | `level: int`, `cost: float` | Breaker liberado |
+| `brand_breaker_released` | `level`, `cost` | Breaker liberado |
 
-## Métodos públicos
+### Sinais consumidos (componentes filhos)
+
+| Origem | Sinal | Handler |
+| --- | --- | --- |
+| `HealthComponent` | `damaged`, `died` | `_on_player_damaged`, `_on_player_died` |
+| `HitboxComponent` | `hit_landed` | `_on_hit_landed` |
+| `HurtboxComponent` | `hit_countered` | `_on_hit_countered` |
+
+## Métodos públicos (preservar)
 
 ### Interação e locks
 
 | Método | Retorno | Contrato |
 | --- | --- | --- |
-| `can_interact_now()` | `bool` | `false` se morto, `HURT`, `INTERACT`, atacando, esquivando, counter, taunt ou carregando Brand |
-| `is_in_dialogue()` | `bool` | Reflete `_dialogue_locked` |
-| `is_in_transition()` | `bool` | Reflete `_transition_locked` |
-| `enter_dialogue_mode()` | `void` | Trava diálogo, interrompe combate, zera velocidade, estado `INTERACT` |
-| `exit_dialogue_mode()` | `void` | Destrava diálogo; volta a `IDLE` se estava em `INTERACT` |
-| `enter_transition_mode()` | `void` | Trava transição, interrompe combate, zera velocidade, estado `INTERACT` |
-| `exit_transition_mode()` | `void` | Destrava transição; volta a `IDLE` se estava em `INTERACT` |
-| `clear_input_locks()` | `void` | Limpa dialogue + transition locks e velocidade |
-| `get_interaction_debug_info()` | `Dictionary` | `{id, distance, priority}` do `InteractionDetector` |
+| `can_interact_now()` | `bool` | `false` se lock gameplay, morto, combate ativo, esquiva, counter, taunt ou carga Brand |
+| `is_in_dialogue()` | `bool` | `GameplayLockManager` lock DIALOGUE ou token legado |
+| `is_in_transition()` | `bool` | Lock AREA_TRANSITION ou token legado |
+| `enter_dialogue_mode()` | `void` | Adquire lock; `interrupt_attack(INTERACT)`; zera velocidade |
+| `exit_dialogue_mode()` | `void` | Libera lock diálogo |
+| `enter_transition_mode()` | `void` | Adquire lock transição |
+| `exit_transition_mode()` | `void` | Libera lock transição |
+| `clear_input_locks()` | `void` | Libera todos locks do owner + tokens legados |
+| `get_interaction_debug_info()` | `Dictionary` | `{id, distance, priority}` |
 
 ### Movimento e orientação
 
 | Método | Retorno | Contrato |
 | --- | --- | --- |
-| `set_facing_direction(direction: int)` | `void` | Ignora `0`; normaliza para `-1`/`1`; atualiza `%DirectionMarker` |
-| `get_spawn_position()` | `Vector2` | Posição de respawn/recuperação |
-| `set_spawn_position(position: Vector2)` | `void` | Define spawn usado por fall recovery |
+| `set_facing_direction(direction: int)` | `void` | Normaliza ±1; espelha `%Visual` e `%DirectionMarker` (não o body) |
+| `get_spawn_position()` | `Vector2` | Spawn / fall recovery |
+| `set_spawn_position(position: Vector2)` | `void` | Define spawn |
 
 ### Combate
 
 | Método | Retorno | Contrato |
 | --- | --- | --- |
-| `can_cancel_attack()` | `bool` | `true` dentro da janela de cancelamento do ataque atual |
-| `interrupt_attack(next_state: int = HURT)` | `void` | Cancela ataque, dodge, counter, taunt e carga Brand |
-| `try_counter_hit(attack_data, _hitbox, attacker)` | `bool` | Só aceita durante `CounterPhase.WINDOW` com `AttackData.counterable == true` |
+| `can_cancel_attack()` | `bool` | Dentro da janela de cancel do `AttackData` atual |
+| `interrupt_attack(next_state = HURT)` | `void` | Cancela ataque, dodge, counter, taunt, Brand |
+| `try_counter_hit(attack_data, hitbox, attacker)` | `bool` | Só na `CounterPhase.WINDOW` com `counterable == true` |
 
 ### Persistência e área
 
 | Método | Retorno | Contrato |
 | --- | --- | --- |
-| `apply_area_settings(settings: Dictionary)` | `void` | Aplica `fall_recovery_y` quando presente |
-| `apply_checkpoint(pos, restore_health, restore_red_brand)` | `void` | Teleporta, limpa combate/timers; opcionalmente restaura vida e Brand |
-| `apply_save_state(save_data: Dictionary)` | `void` | Destrava locks; restaura posição, vida, Brand; limpa combate ativo |
+| `apply_area_settings(settings)` | `void` | Aplica `fall_recovery_y` |
+| `apply_checkpoint(pos, restore_health, restore_red_brand)` | `void` | Teleporta; limpa combate; restaura opcional |
+| `apply_save_state(save_data)` | `void` | Destrava locks; restaura posição, vida, Brand |
+| `capture_persistence_state()` | `Dictionary` | `{spawn_position, max_health, current_health, red_brand_energy}` |
+| `get_health_component()` | `Node` | `%HealthComponent` |
+| `get_red_brand_component()` | `RedBrandComponent` | `%RedBrandComponent` |
 
-## Estados (`PlayerState`)
+## Propriedades consultadas externamente
 
-`IDLE`, `RUN`, `JUMP`, `FALL`, `ATTACK`, `DODGE`, `COUNTER`, `TAUNT`, `HURT`, `DEAD`, `INTERACT`.
+| Propriedade | Consumidores |
+| --- | --- |
+| `global_position`, `velocity` | SaveManager, AreaTransitionManager, câmera, inimigos |
+| `facing_direction` | Hitbox, InteractionDetector, testes |
+| `current_state` | StyleManager (via introspecção), testes |
+| `fall_recovery_y` | AreaTransitionManager via `apply_area_settings` |
+| `coyote_time_remaining`, `jump_buffer_remaining` | Testes (proxies para controllers) |
+| `debug_visible` | Testes / debug (proxy `PlayerDebugView`) |
 
-Sub-fases internas expostas indiretamente via debug: `AttackPhase`, `DodgePhase`, `CounterPhase`, `BrandBreakerPhase`.
+## Métodos chamados por outros sistemas (via `has_method` / `call`)
 
-## Exports relevantes (baseline vertical slice)
+| Chamador | Método |
+| --- | --- |
+| `DialogueController` | `enter_dialogue_mode` |
+| `AreaTransitionManager` | `enter_transition_mode`, `exit_transition_mode`, `set_spawn_position`, `apply_area_settings` |
+| `SaveManager` | `apply_save_state`, `apply_checkpoint`, `capture_persistence_state`, `get_health_component`, `get_red_brand_component`, `get_spawn_position` |
+| `InteractionDetector` | `can_interact_now`, `is_in_dialogue`, `set_facing_direction` |
+| `HurtboxComponent` | `try_counter_hit` |
+| `VerticalSliceController` | `apply_save_state`, `clear_input_locks` (via fluxo reset) |
+| `StyleManager` | Conecta sinais; introspecção `_is_dodging` (dívida) |
+| `RedBrandDirector` | Conecta sinais combo/Brand |
+| Testes headless | `_start_attack_at_index`, `_apply_horizontal_movement`, `_try_buffered_jump`, etc. |
 
-### Movimento
+## Enums públicos (preservar nomes e ordem)
 
-| Export | Default | Unidade |
+`PlayerState`, `AttackPhase`, `DodgePhase`, `CounterPhase`, `BrandBreakerPhase` — usados em testes via `PlayerScript.*`.
+
+## Nós esperados (`player.tscn`)
+
+### Unique names (`%`)
+
+| Nó | Tipo | Uso |
 | --- | --- | --- |
-| `max_run_speed` | 240 | px/s |
-| `ground_acceleration` | 1800 | px/s² |
-| `ground_deceleration` | 2200 | px/s² |
-| `air_acceleration` | 1100 | px/s² |
-| `air_deceleration` | 650 | px/s² |
-| `gravity` | 1800 | px/s² |
-| `max_fall_speed` | 900 | px/s |
-| `jump_velocity` | -560 | px/s |
-| `jump_cut_multiplier` | 0.45 | ratio |
-| `coyote_time` | 0.10 | s |
-| `jump_buffer_time` | 0.12 | s |
-| `floor_snap_distance` | 6 | px |
-| `fall_recovery_y` | 720 (1320 na demo) | px |
+| `Visual` | Node2D | Facing (scale.x) |
+| `BodyVisual` | Polygon2D | Placeholder corpo |
+| `BrandHand` | Polygon2D | Placeholder mão Brand |
+| `DirectionMarker` | Node2D | Indicador direção |
+| `Components` | Node2D | Container combate |
+| `HealthComponent` | Node | Vida |
+| `RedBrandComponent` | Node | Energia Brand |
+| `HurtboxComponent` | Area2D | Recebe dano |
+| `HitboxComponent` | Area2D | Dano ativo |
+| `InteractionDetector` | Node | Interação |
+| `DebugLabel` | Label | Overlay debug |
+| `InteractionPromptLabel` | Label | Prompt [E] |
 
-### Combate
+### Controllers (refatoração em andamento)
 
-| Export | Default |
+| Nó | Script |
 | --- | --- |
-| `attack_input_buffer_time` | 0.35 s |
-| `combo_reset_time` | 0.45 s |
-| `dodge_startup/duration/recovery/cooldown` | 0.04 / 0.13 / 0.14 / 0.28 s |
-| `counter_startup/window/recovery/cooldown` | 0.05 / 0.12 / 0.28 / 0.35 s |
-| `counter_hitstop_duration` | 0.065 s |
-| `taunt_duration/cooldown` | 0.90 / 1.20 s |
+| `Controllers/PlayerInputController` | Entrada, buffers |
+| `Controllers/PlayerMovementController` | Física locomotion |
+| `Controllers/PlayerStateCoordinator` | Estados alto nível |
+| `Controllers/PlayerPresentationController` | Visual placeholder |
+| `Controllers/PlayerDebugView` | Debug overlay |
 
-## NodePaths e unique names
+## Resources
 
-### `%` referenciados pelo script
-
-`Visual`, `BodyVisual`, `DirectionMarker`, `Components`, `DebugLabel`, `HitboxComponent`, `HurtboxComponent`, `HealthComponent`, `RedBrandComponent`, `BrandHand`, `InteractionDetector`.
-
-### NodePaths em componentes filhos
-
-| Nó | Path exportado |
-| --- | --- |
-| `HurtboxComponent` | `owner_node_path = "../.."`, `health_component_path = "../HealthComponent"` |
-| `HitboxComponent` | `owner_node_path = "../.."` |
-
-## Resources (AttackData e config)
-
-| Recurso | Caminho | Uso |
+| Recurso | Caminho | ID |
 | --- | --- | --- |
-| Combo 1 | `resources/combat/calder_straight.tres` | `calder_straight` |
-| Combo 2 | `resources/combat/body_hook.tres` | `body_hook` |
-| Combo 3 | `resources/combat/red_knuckle.tres` | `red_knuckle` (finisher) |
-| Counter | `resources/combat/calder_counter.tres` | counter attack |
-| Brand Lv1 | `resources/combat/red_brand_breaker_lv1.tres` | 30 energy |
-| Brand Lv2 | `resources/combat/red_brand_breaker_lv2.tres` | 60 energy, tag `barrier_break` |
-| Brand config | `resources/combat/red_brand_config.tres` | energia, thresholds de carga |
+| Combo 1 | `calder_straight.tres` | `calder_straight` |
+| Combo 2 | `body_hook.tres` | `body_hook` |
+| Combo 3 | `red_knuckle.tres` | `red_knuckle` |
+| Counter | `calder_counter.tres` | — |
+| Brand Lv1 | `red_brand_breaker_lv1.tres` | custo 30 |
+| Brand Lv2 | `red_brand_breaker_lv2.tres` | custo 60, tags `barrier_break` |
+| Brand config | `red_brand_config.tres` | thresholds carga |
 
-## Ações de entrada (`project.godot`)
+## Input Map
 
-`move_left`, `move_right`, `jump`, `attack`, `dodge`, `counter`, `interact`, `taunt`, `special` (Brand Breaker).
+`move_left`, `move_right`, `jump`, `attack`, `dodge`, `counter`, `interact`, `taunt`, `special`, `debug_toggle`, `debug_reset`.
 
-## Dependências externas (grupos)
+## Dependências externas
 
-| Grupo | Uso pelo Player |
+| Sistema | Integração |
 | --- | --- |
-| `dialogue_controller` | Reconcilia `_dialogue_locked` via `is_active` |
-| `area_transition_manager` | Reconcilia `_transition_locked` via `is_transitioning` |
-| `hitstop_controller` | `request_hitstop(duration)`, `force_release()` |
-| `camera_controller` | `request_shake(intensity, duration)` |
+| **Câmera** | `camera_controller.request_shake` (counter, Brand breaker) |
+| **Hitstop** | `hitstop_controller.request_hitstop`; via `GameplayLockManager` |
+| **Diálogo** | `enter_dialogue_mode` / locks |
+| **Estilo** | Sinais `combo_completed`, `dodge_*`, `counter_*`, `taunt_*`, `brand_breaker_released` |
+| **Save** | `apply_save_state`, `apply_checkpoint`, `capture_persistence_state` |
+| **Progressão** | Indireta via SaveManager/checkpoint (player não chama ProgressionComponent) |
+| **Red Brand director** | Sinais Brand + hits |
 
-## Consumidores do grupo `player`
+## Adaptadores de teste (internos, preservar até refatoração completa)
 
-`DialogueController`, `SaveManager`, `AreaTransitionManager`, `StyleManager`, `RedBrandDirector`, `CombatArenaController`, boss encounters, inimigos (AI), `Game`, `VerticalSliceController`, area exits.
+| Método | Uso headless |
+| --- | --- |
+| `_apply_horizontal_movement(dir, delta)` | Aceleração sem Input confiável |
+| `_try_buffered_jump()` | Coyote/buffer com precondições setadas |
+| `_start_attack_at_index(i)` | Fases de combo |
+| `_start_ground_dodge`, `_start_counter`, `_start_taunt`, `_start_brand_charge` | Defesa/Brand |
+
+Ver `docs/HEADLESS_TESTING.md`.

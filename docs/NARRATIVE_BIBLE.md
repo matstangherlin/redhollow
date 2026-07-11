@@ -1,136 +1,209 @@
 # Red Hollow — Narrative Bible
 
-Documento canônico de narrativa. Complementa `GDD_RED_HOLLOW.md` com lore, tom e regras de escrita.
+Documento canônico de narrativa. Complementa `GDD_RED_HOLLOW.md`. Para escopo de entrega, ver `BETA_DEMO_SCOPE.md` e `FINAL_GAME_SCOPE.md`.
 
-## Premissa
+## Red Hollow (cidade)
 
-Calder Knox retorna a **Red Hollow**, cidade de faroeste alternativo em decomposição, tomada por barões, a **Ordem do Coração Rubro** e promessas quebradas. Ele busca respostas sobre desaparecimentos e sobre um ritual que o marcou para sempre.
+Red Hollow é uma cidade de **faroeste alternativo** construída sobre uma **prisão ou altar subterrâneo ancestral**.
+
+A cidade prosperou após a descoberta da **Vermilite**. A mineração:
+
+- enfraquece o selo subterrâneo;
+- amplia a influência de **Mol-Khar**;
+- altera organismos;
+- fortalece quem aceita pactos;
+- cria dependência física e psicológica;
+- aumenta conflitos, sofrimento e fanatismo.
+
+Tom visual: faroeste decadente, trilhos, saloons, capelas, minas, cemitérios, máquinas velhas, cartazes distorcidos, rituais visíveis.
 
 ## Mol-Khar, O Devorador de Promessas
 
-Antagonista central. Presença religiosa e psicológica antes de ameaça física direta.
+Entidade ancestral **aprisionada sob Red Hollow**.
+
+### Aparência (referência canônica)
+
+- forma humanoide colossal;
+- cabeça bovina esculpida como pedra antiga;
+- chifres rachados;
+- pedra negra fissurada;
+- olhos vermelhos;
+- núcleo ou coração incandescente no peito;
+- presença percebida por estátuas, sombras, sonhos e reflexos antes de forma física completa.
+
+### Ressonância Rubra
 
 **Mol-Khar não controla mentes diretamente.**
 
-Sua influência — a **Ressonância Rubra** — funciona assim:
+Sua influência — a **Ressonância Rubra**:
 
-- amplifica desejos já existentes;
-- aumenta ambição;
+- amplia desejos já existentes;
+- transforma ambição em obsessão;
 - transforma medo em fanatismo;
 - intensifica culpa;
-- oferece poder em troca de **promessas voluntárias**.
+- faz promessas parecerem inevitáveis;
+- oferece poder em troca de **consentimento e pacto**.
 
-Seguidores escolhem ceder. A Ordem organiza essa rendição em rituais, penitências e contratos.
+Seguidores permanecem **responsáveis** por suas escolhas.
+
+Mol-Khar se fortalece quando alguém:
+
+- aceita voluntariamente um pacto;
+- causa sofrimento em nome de uma promessa;
+- sacrifica outra pessoa por poder;
+- abandona princípios para obter vantagem;
+- espalha medo ou fanatismo em seu nome.
+
+### Objetivo
+
+Não destruir o planeta. Produzir sofrimento, fé e energia suficientes para:
+
+1. enfraquecer a prisão;
+2. criar um receptáculo;
+3. recuperar presença física completa.
 
 ## Vermilite
 
-Energia cristalizada que escapa da prisão de Mol-Khar.
+Energia cristalizada que **escapa da prisão** de Mol-Khar. Não é apenas minério.
 
-- minerada nas profundezas de Red Hollow;
-- enfraquece o selo que contém o Devorador;
-- espalha a Ressonância Rubra;
-- altera organismos e fortalece seguidores;
-- cria dependência física e espiritual.
+Reage a:
 
-Visualmente associada ao vermelho intenso controlado (ver `ART_BIBLE.md`). Narrativamente, é recurso, corrupção e preço — não “mana genérica”.
+- violência;
+- medo;
+- culpa;
+- dor;
+- ambição;
+- proximidade da Red Brand;
+- manifestações de Mol-Khar.
+
+Visual: vermelho intenso controlado (`ART_BIBLE.md`). Narrativa: recurso, corrupção, preço — nunca “mana genérica”.
 
 ## Ordem do Coração Rubro
 
-Culto que domina Red Hollow por fé, medo e dependência.
+Ensinamento central:
 
-Ferramentas de controle:
+> **“A dor é a verdadeira salvação.”**
 
-- confissões e penitências;
-- juramentos e contratos;
-- culpa como moeda social;
-- execuções públicas e vigilância;
-- mineração de Vermilite como “bênção”.
+Controle da população por:
 
-Símbolos devem parecer sagrados e violentos ao mesmo tempo.
+- propaganda;
+- medo;
+- promessas;
+- culpa;
+- dependência de Vermilite;
+- rituais;
+- recompensas materiais;
+- controle político;
+- isolamento.
+
+Símbolos: sagrados e violentos ao mesmo tempo.
 
 ## Calder Knox e a Red Brand
 
-Calder sobreviveu a um **ritual incompleto**. A **Red Brand** na mão direita é consequência desse evento.
+Calder foi levado a um **ritual quando criança**. Mol-Khar tentou transformá-lo em receptáculo. Calder **resistiu** antes de concluir a promessa de submissão.
+
+A marca ficou **incompleta**, concentrada na **mão direita** — a **Red Brand**.
 
 A Red Brand:
 
-- aumenta força e reflexos;
-- absorve energia (Vermilite / Coração Rubro);
-- destrói barreiras ligadas ao culto;
-- permite atingir manifestações espirituais;
-- fortalece a ligação de Calder com Mol-Khar.
+- amplia força;
+- amplia reflexos;
+- melhora resistência;
+- absorve energia da Vermilite;
+- quebra barreiras do culto;
+- permite tocar e ferir manifestações espirituais;
+- reage a estátuas e presença de Mol-Khar;
+- **aumenta a conexão** entre Calder e a entidade quando usada em excesso.
 
-Calder é sarcástico, impulsivo e extremamente habilidoso. O humor no combate não anula o horror — contrasta com ele.
+Mol-Khar deseja Calder **vivo**: primeiro corpo que resistiu sem ser destruído.
 
-## Manifestações sobrenaturais
+Personalidade: sarcástico, impulsivo, habilidoso; humor agressivo no combate **contrasta** com horror — não o anula.
 
-**Não existe sistema genérico de magia elemental.**
+## Regra sobrenatural (gameplay + escrita)
 
-Permitido quando ligado a:
+- Calder **não** utiliza magia tradicional.
+- **Não existe** sistema genérico de magia elemental.
+- Red Brand é **predominantemente física** e curta distância.
+- Manifestações sobrenaturais **permitidas** quando ligadas a: Mol-Khar, Vermilite, pactos, transformação corporal, alma, plano espiritual, Ressonância Rubra.
 
-- Mol-Khar;
-- Vermilite;
-- pactos e promessas;
-- alteração física do corpo;
-- dor e trauma;
-- plano espiritual ou cerimonial.
+**Proibido** como padrão:
 
-Proibido como padrão:
+- bolas de fogo comuns;
+- gelo elemental;
+- magia arcana genérica;
+- voo sem justificativa;
+- raios mágicos sem conexão narrativa.
 
-- bolas de fogo, raio, gelo;
-- voo livre;
-- projéteis mágicos genéricos;
-- “mago de fantasia”.
+## Os quatro barões
 
-## Barões e figuras centrais
+Cada barão recebe poder coerente com personalidade, território, desejo, pacto e forma de corrupção.
+
+| Barão | Território / papel | Desejo / pacto (direção) | Corrupção / poder |
+| --- | --- | --- | --- |
+| **Silas Crow** | Vigilância, execuções, medo público | Ordem absoluta; ninguém escapa ao olhar | Sentidos ampliados, redes de informantes, punição à distância via Ressonância |
+| **Rosa “La Serpiente”** | Saloons, contrabando, duelos | Controle social; veneno como linguagem | Charme, toxinas, manipulação de multidões, traição ritualizada |
+| **Magnus Vane** | Minas, máquinas, Vermilite industrial | Produção infinita; corpo como engrenagem | Exoesqueletos híbridos, drones de mina, dependência química da Vermilite |
+| **Bispo Arcturus Vale** | Igreja, teologia, penitência | Sacrifício como evolução; ser porta de Mol-Khar | Rituais, culpa amplificada, fusão voluntária pós-derrota |
+
+### Arcturus Vale (arco final)
+
+Arcturus **sabe** que Mol-Khar é real. Não é seguidor enganado. Acredita que:
+
+- sofrimento produz evolução;
+- liberdade é fraqueza;
+- tornar-se a porta de Mol-Khar é o maior sacrifício.
+
+Após a **primeira derrota**, permite fusão voluntária e torna-se:
+
+**Arcturus, Arauto de Mol-Khar** — confronto completo reservado ao jogo final, **fora** da beta.
+
+### Figuras da demo técnica
 
 | Nome | Papel |
 | --- | --- |
-| Silas Crow | Vigilância, execuções, controle por medo |
-| Rosa “La Serpiente” | Charme, veneno social, duelos sujos |
-| Bispo **Arcturus Vale** | Autoridade religiosa; manipula culpa e penitência |
-| Magnus Vane | Industrial; minas, máquinas, exploração |
-| **Deacon Rusk** | Executor da Ordem; mini-chefe da demo técnica atual |
-| **Elias** | NPC de contato na rua; guia inicial da demo |
+| **Elias** | Contato na rua; guia inicial |
+| **Deacon Rusk** | Executor da Ordem; mini-chefe do Capítulo Zero |
 
-Mol-Khar e Arcturus podem aparecer como presença, estátua, silhueta ou manifestação antes de confronto direto completo.
+## Corrupção ambiental
 
-## Tom e escrita
+Regiões podem existir em estado **normal/decadente** ou **corrompido** (Ressonância Rubra): iluminação, cristais, vegetação retorcida, estátuas distorcidas, inimigos alterados.
 
-- Diálogos curtos, com utilidade clara no gameplay.
-- Humor agressivo de Calder em combate e provocações.
-- Horror religioso por ambiente, rituais e consequências — não por exposição longa.
-- Promessas quebradas e culpa são temas recorrentes.
-- Calder blefa, provoca e age antes de refletir.
+Implementação: camadas substituíveis — **não** duplicar mapas inteiros (`ARCHITECTURE.md`).
 
-## Corrupção ambiental (Ressonância Rubra)
-
-Algumas regiões podem existir em dois estados:
-
-1. **Normal ou decadente** — cidade velha, poeira, madeira, ferro.
-2. **Corrompido** — iluminação alterada, cristais, vegetação retorcida, estátuas distorcidas, inimigos mais alterados.
-
-Não duplicar mapas inteiros manualmente. Usar camadas substituíveis, variantes e elementos modulares (ver `ARCHITECTURE.md` e `ART_BIBLE.md`).
-
-Para a beta: **uma** transformação ambiental curta e controlada.
+Beta: **uma** transformação curta e controlada.
 
 ## Capítulo Zero — O Sino Antes do Anoitecer
 
-Primeiro capítulo jogável público (beta). Calder chega à rua da igreja, enfrenta cultistas, obtém poder da Red Brand, atravessa barreira de Vermilite, desce às catacumbas e confronta Deacon Rusk antes do anoitecer ritual.
+Primeiro capítulo jogável público. Calder chega à rua, enfrenta cultistas, obtém poder da Red Brand, atravessa barreira, desce às catacumbas e confronta Deacon Rusk antes do anoitecer ritual.
 
-Duração alvo: **30–45 minutos**. Detalhes de escopo em `BETA_DEMO_SCOPE.md`.
+Duração alvo: **30–45 minutos**. Escopo: `BETA_DEMO_SCOPE.md`.
 
-## O que já existe na demo técnica (greybox)
+### Já na demo técnica greybox
 
-| Elemento | Estado narrativo |
+| Elemento | Estado |
 | --- | --- |
-| Elias + diálogo na rua | Implementado |
+| Elias + diálogo | Implementado |
 | Cult Brawler / arena | Implementado |
 | Cristal Coração Rubro | Implementado |
 | Barreira Vermilite | Implementado |
 | Subterrâneo + checkpoint | Implementado |
 | Deacon Rusk | Implementado |
-| Overlay de conclusão | Implementado |
-| Estátua Mol-Khar | Planejado para beta (arte) |
-| Aparição Mol-Khar | Planejado para beta |
-| Silhueta Arcturus | Planejado para beta |
+| Overlay conclusão | Implementado |
+
+### Planejado para beta (não confundir com “futuro distante”)
+
+| Elemento | Estado |
+| --- | --- |
+| Estátua Mol-Khar | Planejado beta |
+| Aparição breve Mol-Khar | Planejado beta |
+| Silhueta / voz Arcturus | Planejado beta |
+| Pista sobre parceiro antigo de Calder | Planejado beta |
+| Catacumbas ilustradas + backtracking curto | Planejado beta |
+| Gancho narrativo de encerramento | Planejado beta |
+
+## Tom e escrita
+
+- Diálogos curtos com utilidade no gameplay.
+- Humor agressivo de Calder em combate/provocações.
+- Horror religioso por ambiente, rituais e consequências.
+- Promessas quebradas e culpa como temas recorrentes.

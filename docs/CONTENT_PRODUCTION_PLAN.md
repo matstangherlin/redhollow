@@ -1,101 +1,88 @@
 # Red Hollow — Content Production Plan
 
-Ordem recomendada de produção de conteúdo, alinhada ao estado técnico atual, à beta e ao jogo final.
+Ordem de produção alinhada ao estado técnico (tag `greybox-vertical-slice-v0.1`), beta e jogo final.
 
 ## Princípios
 
-1. **Não bloquear gameplay** — greybox permanece jogável até troca de arte por área.
-2. **Uma área ou um inimigo por vez** — integração incremental.
-3. **Pagar dívida P0** antes de mapas grandes (`TECH_DEBT.md`).
-4. **Arte original** — seguir `VISUAL_REFERENCE_RULES.md`.
+1. Greybox permanece jogável até troca de arte por área.
+2. Uma área ou um inimigo por vez.
+3. Pagar **P0/P1** de `TECH_DEBT.md` antes de mapas grandes.
+4. Arte original — `VISUAL_REFERENCE_RULES.md`, `ART_BIBLE.md`.
 
-## Fase A — Fundação (concluída / em manutenção)
+## Fase A — Fundação greybox ✅
 
 | Entrega | Estado |
 | --- | --- |
-| Demo técnica greybox jogável | Concluído |
-| Combate core (player, hitbox, estilo, Red Brand) | Concluído |
-| Transição de áreas + save | Concluído (load manual) |
-| Deacon Rusk + arena | Concluído |
-| Documentação canônica | Este ciclo |
+| Demo técnica jogável | Concluído |
+| Combate core + Red Brand + estilo | Concluído |
+| 3 áreas + transição + save manual | Concluído |
+| Arena + Deacon Rusk + conclusão | Concluído |
+| GameplayLockManager + test_runner | Concluído (dívida) |
+| Tag `greybox-vertical-slice-v0.1` | Concluído |
+| Documentação canônica atualizada | Este ciclo |
 
-## Fase B — Estabilização pré-beta
-
-| # | Tarefa | Dependência |
-| --- | --- | --- |
-| B1 | Corrigir testes headless sem runtime errors | — |
-| B2 | Gameplay lock manager (substituir panic unlock) | B1 |
-| B3 | Hitstop/feedback sem `Engine.time_scale` global | B2 |
-| B4 | Split inicial de `player.gd` (input + combat) | B2 |
-| B5 | Decisão save auto-load para beta | B2 |
-
-**Gate:** roteiro greybox completo sem softlock; testes headless limpos.
-
-## Fase C — Arte vertical (Capítulo Zero)
-
-Produzir em paralelo quando B estiver estável:
-
-| # | Asset | Notas |
-| --- | --- | --- |
-| C1 | Calder — sprite base + animações combate | `ART_BIBLE.md` |
-| C2 | Rua — camadas parallax | gameplay legível |
-| C3 | Inimigo 1 (ex.: fanático) | substituir greybox |
-| C4 | Igreja / distrito — exterior + arena | integrar barreira visual |
-| C5 | Inimigo 2 + 3 | variedade mecânica |
-| C6 | Elias NPC | diálogo |
-| C7 | Subterrâneo + catacumbas | iluminação escura |
-| C8 | Deacon Rusk — sprite + telegraphs | fases 1 e 2 |
-| C9 | Barreira Vermilite VFX | destruição |
-| C10 | Estátua Mol-Khar + aparição | set piece |
-| C11 | Silhueta Arcturus | teaser |
-| C12 | Variante corrupção (uma área) | camadas substituíveis |
-
-## Fase D — UI beta
+## Fase B — Estabilização pré-beta 🎯
 
 | # | Tarefa | Doc |
 | --- | --- | --- |
-| D1 | HUD vida + Red Brand + estilo (skin final) | `UI_BIBLE.md` |
-| D2 | Mapa simples Capítulo Zero | `BETA_DEMO_SCOPE.md` |
-| D3 | Objetivos + diário curto | `NARRATIVE_BIBLE.md` |
-| D4 | Menu pausa + tela Red Brand (≤3 habilidades) | `UI_BIBLE.md` |
-| D5 | Diálogo — painel pergaminho/madeira | `UI_BIBLE.md` |
+| B1 | Runtime errors headless → zero inesperados | `TECH_DEBT.md` P0 |
+| B2 | Morte/respawn consolidado | P0 |
+| B3 | Reduzir panic unlock | P0 |
+| B4 | Split player + API save | P1 |
+| B5 | Rebinding troca de área | P1 |
+| B6 | Decisão auto-load beta | `DECISIONS.md` D-013 |
 
-## Fase E — Integração beta
+**Gate:** roteiro greybox sem softlock; `test_runner.gd` limpo.
 
-| # | Tarefa |
+## Fase C — Arte Capítulo Zero 📋
+
+| # | Asset |
 | --- | --- |
-| E1 | Substituir main scene ou ramo `beta_chapter_zero` com arte final |
-| E2 | Roteiro 30–45 min balanceado |
-| E3 | Áudio placeholder → SFX combate + ambiente |
-| E4 | QA completo `TEST_MATRIX.md` + playtest externo |
-| E5 | Build Windows beta |
+| C1 | Calder — sprite + anim combate |
+| C2 | Rua — parallax |
+| C3 | Inimigo arquétipo 1 |
+| C4 | Igreja + arena + barreira visual |
+| C5 | Inimigos 2 e 3 |
+| C6 | Elias |
+| C7 | Subterrâneo + catacumbas |
+| C8 | Deacon Rusk + telegraphs |
+| C9 | VFX barreira Vermilite |
+| C10 | Estátua + aparição Mol-Khar |
+| C11 | Teaser Arcturus |
+| C12 | Variante corrupção (uma área) |
 
-## Fase F — Pós-beta (jogo final)
+## Fase D — UI beta 📋
 
-Ordem macro (não detalhar todos assets aqui):
+HUD skin, mapa, objetivos, diário, pausa, Red Brand (≤3 habilidades) — `UI_BIBLE.md`, `BETA_DEMO_SCOPE.md`.
 
-1. Distrito adicional + primeiro barão jogável
-2. Minas / Vermilite (Magnus Vane)
-3. Sistema de mapa metroidvania completo
-4. Mais habilidades Red Brand (com teto narrativo)
-5. Palácio Rubro e confronto Mol-Khar
-6. Polimento, localização, acessibilidade
+## Fase E — Integração beta 📋
+
+Roteiro 30–45 min, áudio placeholder→produção, QA `TEST_MATRIX.md`, build Windows.
+
+## Fase F — Jogo final 📋
+
+1. Prólogo ritual  
+2. Arco Silas Crow  
+3. Arco Rosa La Serpiente  
+4. Arco Magnus Vane  
+5. Arco Arcturus → Arauto  
+6. Palácio Rubro  
+7. Confronto Mol-Khar + finais  
 
 Ver `FINAL_GAME_SCOPE.md`.
 
-## O que não produzir agora
+## Não produzir agora
 
-- todos os arquétipos de inimigo de uma vez;
 - cidade inteira;
-- UI de inventário complexo;
-- duplicação manual de mapas corrompidos;
+- todos arquétipos de uma vez;
+- UI inventário complexo;
+- mapas corrompidos duplicados manualmente;
 - assets copiados de moodboards.
 
 ## Checklist por entrega de arte
 
-- [ ] Silhueta legível em resolução de gameplay
-- [ ] Paleta conforme `ART_BIBLE.md`
-- [ ] Sem cópia de referência (`VISUAL_REFERENCE_RULES.md`)
-- [ ] Hitboxes alinhadas (debug toggle F)
+- [ ] Silhueta legível em gameplay
+- [ ] Paleta `ART_BIBLE.md`
+- [ ] Sem cópia de referência
+- [ ] Hitboxes alinhadas (debug F)
 - [ ] Teste manual na área integrada
-- [ ] Commit apenas de assets licenciados/originais

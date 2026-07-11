@@ -18,8 +18,29 @@
 - A arte final será **pixel art detalhada** com iluminação dramática (ver `docs/ART_BIBLE.md`).
 - A **Red Brand** amplifica capacidades físicas e liga Calder a Mol-Khar; não é magia elemental genérica.
 - A **Vermilite** é energia cristalizada ligada ao culto e à mineração; use-a com moderação visual (ver `docs/ART_BIBLE.md`).
-- Não implemente magia tradicional, bolas de fogo, voo ou poderes genéricos de fantasia.
 - O combate deve parecer físico, agressivo e responsivo.
+
+### Regra sobrenatural (precisa)
+
+- Calder **não** utiliza magia tradicional.
+- **Não existe** sistema genérico de magia elemental.
+- A Red Brand é **predominantemente física** e de curta distância.
+- Manifestações sobrenaturais são **permitidas** quando ligadas diretamente a:
+  - Mol-Khar;
+  - Vermilite;
+  - pactos;
+  - transformação corporal;
+  - alma;
+  - plano espiritual;
+  - **Ressonância Rubra**.
+
+**Não utilizar** poderes genéricos sem relação com o universo:
+
+- bolas de fogo comuns;
+- gelo elemental;
+- magia arcana genérica;
+- voo sem justificativa;
+- raios mágicos sem conexão narrativa.
 
 ## Documentação oficial
 
@@ -32,6 +53,8 @@ Consulte antes de implementar conteúdo, arte ou narrativa:
 | `docs/ART_BIBLE.md` | Direção visual e pixel art |
 | `docs/UI_BIBLE.md` | Interface e HUD |
 | `docs/ARCHITECTURE.md` | Arquitetura real e alvo |
+| `docs/CURRENT_IMPLEMENTATION.md` | Inventário do que existe hoje |
+| `docs/DECISIONS.md` | Decisões de produto e arquitetura |
 | `docs/ROADMAP.md` | Fases concluídas e próximas |
 | `docs/BETA_DEMO_SCOPE.md` | Escopo da beta pública |
 | `docs/FINAL_GAME_SCOPE.md` | Escopo do jogo completo |
@@ -39,34 +62,48 @@ Consulte antes de implementar conteúdo, arte ou narrativa:
 | `docs/CONTENT_PRODUCTION_PLAN.md` | Ordem de produção de conteúdo |
 | `docs/VISUAL_REFERENCE_RULES.md` | Uso de moodboards e referências |
 | `docs/TEST_MATRIX.md` | Testes manuais e headless |
-| `docs/VERTICAL_SLICE_TEST_PLAN.md` | Roteiro da demonstração técnica atual |
+| `docs/VERTICAL_SLICE_TEST_PLAN.md` | Roteiro da demonstração técnica |
+| `docs/HEADLESS_TESTING.md` | Runner e critérios de suítes |
 
 ## Estado atual do repositório
 
 O projeto **não está vazio**. Existe uma demonstração técnica jogável (greybox) com sistemas reais.
 
+**Baseline protegida:** tag `greybox-vertical-slice-v0.1` (`ae65a5084c1cbece80672a67d4bc0a6b4d40e5df`).  
+**Branch de trabalho:** `beta-foundation`.
+
 **Main scene:** `res://scenes/demo/vertical_slice_greybox.tscn`
 
-**Implementado e testado manualmente:**
+**Implementado e razoavelmente funcional** (detalhe em `CURRENT_IMPLEMENTATION.md`):
 
-- movimento, pulo, combo, esquiva, counter, provocação;
+- movimento lateral, pulo, combo, esquiva, counter, provocação;
 - hitbox/hurtbox e ataques orientados por Resource;
 - estilo, Red Brand, barreira destrutível;
-- diálogo, checkpoint, save/load manual;
-- transição de áreas (rua → igreja → subterrâneo);
-- arena, mini-chefe Deacon Rusk, overlay de conclusão.
+- diálogo, interação, checkpoint;
+- save/load **manual** (F8/F9);
+- três áreas e transição (rua → igreja → subterrâneo);
+- arena, Cult Brawler, mini-chefe Deacon Rusk;
+- HUD estilo, HUD chefe, overlay de conclusão;
+- `GameplayLockManager`, testes headless (`test_runner.gd`).
 
 **Implementado com dívida técnica** (ver `docs/TECH_DEBT.md`):
 
-- `player.gd` monolítico;
-- locks de input e recuperação global (`panic unlock`, `Engine.time_scale`);
+- `player.gd` monolítico (~1700 linhas no baseline);
 - acoplamento por grupos e chamadas dinâmicas;
-- auto-load de save **desativado** na vertical slice (`auto_load_on_ready = false`).
+- SaveManager captura vida/Red Brand via paths internos (baseline);
+- panic unlock (Esc) como escape hatch;
+- auto-load de save **desativado** na vertical slice (`auto_load_on_ready = false`);
+- fluxo morte/respawn não consolidado.
 
-**Salvamento na demo atual:**
+**Planejado para beta** (`BETA_DEMO_SCOPE.md`): arte final Capítulo Zero, catacumbas, três inimigos visuais, set pieces Mol-Khar/Arcturus, UI mapa/diário/pausa.
+
+**Planejado para jogo final** (`FINAL_GAME_SCOPE.md`): barões, Palácio Rubro, Mol-Khar completo, finais.
+
+### Salvamento na demo atual
 
 - **F8** salva; **F9** carrega manualmente.
-- Não há auto-load ao iniciar a vertical slice greybox.
+- **Não há auto-load** ao iniciar a vertical slice greybox.
+- Checkpoint no subterrâneo grava save ao ativar.
 
 ## Regras de edição
 
@@ -90,7 +127,7 @@ O projeto **não está vazio**. Existe uma demonstração técnica jogável (gre
 - Use nomes claros em inglês para código, cenas, nós e recursos.
 - Use snake_case para variáveis e funções.
 - Use PascalCase para classes com `class_name`.
-- Evite scripts gigantes; a refatoração do jogador é prioridade documentada em `docs/TECH_DEBT.md`.
+- Evite scripts gigantes; refatoração do jogador documentada em `TECH_DEBT.md`.
 - Separe entrada, movimento, combate, interface, salvamento e narrativa quando possível.
 - Use composição quando ela for mais apropriada que herança.
 - Use máquinas de estados para jogador, inimigos e chefes.
@@ -98,7 +135,7 @@ O projeto **não está vazio**. Existe uma demonstração técnica jogável (gre
 - Use sinais para reduzir acoplamento entre sistemas.
 - Não use `get_node` com caminhos frágeis espalhados pelo projeto.
 - Use referências exportadas, grupos, sinais ou componentes quando apropriado.
-- Autoloads devem ser raros; a vertical slice atual usa shell persistente na main scene, sem autoloads de gameplay.
+- Autoloads devem ser raros; a vertical slice usa shell persistente na main scene.
 
 ## Estrutura recomendada
 
@@ -116,38 +153,34 @@ O projeto **não está vazio**. Existe uma demonstração técnica jogável (gre
 
 - O jogador deve usar `CharacterBody2D`.
 - Movimento, combate e apresentação visual devem permanecer separados quando possível.
-- Estados atuais no código: idle, run, jump, fall, attack, dodge, counter, taunt, hurt, dead, interact.
+- Estados atuais: idle, run, jump, fall, attack, dodge, counter, taunt, hurt, dead, interact.
 - A lógica de movimento não deve depender de sprites definitivos.
-- O personagem deve continuar funcional com gráficos provisórios até a integração da pixel art.
+- Escala de facing aplica-se a `%Visual`, não ao `CharacterBody2D` inteiro.
 
 ## Combate
 
-- Hitboxes e hurtboxes devem ser separadas.
-- Ataques devem ser orientados por dados (`AttackData` Resource).
-- Cada ataque deve poder definir dano, startup, active, recovery, hitstun, knockback, hitstop e ganho de estilo.
-- Uma hitbox não deve atingir o mesmo alvo várias vezes acidentalmente.
-- Ataques devem respeitar a direção do personagem.
-- O combate deve suportar socos, chutes, esquivas, counters, provocações e ataques da Red Brand.
-- Manifestações sobrenaturais só quando ligadas a Mol-Khar, Vermilite, pactos, alteração física, dor ou plano espiritual — nunca magia elemental genérica.
+- Hitboxes e hurtboxes separadas.
+- Ataques orientados por `AttackData` Resource.
+- Timing em **segundos** no código atual.
+- Combate: socos, chutes, esquivas, counters, provocações, Red Brand Breaker.
+- Manifestações sobrenaturais conforme regra sobrenatural acima.
 
 ## Física
 
 - Use `_physics_process` para lógica física.
 - Evite comportamento dependente da taxa de quadros.
-- Valores de ataque usam **segundos** no código atual; não misturar frames e segundos sem documentar.
-- Colisões devem ser previsíveis.
-- Não altere collision layers e masks sem documentar.
+- Colisões previsíveis; documente mudanças em layers/masks.
 
 ## Interface
 
-- Interface deve usar `Control` e `CanvasLayer` quando apropriado.
-- HUD não deve depender diretamente de detalhes internos do jogador.
-- Direção visual da UI: `docs/UI_BIBLE.md`.
+- Interface com `Control` e `CanvasLayer` quando apropriado.
+- HUD não deve depender de detalhes internos do jogador.
+- Direção visual: `docs/UI_BIBLE.md`.
 
 ## Salvamento
 
 - Use `user://` para arquivos de salvamento.
-- O save deve possuir versão (`SaveData.CURRENT_SAVE_VERSION`).
+- Save com versão (`SaveData.CURRENT_SAVE_VERSION`).
 - Não salve referências de nós ou IDs temporários.
 - Valide dados antes de carregar.
 - Arquivo corrompido não deve encerrar o jogo.
@@ -156,16 +189,16 @@ O projeto **não está vazio**. Existe uma demonstração técnica jogável (gre
 
 Depois de cada alteração:
 
-- procure erros de sintaxe;
-- procure referências quebradas;
-- verifique a árvore de cenas;
-- verifique sinais conectados;
-- verifique collision layers e masks;
-- execute testes headless quando possível (comandos portáveis em `docs/TEST_MATRIX.md`);
+- procure erros de sintaxe e referências quebradas;
+- verifique árvore de cenas, sinais, collision layers/masks;
+- execute testes headless quando possível:
+
+```bash
+godot --headless --path . --script res://scripts/tests/test_runner.gd
+```
+
 - informe erros encontrados;
-- liste todos os arquivos criados e modificados;
-- liste testes manuais na Godot;
-- não considere a tarefa concluída sem apresentar os testes.
+- liste arquivos criados/modificados e testes manuais.
 
 ## Git
 
@@ -173,3 +206,4 @@ Depois de cada alteração:
 - Não faça commit automaticamente, salvo quando solicitado.
 - Não descarte alterações existentes do usuário.
 - Não use comandos destrutivos como `git reset --hard` sem autorização explícita.
+- Tag de restauração greybox: `greybox-vertical-slice-v0.1`.

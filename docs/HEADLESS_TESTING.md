@@ -16,10 +16,16 @@ Run a single suite:
 godot --headless --path . --script res://scripts/dialogue/dialogue_tests.gd
 ```
 
-On Windows (example with a local Godot install):
+On Windows, use the full path to your Godot 4.7 executable if `godot` is not on PATH:
 
 ```powershell
 & "C:\Path\To\Godot_v4.7-stable_win64.exe" --headless --path . --script res://scripts/tests/test_runner.gd
+```
+
+After adding new scripts with `class_name`, run once from project root:
+
+```bash
+godot --headless --path . --import
 ```
 
 ## Suites

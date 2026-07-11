@@ -271,6 +271,9 @@ func _capture_game_state() -> Dictionary:
 
 
 func _capture_player_state(player: Node) -> Dictionary:
+	if player.has_method("capture_persistence_state"):
+		return player.call("capture_persistence_state") as Dictionary
+
 	var state := {
 		"spawn_position": {"x": 0.0, "y": 0.0},
 		"max_health": 12.0,
@@ -285,12 +288,16 @@ func _capture_player_state(player: Node) -> Dictionary:
 		var node_2d := player as Node2D
 		state["spawn_position"] = {"x": node_2d.global_position.x, "y": node_2d.global_position.y}
 
-	var health := player.get_node_or_null("Components/HealthComponent")
+	var health: Node = null
+	if player.has_method("get_health_component"):
+		health = player.call("get_health_component") as Node
 	if health != null:
 		state["max_health"] = float(health.get("max_health"))
 		state["current_health"] = float(health.get("current_health"))
 
-	var red_brand := player.get_node_or_null("Components/RedBrandComponent")
+	var red_brand: Node = null
+	if player.has_method("get_red_brand_component"):
+		red_brand = player.call("get_red_brand_component") as Node
 	if red_brand != null:
 		state["red_brand_energy"] = float(red_brand.get("current_energy"))
 

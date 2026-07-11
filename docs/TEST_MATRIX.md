@@ -1,6 +1,6 @@
 # Red Hollow — Test Matrix
 
-Matriz de testes manuais e headless. Para roteiro passo a passo da demo greybox, use [VERTICAL_SLICE_TEST_PLAN.md](VERTICAL_SLICE_TEST_PLAN.md).
+Matriz de testes manuais e headless. Roteiro greybox: [VERTICAL_SLICE_TEST_PLAN.md](VERTICAL_SLICE_TEST_PLAN.md). Runner: [HEADLESS_TESTING.md](HEADLESS_TESTING.md).
 
 ## Legenda
 
@@ -8,10 +8,10 @@ Matriz de testes manuais e headless. Para roteiro passo a passo da demo greybox,
 | --- | --- |
 | **Pass** | Comportamento correto |
 | **Fail** | Comportamento incorreto |
-| **Blocked** | Sistema ausente ou erro impede teste |
-| **N/A** | Não aplicável na etapa |
+| **Blocked** | Erro impede teste |
+| **N/A** | Não aplicável |
 
-## Estado dos sistemas (repositório atual)
+## Estado dos sistemas
 
 | Sistema | Estado | Notas |
 | --- | --- | --- |
@@ -20,99 +20,84 @@ Matriz de testes manuais e headless. Para roteiro passo a passo da demo greybox,
 | Combo / dodge / counter / taunt | Implementado | |
 | Estilo + HUD | Implementado | |
 | Red Brand + Breaker | Implementado | |
-| Diálogo | Implementado | Cooldown reopen 250 ms |
-| Áreas (3) | Implementado | street → church → underground |
-| Arena | Implementado | |
-| Barreira persistente | Implementado | Registry + save |
+| Diálogo + interação | Implementado | Cooldown reopen 250 ms |
+| 3 áreas + transição | Implementado | |
+| Arena + Cult Brawler | Implementado | |
+| Barreira persistente | Implementado | |
 | Checkpoint | Implementado | Auto-save ao ativar |
-| Save/load | Implementado | **Manual:** F8 / F9 |
-| Auto-load ao boot | Desativado | `auto_load_on_ready = false` na greybox |
-| Deacon Rusk | Implementado | |
-| Conclusão demo | Implementado | Overlay + flag |
-| Pixel art final | Planejado beta | |
-| Mapa / diário UI | Planejado beta | |
+| Save/load manual | Implementado | **F8 / F9** |
+| Auto-load ao boot | **Desativado** | `auto_load_on_ready = false` |
+| Deacon Rusk + HUD chefe | Implementado | |
+| Conclusão demo | Implementado | |
+| GameplayLockManager | Implementado | Testes dedicados |
+| test_runner (10 suítes) | Implementado | |
+| Pixel art / mapa / diário UI | Planejado beta | |
 
 ## Comandos headless (portáveis)
 
-Executar na raiz do projeto. Substituir `godot` pelo executável da Godot 4.7 no PATH, se necessário.
+Executar na **raiz do projeto**. Substituir `godot` pelo executável Godot 4.7 se necessário.
+
+### Runner completo (recomendado)
+
+```bash
+godot --headless --path . --script res://scripts/tests/test_runner.gd
+```
+
+### Suítes individuais
 
 ```bash
 godot --headless --path . --script res://scripts/demo/vertical_slice_verification.gd
+godot --headless --path . --script res://scripts/demo/vertical_slice_regression_tests.gd
 godot --headless --path . --script res://scripts/dialogue/dialogue_tests.gd
 godot --headless --path . --script res://scripts/save/save_tests.gd
 godot --headless --path . --script res://scripts/world/area_transition_tests.gd
 godot --headless --path . --script res://scripts/world/combat_arena_tests.gd
 godot --headless --path . --script res://scripts/enemies/cult_brawler_tests.gd
 godot --headless --path . --script res://scripts/enemies/deacon_rusk_tests.gd
+godot --headless --path . --script res://scripts/player/player_regression_tests.gd
+godot --headless --path . --script res://scripts/core/gameplay_lock_tests.gd
 ```
 
-**Nota:** algumas suítes passam com warnings/erros de runtime em fixtures incompletas — tratar como dívida (`TECH_DEBT.md`). Meta: zero erros no console.
+**Meta:** exit code `0` e zero issues inesperados no console (`TECH_DEBT.md` P0). Arena headless ainda declara erros **permitidos** até fix de colisão deferred.
 
-## Demonstração vertical slice (greybox)
+## Demonstração vertical slice
 
-| Área | Teste | Procedimento | Resultado esperado |
+| Área | Teste | Procedimento | Esperado |
 | --- | --- | --- | --- |
-| Demo | Main scene | Executar projeto | Carrega `vertical_slice_greybox.tscn` |
-| Demo | Fluxo completo | `VERTICAL_SLICE_TEST_PLAN.md` | Marcos em 10–20 min |
-| Demo | Reinício | **R** | Retorna spawn/checkpoint sem softlock |
-| Demo | Voltar ao início | **F7** | Rua inicial; progresso resetado |
-| Demo | Salvar | **F8** | Arquivo em `user://saves/` |
-| Demo | Carregar | **F9** | Estado restaurado (não auto no boot) |
-| Demo | Conclusão | Derrotar Deacon Rusk | Overlay de demonstração concluída |
-| Demo | Verificação headless | `vertical_slice_verification.gd` | Mensagem de sucesso |
-| Demo | Panic recovery | **Esc** | Destrava diálogo/locks se travado |
+| Demo | Main scene | Executar projeto | Greybox carrega |
+| Demo | Fluxo completo | `VERTICAL_SLICE_TEST_PLAN.md` | 10–20 min |
+| Demo | Reinício | **R** | Spawn/checkpoint |
+| Demo | Voltar início | **F7** | Rua; progresso reset |
+| Demo | Salvar | **F8** | `user://saves/` |
+| Demo | Carregar | **F9** | Estado restaurado |
+| Demo | Boot frio | Fechar e reabrir | **Não** auto-carrega |
+| Demo | Conclusão | Derrotar Rusk | Overlay conclusão |
+| Demo | Panic | **Esc** | Destrava locks conhecidos |
 
-## Matriz geral
+## Matriz geral (resumo)
 
-| Área | Teste | Procedimento | Resultado esperado | Estado |
-| --- | --- | --- | --- | --- |
-| Inicialização | Abrir projeto | Godot 4.7 | Sem erros críticos | Implementado |
-| Inicialização | Main scene | Executar | Greybox carrega | Implementado |
-| Inicialização | `.godot/` | `git status --ignored` | Ignorada | Implementado |
-| Inicialização | FPS | Sala simples Windows | ~60 FPS | Implementado |
-| Movimento | Direita/esquerda | A/D | Plano 2D lateral | Implementado |
-| Movimento | Parada | Soltar direcional | Desacelera previsível | Implementado |
-| Movimento | Virada | Alternar direção | Hitbox/orientação corretas | Implementado |
-| Colisão | Piso / parede | Plataformas | Sem atravessar | Implementado |
-| Pulo | Chão / queda | Espaço | Pulo e pouso | Implementado |
-| Câmera | Seguimento / limites | Extremos da área | Limites respeitados | Implementado |
-| Câmera | Troca de área | Exit entre áreas | Limites atualizados | Implementado |
-| Ataques | Combo | J | Três golpes encadeáveis | Implementado |
-| Ataques | Startup / recovery | Observar fases | Dano só na janela ativa | Implementado |
-| Hitboxes | Separação | Inspecionar cena | Hitbox ≠ hurtbox | Implementado |
-| Hitboxes | Acerto único | Um swing | Sem multi-hit acidental | Implementado |
-| Hitboxes | Hitstop | Acertar inimigo | Feedback sem softlock | Implementado-debt |
-| Esquiva | K | Durante ataque inimigo | I-frames na janela | Implementado |
-| Counter | L | Telegraph amarelo | Counter em ataques counterable | Implementado |
-| Estilo | Variedade / repetição | Combo + repetição | Sobe com variedade; penaliza spam | Implementado |
-| Red Brand | U (segurar/soltar) | Após cristal | Breaker destrói barreira | Implementado |
-| Red Brand | Restrições | — | Sem magia/voo/projétil | Implementado |
-| Diálogo | E com Elias | Avançar e sair | Controles liberados | Implementado |
-| Diálogo | Reabertura | Fechar e mover | Não reabre no mesmo frame | Implementado |
-| Checkpoint | E no subterrâneo | Ativar | Visual ativo + save | Implementado |
-| Salvamento | F8 / F9 | Salvar e recarregar | Área, barreira, chefe consistentes | Implementado |
-| Salvamento | Corrompido | Arquivo inválido | Fallback sem crash | Implementado |
-| Salvamento | Boot | Iniciar jogo frio | **Não** auto-carrega na greybox | Por design atual |
-| Troca de áreas | Exits | Rua ↔ igreja ↔ sub | Spawn correto | Implementado |
-| Arena | Ativação | Zona igreja | Portas fecham; 2 inimigos | Implementado |
-| Arena | Conclusão | Derrotar todos | Portas abrem; flag set | Implementado |
-| Chefe | Deacon Rusk | Zona subterrâneo | HUD, fase 2, vitória | Implementado |
-| UI beta | Mapa / diário | — | — | Planejado |
-| Arte final | Pixel art | — | — | Planejado beta |
+| Área | Teste | Estado |
+| --- | --- | --- |
+| Inicialização | Godot 4.7, main scene | Implementado |
+| Movimento / pulo / câmera | A/D, espaço, limites | Implementado |
+| Ataques / hitboxes | Combo J, fases | Implementado |
+| Esquiva / counter | K / L | Implementado |
+| Estilo / Red Brand | Variedade; U + barreira | Implementado |
+| Diálogo | E com Elias | Implementado |
+| Checkpoint + save | Subterrâneo; F8/F9 | Implementado |
+| Transição áreas | Exits | Implementado |
+| Arena | 2 brawlers | Implementado |
+| Chefe | Deacon Rusk | Implementado |
+| UI beta | Mapa, diário | Planejado |
 
 ## Checklist por tarefa
 
-Depois de cada alteração de jogo, registrar:
-
-- arquivos criados e modificados;
-- testes executados (manual + headless aplicáveis);
-- erros no console (incluir warnings em testes);
-- se a Godot foi executada pelo terminal;
-- se collision layers/masks mudaram;
-- se sinais e referências foram verificados.
+- arquivos criados/modificados;
+- testes manual + headless aplicáveis;
+- erros/warnings no console;
+- collision layers/masks se alterados;
+- sinais e referências verificados.
 
 ## Documentos relacionados
 
-- `VERTICAL_SLICE_TEST_PLAN.md` — roteiro jogável
-- `BETA_DEMO_SCOPE.md` — critérios da beta
-- `TECH_DEBT.md` — falhas conhecidas de teste e runtime
+- `VERTICAL_SLICE_TEST_PLAN.md`, `BETA_DEMO_SCOPE.md`, `TECH_DEBT.md`

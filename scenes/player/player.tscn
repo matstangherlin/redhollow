@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://ckposgkq8gbef"]
+[gd_scene load_steps=15 format=3 uid="uid://ckposgkq8gbef"]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
@@ -6,6 +6,11 @@
 [ext_resource type="Script" path="res://scripts/combat/hitbox_component.gd" id="4_hitbox"]
 [ext_resource type="Script" path="res://scripts/combat/red_brand_component.gd" id="5_red_brand"]
 [ext_resource type="Script" path="res://scripts/interactables/interaction_detector.gd" id="6_interaction_detector"]
+[ext_resource type="Script" path="res://scripts/player/player_input_controller.gd" id="7_input"]
+[ext_resource type="Script" path="res://scripts/player/player_movement_controller.gd" id="8_movement"]
+[ext_resource type="Script" path="res://scripts/player/player_state_coordinator.gd" id="9_state"]
+[ext_resource type="Script" path="res://scripts/player/player_presentation_controller.gd" id="10_presentation"]
+[ext_resource type="Script" path="res://scripts/player/player_debug_view.gd" id="11_debug"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player_body"]
 size = Vector2(32, 56)
@@ -45,6 +50,23 @@ polygon = PackedVector2Array(0, -6, 14, 0, 0, 6)
 
 [node name="Components" type="Node2D" parent="."]
 unique_name_in_owner = true
+
+[node name="Controllers" type="Node" parent="."]
+
+[node name="PlayerInputController" type="Node" parent="Controllers"]
+script = ExtResource("7_input")
+
+[node name="PlayerMovementController" type="Node" parent="Controllers"]
+script = ExtResource("8_movement")
+
+[node name="PlayerStateCoordinator" type="Node" parent="Controllers"]
+script = ExtResource("9_state")
+
+[node name="PlayerPresentationController" type="Node" parent="Controllers"]
+script = ExtResource("10_presentation")
+
+[node name="PlayerDebugView" type="Node" parent="Controllers"]
+script = ExtResource("11_debug")
 
 [node name="HealthComponent" type="Node" parent="Components"]
 unique_name_in_owner = true

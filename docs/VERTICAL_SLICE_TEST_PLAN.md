@@ -3,7 +3,9 @@
 Demonstração técnica jogável: `vertical_slice_greybox.tscn`  
 Duração estimada: **10–20 minutos** (primeiro jogador).
 
-## Controles da demonstração
+**Importante:** ao iniciar o jogo, **não há auto-load** de save. Use **F9** para carregar manualmente após **F8**.
+
+## Controles
 
 | Tecla | Ação |
 | --- | --- |
@@ -13,135 +15,121 @@ Duração estimada: **10–20 minutos** (primeiro jogador).
 | K | Esquiva |
 | L | Counter |
 | T | Provocação |
-| U (segurar/soltar) | Red Brand Breaker carregado |
+| U (segurar/soltar) | Red Brand Breaker |
 | E | Interagir / avançar diálogo |
-| R | Reiniciar posição na área (spawn/checkpoint) |
+| R | Reiniciar posição (spawn/checkpoint) |
 | F7 | Voltar ao início da demonstração |
 | F8 | Salvar |
 | F9 | Carregar |
+| F | Toggle debug hitboxes |
+| Esc | Panic unlock (destravar locks) |
 
-## Roteiro completo (início ao fim)
+## Roteiro (início ao fim)
 
 ### 1. Rua inicial
-1. Inicie o projeto (`vertical_slice_greybox` é a main scene).
-2. Confirme spawn em posição inicial (x≈120).
-3. Verifique HUD de estilo (canto superior) e barra Red Brand sem cobrir o centro da ação.
-4. Caminhe pela rua e leia o rótulo de área.
 
-**Esperado:** movimento fluido, câmera segue Calder, limites da área respeitados.
+1. Inicie o projeto (main scene greybox).
+2. Confirme spawn inicial (x≈120).
+3. Verifique HUD estilo e barra Red Brand.
+4. Caminhe e leia rótulo de área.
+
+**Esperado:** movimento fluido; câmera com limites.
 
 ### 2. Elias e diálogo
-1. Aproxime-se de Elias (cor azul-acinzentada).
-2. Pressione **E** para iniciar diálogo.
-3. Avance todas as linhas com **E**.
-4. Ao terminar, tente mover/atacar imediatamente.
 
-**Esperado:** diálogo sobre igreja/cultistas; controles liberados após o fim.
+1. Interaja com Elias (**E**).
+2. Avance linhas; ao terminar, mova/ataque.
 
-### 3. Seção de plataforma
-1. Avance até plataformas cinza elevadas.
-2. Pule entre PlatformA → B → C → retorno ao chão.
-3. Se cair, confirme recuperação por queda (teleporte ao spawn) sem softlock.
+**Esperado:** controles liberados; cooldown reopen (~250 ms).
 
-**Esperado:** plataformas alcançáveis; sem ficar preso permanentemente.
+### 3. Plataformas
+
+1. Pule plataformas cinza.
+2. Se cair, confirme recuperação por queda (teleporte spawn).
 
 ### 4. Cult Brawler (rua)
-1. Enfrente o Cult Brawler após as plataformas.
-2. Teste combo (J), esquiva (K) e counter (L) em ataque telegrafado.
-3. Derrote o inimigo e observe ganho de estilo.
 
-**Esperado:** hitbox/hurtbox corretos; morte do inimigo; estilo sobe.
+1. Enfrente brawler; teste J/K/L.
+2. Derrote; observe estilo.
 
-### 5. Transição para igreja
-1. Siga até a saída **→ Igreja** (extremo direito).
-2. Confirme spawn coerente na igreja (`from_street`).
+### 5. Transição igreja
 
-**Esperado:** transição de área sem perder player/câmera/HUD.
+1. Saída **→ Igreja** (direita).
+2. Spawn coerente (`from_street`).
 
 ### 6. Arena (dois Cult Brawlers)
-1. Entre na zona de ativação da arena (~x=720).
-2. Confirme mensagem **Combate iniciado** e portas fechadas.
-3. Tente sair pela esquerda/direita durante combate — deve bloquear.
-4. Derrote os dois inimigos.
-5. Confirme **Arena concluída**, portas abertas e bônus de estilo.
 
-**Esperado:** arena não reativa após conclusão.
+1. Zona ~x=720 — portas fecham.
+2. Derrote ambos; portas abrem; bônus estilo.
 
-### 7. Red Brand para golpe carregado
-1. Interaja com o cristal vermelho (**Absorver Coração Rubro**) após arena.
-2. Confirme energia ≥ 30 (mínimo para carregar Breaker).
-3. Segure **U** e solte para Red Brand Breaker.
+### 7. Red Brand
 
-**Esperado:** cristal só disponível após arena; energia suficiente para teste.
+1. Cristal Coração Rubro após arena.
+2. Energia ≥ 30; segure/solte **U**.
 
-### 8. Barreira vermelha
-1. Aproxime-se da barreira rubra antes do subterrâneo.
-2. Use Red Brand Breaker para destruir.
-3. Atravesse a passagem liberada.
+### 8. Barreira Vermilite
 
-**Esperado:** barreira some; saída para subterrâneo acessível.
+1. Breaker destrói barreira rubra.
+2. Acesse saída subterrâneo.
 
-### 9. Área subterrânea
-1. Entre em **→ Subterrâneo**.
-2. Confirme ambiente mais escuro e câmera com novos limites.
+### 9. Subterrâneo
 
-**Esperado:** transição correta; atmosfera distinta.
+1. Ambiente escuro; limites câmera novos.
 
 ### 10. Checkpoint
-1. Ative checkpoint verde com **E**.
-2. Visual muda para estado ativo (amarelo).
-3. Pressione **F8** para salvar.
 
-**Esperado:** checkpoint registrado; feedback visual.
+1. Ative checkpoint verde (**E**).
+2. **F8** salvar.
 
-### 11. Mini-chefe Deacon Rusk
-1. Avance até zona do chefe (~x=520).
-2. Confirme HUD do chefe (nome + barra de vida).
-3. Observe telegraphs (amarelo = counterable, vermelho = não counterable).
-4. Teste fase 2 abaixo de 50% HP.
-5. Derrote Deacon Rusk.
+### 11. Deacon Rusk
 
-**Esperado:** `boss_defeated`; saída desbloqueada; overlay de conclusão.
+1. Zona chefe ~x=520; HUD chefe.
+2. Telegraphs amarelo/vermelho; fase 2 <50% HP.
+3. Derrote — overlay conclusão.
 
-### 12. Mensagem final
+### 12. Reinício
+
 1. Leia overlay **Demonstração Técnica Concluída**.
-2. Pressione **F7** para voltar ao início.
-
-**Esperado:** mensagem clara; reinício limpo na rua.
+2. **F7** volta ao início.
 
 ## Testes de persistência
 
-1. Após destruir barreira e ativar checkpoint, salve (**F8**).
-2. Feche e reabra o jogo.
-3. Carregue (**F9**) ou aguarde auto-load.
+1. Após barreira destruída + checkpoint, **F8**.
+2. Feche e reabra o jogo — **não** deve auto-carregar.
+3. Pressione **F9**.
 
-**Esperado:**
-- Área e posição restauradas.
-- Barreira permanece destruída.
-- Checkpoint visual ativo.
-- Arena/chefe concluídos não reativam indevidamente.
+**Esperado:** área/posição/barreira/checkpoint/flags de arena e chefe consistentes.
 
 ## Testes de recuperação
 
-| Cenário | Procedimento | Esperado |
+| Cenário | Tecla | Esperado |
 | --- | --- | --- |
-| Reinício de área | **R** após tomar dano | Volta ao spawn/checkpoint |
-| Voltar ao início | **F7** | Rua inicial, progresso resetado |
-| Queda | Cair do mapa | Recuperação automática |
-| Diálogo | Terminar conversa | Controles liberados |
+| Reinício área | R | Spawn/checkpoint |
+| Início demo | F7 | Rua, progresso reset |
+| Queda | Cair do mapa | Teleporte spawn |
+| Softlock | Esc | Locks destravados (escape hatch) |
 
-## Verificação automatizada (headless)
+## Verificação automatizada
 
-```powershell
-& "C:\Users\Stan\Documents\Godot_v4.7-stable_win64.exe" --headless --path "C:\Users\Stan\Documents\red-hollow" --script res://scripts/demo/vertical_slice_verification.gd
+Na raiz do projeto:
+
+```bash
+godot --headless --path . --script res://scripts/tests/test_runner.gd
 ```
 
-Execute também os testes de sistema existentes (diálogo, save, áreas, arena, Deacon Rusk) antes de release da demo.
+Suíte mínima demo:
+
+```bash
+godot --headless --path . --script res://scripts/demo/vertical_slice_verification.gd
+godot --headless --path . --script res://scripts/demo/vertical_slice_regression_tests.gd
+```
+
+Ver lista completa em `TEST_MATRIX.md`.
 
 ## Critérios de aceite
 
-- [ ] Fluxo completo jogável em 10–20 min.
-- [ ] Todos os sistemas obrigatórios exercitados pelo menos uma vez.
-- [ ] Nenhum softlock conhecido.
-- [ ] Save/checkpoint/barreira/chefe consistentes após reload.
-- [ ] HUD e diálogo não bloqueiam gameplay indevidamente.
+- [ ] Fluxo 10–20 min completo.
+- [ ] Sistemas obrigatórios exercitados.
+- [ ] Sem softlock conhecido.
+- [ ] F8/F9 consistente; **sem** expectativa de auto-load no boot.
+- [ ] HUD/diálogo não bloqueiam gameplay indevidamente.

@@ -1,132 +1,159 @@
 # Player Behavior Contract — Vertical Slice baseline
 
-Contratos comportamentais que **devem permanecer verdadeiros** após refatorações. Validados por `scripts/player/player_regression_tests.gd` e suítes de fluxo.
+Comportamentos que **devem permanecer verdadeiros** após refatoração de `player.gd`. Validados por `scripts/player/player_regression_tests.gd` (48 casos) e suítes de fluxo.
+
+Complementa `PLAYER_PUBLIC_API.md`. Valores numéricos vêm dos `@export` atuais — **não alterar** sem atualizar testes.
 
 ## Movimento
 
-### Aceleração e desaceleração
+### Horizontal, aceleração e desaceleração
 
-- No chão, com input horizontal, `velocity.x` converge para `±max_run_speed` (240 px/s) usando `ground_acceleration` (1800).
-- Sem input no chão, `velocity.x` decai até 0 usando `ground_deceleration` (2200).
-- No ar, aceleração/desaceleração usam `air_acceleration` (1100) e `air_deceleration` (650).
+- Input A/D produz `velocity.x` positivo/negativo convergindo para `±max_run_speed` (240 px/s).
+- Chão: aceleração `ground_acceleration` (1800); desaceleração `ground_deceleration` (2200).
+- Ar: `air_acceleration` (1100) / `air_deceleration` (650).
 
-### Pulo, queda e gravidade
+### Gravidade e queda
 
-- Pulo no chão define `velocity.y = jump_velocity` (-560) e estado `JUMP`.
-- Gravidade aplica até `max_fall_speed` (900).
-- Soltar `jump` cedo reduz `velocity.y` por `jump_cut_multiplier` (0.45).
+- Gravidade 1800 px/s² até `max_fall_speed` (900).
+- No chão com `velocity.y > 0`, vertical zera antes de gravidade.
 
-### Coyote time e jump buffer
+### Pulo, coyote, buffer, corte variável
 
-- Ao sair do chão, `coyote_time_remaining` inicia em `coyote_time` (0.10 s); pulo ainda permitido enquanto > 0.
-- Pressionar `jump` antes de pousar preenche `jump_buffer_remaining` (0.12 s); ao tocar chão, pulo dispara se buffer ativo.
+- Pulo no chão: `velocity.y = jump_velocity` (-560); estado `JUMP` ou `FALL`.
+- Coyote: 0.10 s após sair do chão.
+- Jump buffer: 0.12 s; dispara ao pousar se coyote ativo.
+- Soltar pulo cedo: `velocity.y *= jump_cut_multiplier` (0.45).
 
 ### Facing
 
-- `set_facing_direction(±1)` atualiza `facing_direction` e espelha `%Visual` / `%DirectionMarker`.
-- Dodge usa `facing_direction` como direção padrão.
+- `set_facing_direction(±1)` atualiza `facing_direction`, `%Visual.scale.x`, `%DirectionMarker`.
+- **CharacterBody2D.scale** permanece `(1, 1)` — espelhamento só em `%Visual`.
 
-### Recuperação de queda
+### Recuperação por queda
 
-- Se `global_position.y > fall_recovery_y`, o jogador teleporta para `spawn_position`, zera velocidade/timers e cancela combate ativo.
-- `apply_area_settings({"fall_recovery_y": X})` altera o limiar por área (demo: 1320; underground VS: 1280).
+- Se `global_position.y > fall_recovery_y` → teleporte `spawn_position`, zera velocidade/timers, cancela combate.
+- `apply_area_settings({"fall_recovery_y": X})` altera limiar por área.
 
-## Combate
+## Ataques
 
-### Combo de três golpes
+### Combo (ordem fixa)
 
-- Sequência: `calder_straight` → `body_hook` → `red_knuckle`.
-- Cada ataque passa por fases `STARTUP → ACTIVE → RECOVERY`.
-- Golpes 1–2 possuem janela de cancelamento (`cancel_window_start/end`); o 3º é finisher sem cancel.
-- Buffer de combo: `attack_input_buffer_time` (0.35 s) durante janela de cancelamento.
-- Após finisher, emite `combo_completed`.
+1. **Calder Straight** (`calder_straight`) — startup 0.08 / active 0.08 / recovery 0.18 s  
+2. **Body Hook** (`body_hook`) — 0.11 / 0.09 / 0.22 s  
+3. **Red Knuckle** (`red_knuckle`) — finisher; emite `combo_completed`
 
-### Hitbox e alvo único
+### Fases e buffer
 
-- Hitbox ativa só em `AttackPhase.ACTIVE`.
-- `HitboxComponent` respeita `max_hits_per_target` do `AttackData` (default 1).
-- Forma/tamanho vêm de `AttackData.hitbox_size` e `hitbox_offset`, não do Polygon2D.
+- Fases: `STARTUP → ACTIVE → RECOVERY → NONE`.
+- Hitbox ativa só em `ACTIVE`.
+- Buffer de combo: `attack_input_buffer_time` (0.35 s) durante janela de cancel (`cancel_window_start/end` nos `.tres`).
+- Finisher sem janela de cancel.
 
-### Interrupção
+### Acerto único e interrupção
 
-- `interrupt_attack()` cancela ataque, dodge, counter, taunt e carga Brand.
-- Dano (`HealthComponent.damaged`) interrompe para `HURT`.
-- Morte interrompe para `DEAD`.
+- `max_hits_per_target == 1` por padrão; `clear_hit_targets` ao iniciar ataque.
+- `interrupt_attack()` limpa `current_attack` e estados de defesa/Brand.
+- Dano → `HURT` + interrupção; morte → `DEAD`.
 
-### Counter
-
-- Input `counter` inicia fases: startup → **window** → recovery.
-- `try_counter_hit()` só funciona na window com ataque `counterable`.
-- Sucesso dispara counter attack (`calder_counter.tres`), hitstop e screen shake.
+## Defesa
 
 ### Esquiva
 
-- Input `dodge` no chão; fases startup/active/recovery; cooldown 0.28 s.
+- Fases startup / active / recovery; cooldown 0.28 s.
 - Invulnerabilidade entre `invulnerability_start` (0.02 s) e `invulnerability_end` (0.13 s) do elapsed.
+- Sinais: `dodge_started`, `dodge_finished`.
 
-### Provocação
+### Counter
 
-- Input `taunt` no chão (estados permitidos); duração 0.90 s; cooldown 1.20 s.
-- Vulnerabilidade entre `taunt_vulnerable_start` (0.14 s) e `taunt_vulnerable_end` (0.68 s).
+- Fases: startup → **window** (0.12 s) → recovery.
+- `try_counter_hit`: aceito só na window com `AttackData.counterable == true`.
+- Rejeição: cedo (startup), tarde (pós-window), não counterable.
+- Sucesso → counter attack + hitstop + screen shake.
 
-### Red Brand Breaker
+## Provocação
 
-- Input `special` (segurar) inicia carga se `RedBrandComponent` tem ≥ `min_energy_to_charge` (30 no `.tres` atual).
-- Lv1 após 0.22 s; Lv2 após 0.55 s.
-- Soltar dispara ataque correspondente e consome energia.
-- Emite sinais `brand_breaker_*`.
+- Duração 0.90 s; cooldown 1.20 s após término.
+- Vulnerabilidade (não invulnerável) entre 0.14 s e 0.68 s elapsed.
+- Sinais `taunt_started`, `taunt_performed`; frase não vazia de `taunt_phrases`.
+- Bloqueia `can_interact_now`.
 
-## Locks de input
+## Red Brand Breaker
+
+- Carga requer energia ≥ `min_energy_to_charge` (config `.tres`).
+- Lv1 após 0.22 s; Lv2 após 0.55 s (config).
+- Custos: 30 (lv1) / 60 (lv2) via `AttackData.red_brand_cost`.
+- Energia insuficiente → downgrade ou cancel.
+- Sinais: `brand_breaker_charge_started`, `_updated`, `_cancelled`, `_released`.
+- Lv2 mantém tags `red_brand_breaker` + `barrier_break` para barreiras Vermilite.
+
+## Locks de gameplay
 
 | Lock | Efeito |
 | --- | --- |
-| Diálogo | Sem ataque/dodge/counter/taunt/Brand; gravidade continua; estado `INTERACT` |
-| Transição | Idêntico ao diálogo |
-| Morte | `can_interact_now()` false; combate bloqueado |
-| Dois locks | Ambos podem estar true; `clear_input_locks()` limpa os dois |
-| Fora de ordem | `exit_dialogue_mode()` / `exit_transition_mode()` independentes; `clear_input_locks()` força reset |
+| Diálogo (`GameplayLockManager.DIALOGUE`) | Sem ataque/dodge/counter/taunt/Brand; gravidade continua; `INTERACT` |
+| Transição (`AREA_TRANSITION`) | Idem diálogo |
+| Morte (`DEATH`) | `can_interact_now` false; lock via `_on_player_died` |
+| Dois locks | Coexistem; `clear_input_locks()` limpa todos |
+| Desbloqueio parcial | `exit_dialogue_mode()` não remove lock de transição |
 
-Reconciliação automática: se controller de diálogo não está ativo, locks de diálogo são limpos; idem transição via `AreaTransitionManager.is_transitioning`.
+## Dano e morte
+
+- `HealthComponent.damaged` → `interrupt_attack(HURT)` se não morto.
+- `HealthComponent.died` → `interrupt_attack(DEAD)` + lock DEATH.
+- `apply_checkpoint` / `apply_save_state` restauram posição, vida, Brand e limpam combate ativo.
 
 ## Contratos com sistemas externos
 
-### Câmera (`camera_controller` group)
+### Câmera
 
-- Player solicita shake em counter success e Brand breaker via `request_shake(intensity, duration)`.
-- Câmera segue `target_path` (demo: `../Player`); Player **não** controla limites de área diretamente.
+- `request_shake(intensity, duration)` em counter e Brand breaker.
 
-### Diálogo (`dialogue_controller` group)
+### Diálogo
 
-- `DialogueController` chama `enter_dialogue_mode()` / destrava via `clear_input_locks()` ou `exit_dialogue_mode()`.
-- Player bloqueia `interact` durante combate/locks via `can_interact_now()`.
+- `DialogueController` → `enter_dialogue_mode()`.
+- Player não avança diálogo; bloqueia combate durante lock.
 
-### Save (`SaveManager`)
+### Save / checkpoint
 
-- `apply_save_state()` restaura `checkpoint_position`, `player_current_health`, `player_max_health`, `red_brand_energy`.
-- `apply_checkpoint()` usado em checkpoints da vertical slice.
-- Save **não** serializa estado de combo/dodge/counter.
+- `apply_save_state`: `checkpoint_position`, `player_current_health`, `player_max_health`, `red_brand_energy`.
+- `capture_persistence_state()` para SaveManager (sem paths `Components/...`).
+- Não serializa combo/dodge/counter mid-action.
 
-### Red Brand (`RedBrandComponent`)
+### Estilo (`StyleManager`)
 
-- Player lê/consome via `can_consume`, `consume_energy`, `set_energy`, `reset_energy`.
-- Breaker consome custo do `AttackData.red_brand_cost` ou config fallback.
+- Escuta sinais do player e hits; player **não** chama StyleManager diretamente.
 
-### StyleManager (`style_manager` group)
+### Hitstop
 
-- StyleManager escuta sinais do Player (`combo_completed`, `dodge_*`, `counter_*`, `taunt_*`, `brand_breaker_released`) e hits do hitbox.
-- Player **não** chama StyleManager diretamente.
+- `request_hitstop(duration)`; **não** altera `Engine.time_scale` permanentemente nem pausa árvore sozinho.
 
-### Hitstop (`hitstop_controller` group)
+### Progressão
 
-- Player chama `request_hitstop(duration)` em counter; hitbox também pode solicitar.
-- **Contrato crítico:** hitstop **não** pausa árvore nem altera `Engine.time_scale` permanentemente.
-- Player força `Engine.time_scale = 1.0` e unpause se detectar soft-lock.
+- Indireta via checkpoint/save; player não referencia `ProgressionComponent`.
 
-## Fluxo vertical slice (referência)
+## Visual vs gameplay
 
-1. **Street** — spawn `(120, 848)`, diálogo Elias, brawler, exit church.
-2. **Church** — arena cultistas, cache Brand, barreira `CultRedBarrier`, exit underground.
-3. **Underground** — checkpoint, Deacon Rusk, conclusão demo.
-4. **Reset F7** — `VerticalSliceController.return_to_start()` limpa save, locks, hitstop, barreiras, Brand, style.
+- Ocultar `%BodyVisual` / `%BrandHand` **não** impede ataque (hitbox independente).
+- Colisão do `CharacterBody2D` independente de escala visual.
 
-Contratos de fluxo detalhados em `scripts/demo/vertical_slice_regression_tests.gd`.
+## Não testável automaticamente (headless)
+
+| Comportamento | Motivo |
+| --- | --- |
+| Feeling subjetivo de combo/dodge | Requer playtest humano |
+| Input Map `is_action_just_pressed` confiável | Testes usam precondições + adaptadores |
+| Screen shake visual | Sem viewport assert |
+| Animações futuras (`AnimatedSprite2D`) | Ainda placeholder Polygon2D |
+| Integração câmera follow/limites | Requer cena completa + `AreaRoot` |
+| Barreira destruível in-world | Coberto indiretamente por tags lv2; destruição em testes de mundo |
+| Respawn completo pós-morte na demo | Fluxo morte/respawn P0 dívida — lock testado, respawn UX manual |
+| Red Brand HUD pulse | UI separada |
+
+## Execução dos testes
+
+```bash
+godot --headless --path . --script res://scripts/player/player_regression_tests.gd
+godot --headless --path . --script res://scripts/tests/test_runner.gd
+```
+
+Suite `player_regression_tests`: **48** casos; falha se qualquer assertion ou erro inesperado no console.

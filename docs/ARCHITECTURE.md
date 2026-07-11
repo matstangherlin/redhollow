@@ -1,228 +1,142 @@
 # Red Hollow — Architecture
 
-Arquitetura do projeto Godot 4.7 em GDScript. Este documento descreve **o que está implementado** e **para onde evoluir**.
+Arquitetura Godot 4.7 / GDScript. Descreve **implementado**, **dívida** e **alvo**.
 
-## Legenda de estado
+Baseline: tag `greybox-vertical-slice-v0.1`. Inventário: `CURRENT_IMPLEMENTATION.md`.
+
+## Legenda
 
 | Tag | Significado |
 | --- | --- |
-| **[implemented]** | Existe no repositório e funciona na demo greybox |
-| **[implemented-debt]** | Funciona, mas com dívida documentada em `TECH_DEBT.md` |
-| **[planned-beta]** | Previsto para Capítulo Zero |
-| **[planned-final]** | Previsto para o jogo completo |
-| **[target]** | Direção arquitetural desejada |
+| **[implemented]** | Funciona na demo greybox |
+| **[implemented-debt]** | Funciona com dívida (`TECH_DEBT.md`) |
+| **[planned-beta]** | Capítulo Zero |
+| **[planned-final]** | Jogo completo |
+| **[target]** | Direção desejada |
 
-## Main scene e shell persistente
+## Main scene e shell
 
-**[implemented]** Main scene: `res://scenes/demo/vertical_slice_greybox.tscn`
-
-Estrutura persistente (player, câmera e managers não são recriados a cada área):
+**[implemented]** `res://scenes/demo/vertical_slice_greybox.tscn`
 
 ```text
 vertical_slice_greybox (game.gd)
-├── HitstopController
-├── StyleManager → StyleHud
+├── HitstopController          [implemented-debt]
+├── GameplayLockManager        [implemented]
+├── StyleManager → StyleHud    [implemented-debt]
 ├── BossHealthHud
 ├── RedBrandDirector
 ├── ProgressionSystem
 ├── DialogueSystem
-├── SaveManager          (auto_load_on_ready = false na greybox)
-├── AreaTransitionManager
+├── SaveManager                auto_load_on_ready = false
+├── AreaTransitionManager      [implemented-debt]
 ├── VerticalSliceController
-├── WorldHost            ← apenas a área atual
-├── Player
+├── WorldHost                  ← área atual (swap)
+├── Player                     [implemented-debt]
 └── CameraController
 ```
 
-`scenes/core/game.tscn` existe como referência de shell; a demo greybox replica o mesmo padrão.
+`scenes/core/game.tscn` — referência de shell; greybox replica o padrão.
 
-**[target]** Separar orquestração de `game.gd` em serviços menores sem concentrar panic recovery.
+**[target]** Orquestração menor em `game.gd`; panic unlock removido quando locks forem suficientes.
 
 ## Troca de áreas
 
-**[implemented]** `AreaTransitionManager` troca cenas filhas em `WorldHost` — não usa `change_scene_to_file()` para cada passagem.
+**[implemented]** `AreaTransitionManager` — swap filho em `WorldHost`, não `change_scene_to_file()` por passagem.
 
-Fluxo:
+Fluxo: exit → lock transição → pausa → remove área → instancia `AreaRoot` → spawn → câmera → rebind (save, style, Red Brand, diálogo) → unlock.
 
-1. `AreaExit` emite trigger
-2. Player entra em `enter_transition_mode()`
-3. Pausa curta (`transition_pause_seconds`)
-4. Área atual removida; nova instanciada (`AreaRoot`)
-5. Spawn em `AreaSpawnPoint` por `spawn_id`
-6. Câmera `configure_for_area`
-7. Rebind: save checkpoints, style trackables, diálogo reset, Red Brand
-8. Player `exit_transition_mode()` / `clear_input_locks`
-
-Áreas da vertical slice:
+Áreas vertical slice:
 
 - `vertical_slice_street.tscn`
 - `vertical_slice_church.tscn`
 - `vertical_slice_underground.tscn`
 
-Áreas de teste legadas: `street_test`, `church_entrance_test`, `underground_test`.
+Legado teste: `street_test`, `church_entrance_test`, `underground_test`.
 
 Ver `AREA_TRANSITIONS.md`.
 
-## Estrutura de pastas (atual)
-
-```text
-scenes/
-  demo/           # vertical_slice_greybox
-  core/           # game, camera, dialogue, progression, style
-  player/
-  enemies/
-  areas/          # vertical_slice_* + test_*
-  world/          # arena, barrier, boss_encounter
-  ui/
-  interactables/
-  npcs/
-scripts/
-  player/         # player.gd (monolítico) [implemented-debt]
-  combat/         # components, attack_data, red_brand
-  core/           # game, camera, hitstop
-  dialogue/
-  demo/
-  enemies/
-  save/
-  style/
-  world/
-  ui/
-resources/combat/   # AttackData .tres
-data/dialogues/     # dialogues_pt_br.json
-docs/
-```
-
-**[planned-beta]** `art/`, `audio/` com assets finais versionados.
-
 ## Jogador
 
-**[implemented]** `CharacterBody2D` + componentes filhos:
+**[implemented]** `CharacterBody2D` + componentes combate:
 
 - `HealthComponent`, `HitboxComponent`, `HurtboxComponent`
 - `RedBrandComponent`, `InteractionDetector`
-- Estados: idle, run, jump, fall, attack, dodge, counter, taunt, hurt, dead, interact
 
-**[implemented-debt]** Toda lógica em `scripts/player/player.gd`.
+**[implemented-debt]** Lógica central em `player.gd` (~1700 linhas baseline).
 
-**[target]** Divisão:
+**[target]** Componentes (refatoração documentada):
 
 | Módulo | Responsabilidade |
 | --- | --- |
-| PlayerInput | Input map, buffers |
-| PlayerMovement | Velocidade, pulo, gravidade |
-| PlayerCombat | Combo, fases de ataque |
-| PlayerDefense | Dodge, counter, i-frames |
-| PlayerRedBrand | Carga e release do Breaker |
-| PlayerInteractionLock | Diálogo, transição |
-| PlayerPresentation | Visual, animação |
+| PlayerInputController | Input map, buffers, locks |
+| PlayerMovementController | Física horizontal, pulo, gravidade |
+| PlayerStateCoordinator | Estados alto nível |
+| PlayerPresentationController | Visual; `%Visual` scale, não body |
+| PlayerDebugView | Overlay debug; off em release |
 
-## Componentes de combate
+Player permanece **coordenador**; combate/hitbox ficam no script principal até split futuro.
 
-**[implemented]**
+## Combate
 
-| Componente | Função |
+**[implemented]** `AttackData`, hitbox/hurtbox, fases startup/active/recovery, hitstop request, estilo, Red Brand Breaker.
+
+## Inimigos
+
+**[implemented]** Cult Brawler, Deacon Rusk, dummies de teste.
+
+**[planned-beta]** Três arquétipos visuais sobre IA existente.
+
+## Sistemas na shell
+
+| Sistema | Estado |
 | --- | --- |
-| `HitboxComponent` | Dano ativo, hitstop request, alvos únicos |
-| `HurtboxComponent` | Recebe hit, encaminha counter/dano |
-| `HealthComponent` | Vida, morte, invulnerabilidade |
-| `AttackData` | Resource: timing, dano, knockback, tags, estilo |
-
-Hitboxes/hurtboxes em `Node2D` filho (`Components`) para seguir o personagem.
-
-## Inimigos e chefes
-
-**[implemented]**
-
-- `cult_brawler.gd` — IA patrulha/ataque
-- `deacon_rusk.gd` — chefe em fases, stagger, super armor
-- `enemy_dummy`, `enemy_attacker_test` — testes
-
-**[planned-beta]** Três arquétipos visuais finais reutilizando padrões de IA existentes.
-
-## Sistemas globais (na shell, não autoload)
-
-| Sistema | Estado | Notas |
-| --- | --- | --- |
-| `StyleManager` | [implemented] | Grupos + sinais do player |
-| `RedBrandDirector` | [implemented] | Energia e recompensas |
-| `ProgressionComponent` | [implemented] | Flags, checkpoints, habilidades |
-| `SaveManager` | [implemented-debt] | `user://saves`; F8/F9; auto-load off na greybox |
-| `DialogueController` | [implemented] | JSON, cooldown reopen |
-| `BarrierRegistry` | [implemented] | Barreiras destruídas persistentes |
-| `CombatArenaController` | [implemented] | Spawn, gates, flags |
-| `BossEncounterController` | [implemented] | Rusk + HUD |
-| `HitstopController` | [implemented-debt] | Marcador; não congela simulação |
-
-**[target]** Autoloads apenas se múltiplas roots precisarem do mesmo serviço (ex.: menu principal separado).
+| `GameplayLockManager` | [implemented] tokens diálogo/transição/morte/hitstop |
+| `HitstopController` | [implemented-debt] sem `Engine.time_scale` global |
+| `StyleManager` | [implemented-debt] acoplado a StyleHud |
+| `SaveManager` | [implemented-debt] F8/F9; paths internos player |
+| `DialogueController` | [implemented] |
+| `BarrierRegistry` | [implemented] |
+| `CombatArenaController` | [implemented-debt] fail-safe se inimigos somem |
+| `BossEncounterController` | [implemented] |
 
 ## Salvamento
 
-**[implemented]** `SaveData` versão 1; validação; backup `.bak`; escrita atômica via temp.
+**[implemented]** `SaveData` v1, validação, backup, escrita atômica.
 
-Persiste: área, posição, vida, Red Brand, flags, checkpoints, barreiras destruídas.
+Persiste: área, posição, vida, Red Brand, flags, checkpoints, barreiras.
 
-**Importante:** na vertical slice greybox, `SaveManager.auto_load_on_ready = false` — carregamento manual (**F9**) ou após bind explícito.
+**Importante:** `auto_load_on_ready = false` na greybox — **sem** load automático ao abrir o jogo. F9 manual.
 
-**[planned-beta]** Auto-load seguro com validação de área compatível.
+**[target]** `capture_persistence_state()` no player; auto-load beta com validação de área.
 
-## Corrupção ambiental (Ressonância Rubra)
+## Corrupção ambiental
 
-**[planned-beta]** Uma transformação curta no Capítulo Zero.
+**[planned-beta]** Uma variante curta Capítulo Zero.
 
-**[target]** Arquitetura sem duplicar mapas inteiros:
-
-```text
-AreaRoot
-├── Layers_Normal (Node2D)
-│   ├── background
-│   ├── midground
-│   └── foreground
-├── Layers_Corrupted (Node2D, hidden by default)
-│   └── ... variantes substituíveis
-└── CorruptionController
-    └── aplica: lighting, swap meshes, enemy table, particles
-```
-
-Técnicas:
-
-- trocar visibilidade de camadas;
-- `Resource` de variante por prop;
-- shader/global modulate para iluminação;
-- spawn table diferente por estado;
-- **não** manter dois `.tscn` completos por área salvo exceção.
-
-## HUD e UI
-
-**[implemented]** `StyleHud`, `BossHealthHud`, `DialogueBox`, hints na demo.
-
-**[planned-beta]** Mapa, objetivos, diário, menu pausa, tela Red Brand — `UI_BIBLE.md`.
-
-## Diálogo
-
-**[implemented]** `DialogueLibrary` + `dialogues_pt_br.json` + `DialogueController` + triggers em NPCs/interactables.
-
-## Câmera
-
-**[implemented]** `CameraController` — follow, limites por `AreaRoot.camera_limits`, shake.
-
-## Depuração
-
-**[implemented]** F toggle debug hitboxes; R respawn; F7 reset demo; F8/F9 save/load; Esc panic unlock.
-
-**[target]** Debug overlay desligável em release.
-
-## Sinais recomendados
-
-Muitos já em uso: `health_changed`, `died`, `damaged`, `hit_landed`, `style_changed`, `dialogue_started/finished`, `area_changed`, `boss_defeated`, `arena_completed`.
+**[target]** Camadas substituíveis em `AreaRoot` — ver `ARCHITECTURE.md` seção anterior em `NARRATIVE_BIBLE.md`.
 
 ## Testes
 
-Scripts headless em `scripts/**/*_tests.gd` e `vertical_slice_verification.gd`. Comandos portáveis em `TEST_MATRIX.md`.
+**[implemented]**
 
-**[target]** Fixture de cena mínima para testes que hoje assumem árvore incompleta.
+| Artefato | Função |
+| --- | --- |
+| `scripts/tests/test_runner.gd` | 10 suítes, exit code |
+| `scripts/tests/test_helpers.gd` | Fixtures, allowlist |
+| `scripts/tests/runtime_error_monitor.gd` | Erros/warnings inesperados |
+| `player_regression_tests.gd` | 26 contratos player |
+| `gameplay_lock_tests.gd` | Locks + hitstop |
+| `vertical_slice_regression_tests.gd` | Fluxo demo |
+
+Comandos: `TEST_MATRIX.md`, `HEADLESS_TESTING.md`.
+
+## Depuração
+
+**[implemented]** F debug hitboxes; R respawn; F7 reset demo; F8/F9 save/load; Esc panic unlock.
+
+**[target]** Debug desligável em release (`PlayerDebugView.enabled_in_debug_builds`).
 
 ## Documentos relacionados
 
-- `TECH_DEBT.md` — dívida e ordem de refatoração
-- `AREA_TRANSITIONS.md` — fluxo de transição
-- `BETA_DEMO_SCOPE.md` — próximo marco de entrega
+- `TECH_DEBT.md`, `DECISIONS.md`, `CURRENT_IMPLEMENTATION.md`
+- `PLAYER_PUBLIC_API.md`, `PLAYER_BEHAVIOR_CONTRACT.md` — contratos regressão

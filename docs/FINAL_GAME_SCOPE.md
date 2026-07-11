@@ -1,107 +1,83 @@
 # Red Hollow — Final Game Scope
 
-Visão de escopo do jogo completo. Distinto da beta (`BETA_DEMO_SCOPE.md`) e da demo técnica greybox já jogável.
+Visão do **jogo completo**. Distinto da beta (`BETA_DEMO_SCOPE.md`) e da demo técnica greybox (`CURRENT_IMPLEMENTATION.md`).
 
 ## Visão
 
-Metroidvania de ação 2D em pixel art detalhada. Calder explora Red Hollow, enfrenta barões e a Ordem, desvenda o ritual da Red Brand e o papel de Mol-Khar, enquanto a mineração de Vermilite enfraquece o selo da cidade.
+Metroidvania de ação 2D em pixel art detalhada. Calder explora Red Hollow, enfrenta barões e a Ordem, desvende o ritual da Red Brand e o papel de Mol-Khar, enquanto a mineração de Vermilite enfraquece o selo sob a cidade.
 
-## Pilares do produto final
+## Pilares
 
 - combate corpo a corpo técnico e estilizado;
 - exploração interligada com backtracking;
 - progressão por habilidades físicas e Red Brand;
 - narrativa ambiental + diálogos curtos;
-- terror religioso e faroeste decadente;
-- humor agressivo de Calder sem anular ameaça.
+- terror religioso + faroeste decadente;
+- humor agressivo de Calder;
+- Ressonância Rubra — sem magia elemental genérica.
 
-## Estrutura macro
+## Estrutura narrativa provisória
 
-### Mundo
+Ordem macro sujeita a ajuste de produção; cada arco deve reforçar pactos, culpa e custo da Red Brand.
 
-- cidade de Red Hollow em múltiplos distritos conectados;
-- minas e instalações industriais;
-- igrejas, catacumbas, ruínas cerimoniais;
-- áreas com variantes de corrupção (Ressonância Rubra);
+| Arco | Conteúdo |
+| --- | --- |
+| **Prólogo** | Ritual infantil de Calder; origem incompleta da Red Brand |
+| **Capítulo Zero** (beta) | O Sino Antes do Anoitecer — Rusk, primeira exposição ao culto |
+| **Silas Crow** | Vigilância, execuções, medo institucionalizado |
+| **Rosa “La Serpiente”** | Charme, veneno social, traições e duelos sujos |
+| **Magnus Vane** | Minas, máquinas, dependência industrial da Vermilite |
+| **Arcturus Vale** | Teologia da dor; primeira derrota → **Arcturus, Arauto de Mol-Khar** |
+| **Palácio Rubro** | Clímax urbano/cerimonial antes do confronto final |
+| **Confronto Mol-Khar** | Enfraquecimento do selo; receptáculo; presença física |
+| **Finais** | Variantes ligadas ao uso excessivo da Red Brand e decisões morais de Calder |
+
+## Mundo
+
+- Red Hollow em múltiplos distritos conectados;
+- minas, trilhos, igrejas, catacumbas, instalações industriais;
+- variantes de corrupção (Ressonância Rubra) por camadas;
 - atalhos e portas por habilidade/flag.
 
-### Personagens e facções
-
-- Calder Knox (protagonista);
-- Ordem do Coração Rubro;
-- Mol-Khar (presença crescente);
-- barões: Silas Crow, Rosa La Serpiente, Arcturus Vale, Magnus Vane;
-- inimigos regulares e elites por arquétipo (`ART_BIBLE.md`).
-
-### Combate
+## Combate e progressão
 
 - socos, chutes, agarrões, esquivas, counters, provocações;
-- ataques da Red Brand e técnicas desbloqueáveis;
+- técnicas Red Brand desbloqueáveis (teto narrativo: físico + sobrenatural justificado);
 - chefes com fases testáveis;
-- sistema de estilo com ranks;
-- sem magia elemental genérica.
+- sistema de estilo;
+- flags, barreiras, checkpoints persistentes.
 
-### Progressão
+## Interface e áudio
 
-- habilidades de movimento e combate;
-- upgrades da Red Brand ligados à narrativa;
-- chaves narrativas, flags e barreiras;
-- opcional: equipamentos simples no futuro — **não** loot aleatório pesado no escopo inicial.
-
-### Narrativa
-
-- arco principal: promessas, culpa e selo de Mol-Khar;
-- side content ambiental e diário;
-- confrontos com barões ao longo do mapa;
-- clímax envolvendo Palácio Rubro e ritual (fora da beta).
-
-### Interface
-
-- HUD completo;
-- mapa metroidvania;
-- diário, objetivos, coleção de lore;
-- menus de pausa, opções, Red Brand;
-- conforme `UI_BIBLE.md` em evolução.
-
-### Áudio
-
+- HUD completo, mapa metroidvania, diário, lore;
+- menus pausa/opções/Red Brand (`UI_BIBLE.md`);
 - trilha por distrito e estado de corrupção;
-- SFX de combate pesado e legível;
-- voz/locução: a definir; diálogos textuais no mínimo.
+- SFX combate legíveis.
 
-### Salvamento
+## Base técnica já existente
 
-- slots em `user://` com versão;
-- checkpoint + progresso global;
-- barreiras destruídas e flags persistentes;
-- migração de versão de save documentada.
-
-## O que já existe no repositório (base técnica)
-
-| Área | Estado |
+| Entrega | Estado |
 | --- | --- |
-| Shell persistente + troca de áreas | Implementado |
-| Player completo (combate) | Implementado (dívida em `TECH_DEBT.md`) |
+| Shell + troca de áreas | Implementado |
+| Player combate completo | Implementado (dívida) |
 | Save, progressão, barreiras | Implementado |
-| Um arco demo (rua → igreja → subterrâneo → Rusk) | Implementado |
-| Pixel art final | Planejado |
-| Cidade completa | Planejado |
-| Todos barões | Planejado |
-| Palácio Rubro | Planejado |
+| Arco demo rua → igreja → sub → Rusk | Implementado |
+| GameplayLockManager + testes | Implementado (dívida) |
+| Pixel art / cidade completa / barões / Palácio | Planejado |
 
-## Fora do escopo do jogo (nunca)
+## Fora do escopo (nunca)
 
 - magia tradicional elemental;
 - voo livre;
 - projéteis mágicos genéricos;
-- MMO, crafting infinito ou gacha;
+- MMO, gacha, crafting infinito;
 - cópia de IPs de referência.
 
-## Marcos de entrega sugeridos
+## Marcos sugeridos
 
-1. **Beta** — Capítulo Zero (`BETA_DEMO_SCOPE.md`)
-2. **Vertical slice visual** — uma área com arte final + um chefe
-3. **Alpha de distrito** — múltiplas áreas interligadas
-4. **Conteúdo completo** — cidade, barões, final
+1. Beta — Capítulo Zero  
+2. Vertical slice visual — uma área + um chefe com arte final  
+3. Alpha — distrito expandido + primeiro barão  
+4. Conteúdo completo — todos arcos + finais  
 
-Detalhamento de produção em `CONTENT_PRODUCTION_PLAN.md`.
+Produção: `CONTENT_PRODUCTION_PLAN.md`.
