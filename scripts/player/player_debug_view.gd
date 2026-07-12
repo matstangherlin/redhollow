@@ -8,12 +8,22 @@ var visible_in_game: bool = false
 var _debug_label: Label = null
 var _hitbox_component: Area2D = null
 var _hurtbox_component: Area2D = null
+var _visual_controller: PlayerVisualController = null
+var _visual_overlay: PlayerVisualDebugOverlay = null
 
 
-func setup(debug_label: Label, hitbox_component: Area2D, hurtbox_component: Area2D) -> void:
+func setup(
+	debug_label: Label,
+	hitbox_component: Area2D,
+	hurtbox_component: Area2D,
+	visual_controller: PlayerVisualController = null,
+	visual_overlay: PlayerVisualDebugOverlay = null
+) -> void:
 	_debug_label = debug_label
 	_hurtbox_component = hurtbox_component
 	_hitbox_component = hitbox_component
+	_visual_controller = visual_controller
+	_visual_overlay = visual_overlay
 	set_debug_visible(false)
 
 
@@ -28,6 +38,8 @@ func set_debug_visible(is_visible: bool) -> void:
 		_hitbox_component.call("set_debug_draw_enabled", is_visible)
 	if _hurtbox_component != null and _hurtbox_component.has_method("set_debug_draw_enabled"):
 		_hurtbox_component.call("set_debug_draw_enabled", is_visible)
+	if _visual_overlay != null:
+		_visual_overlay.set_overlay_enabled(is_visible)
 
 
 func toggle_visibility() -> void:
@@ -38,7 +50,7 @@ func refresh(snapshot: Dictionary) -> void:
 	if not visible_in_game or _debug_label == null:
 		return
 
-	_debug_label.text = "state: %s\nvelocity.x: %.2f\nvelocity.y: %.2f\nis_on_floor: %s\ncoyote: %.3f\njump_buffer: %.3f\nfacing: %d\nattack: %s\ncombo_index: %d / %d\nbuffered_input: %s\nbuffer_time: %.3f\nattack_phase: %s\nattack_time: %.3f\nlast_hit: %s\ndodge_phase: %s\ndodge_time: %.3f\ndodge_invulnerable: %s\ndodge_recovery: %.3f\ndodge_cooldown: %.3f\ncounter_phase: %s\ncounter_window: %.3f\ncounter_recovery: %.3f\ncounter_cooldown: %.3f\nlast_counter: %s\nincoming_attack: %s\nincoming_counterable: %s\ntaunt_time: %.3f\ntaunt_vulnerable: %s\ntaunt_cooldown: %.3f\ntaunt_phrase: %s\nred_brand: %.0f / %.0f\nbrand_charge_level: %d\nbrand_cost: %.0f\nbrand_charge_time: %.3f\nbrand_breaker: %s\ninput_blocked: %s\ninteract_id: %s\ninteract_distance: %.1f\ninteract_priority: %d" % [
+	_debug_label.text = "state: %s\nvelocity.x: %.2f\nvelocity.y: %.2f\nis_on_floor: %s\ncoyote: %.3f\njump_buffer: %.3f\nfacing: %d\nattack: %s\ncombo_index: %d / %d\nbuffered_input: %s\nbuffer_time: %.3f\nattack_phase: %s\nattack_time: %.3f\nlast_hit: %s\ndodge_phase: %s\ndodge_time: %.3f\ndodge_invulnerable: %s\ndodge_recovery: %.3f\ndodge_cooldown: %.3f\ncounter_phase: %s\ncounter_window: %.3f\ncounter_recovery: %.3f\ncounter_cooldown: %.3f\nlast_counter: %s\nincoming_attack: %s\nincoming_counterable: %s\ntaunt_time: %.3f\ntaunt_vulnerable: %s\ntaunt_cooldown: %.3f\ntaunt_phrase: %s\nred_brand: %.0f / %.0f\nbrand_charge_level: %d\nbrand_cost: %.0f\nbrand_charge_time: %.3f\nbrand_breaker: %s\ninput_blocked: %s\ninteract_id: %s\ninteract_distance: %.1f\ninteract_priority: %d\nvisual_mode: %s\nanimation: %s\nanim_frame: %d\nsprite_active: %s" % [
 		String(snapshot.get("state_name", "unknown")),
 		float(snapshot.get("velocity_x", 0.0)),
 		float(snapshot.get("velocity_y", 0.0)),
@@ -80,4 +92,8 @@ func refresh(snapshot: Dictionary) -> void:
 		String(snapshot.get("interact_id", "none")),
 		float(snapshot.get("interact_distance", -1.0)),
 		int(snapshot.get("interact_priority", 0)),
+		String(snapshot.get("visual_mode", "unknown")),
+		String(snapshot.get("current_animation", "none")),
+		int(snapshot.get("current_frame", -1)),
+		str(snapshot.get("sprite_active", false)),
 	]

@@ -13,4 +13,5 @@ chapters = [ExtResource("2_chapter_zero")]
 playable_chapter_ids = PackedStringArray("chapter_zero_bell_before_nightfall")
 starting_chapter_id = &"chapter_zero_bell_before_nightfall"
 beta_end_chapter_id = &"chapter_zero_bell_before_nightfall"
+world_graph_path = "res://resources/content/world/beta_world_graph.tres"
 migrate_beta_saves_to_full = false

@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
@@ -18,12 +18,8 @@ const REQUIRED_DIALOGUES: Array[String] = [
 ]
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "narrative_chapter_zero_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "narrative_chapter_zero_tests")
 	var failures: PackedStringArray = PackedStringArray()
 
 	_test_objectives_data(failures)
@@ -138,10 +134,10 @@ func _test_narrative_director_conditions(failures: PackedStringArray) -> void:
 	var test_root := Node.new()
 	root.add_child(test_root)
 
-	var progression := await TestHelpers.mount_progression(test_root, self)
+	var progression := await TestHelpers.mount_progression(test_root, get_tree())
 	var director := NarrativeDirector.new()
 	test_root.add_child(director)
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 2)
 
 	(progression as ProgressionComponent).set_narrative_flag(
 		ChapterZeroFlags.RED_BRAND_CACHE_USED,
@@ -157,5 +153,5 @@ func _test_narrative_director_conditions(failures: PackedStringArray) -> void:
 	if director.meets_dialogue_conditions(conditions):
 		failures.append("NarrativeDirector should block dialogue when excluded flag is set.")
 
-	root.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	test_root.queue_free()
+	await TestHelpers.await_frames(get_tree(), 1)

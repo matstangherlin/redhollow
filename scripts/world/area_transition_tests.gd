@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const AreaTransitionManagerScript := preload("res://scripts/world/area_transition_manager.gd")
@@ -7,12 +7,8 @@ const CameraScene := preload("res://scenes/core/camera_controller.tscn")
 const StreetScene := preload("res://scenes/areas/street_test.tscn")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "area_transition_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "area_transition_tests")
 	var failures: PackedStringArray = PackedStringArray()
 
 	var game_root := Node.new()
@@ -32,9 +28,9 @@ func _run_tests() -> void:
 	camera.set("target_path", NodePath("../Player"))
 	game_root.add_child(camera)
 
-	await TestHelpers.mount_dialogue_system(game_root, self)
-	await TestHelpers.mount_progression(game_root, self)
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.mount_dialogue_system(game_root, get_tree())
+	await TestHelpers.mount_progression(game_root, get_tree())
+	await TestHelpers.await_frames(get_tree(), 2)
 
 	var manager: Node = AreaTransitionManagerScript.new()
 	manager.name = "AreaTransitionManager"
@@ -46,9 +42,9 @@ func _run_tests() -> void:
 	manager.transition_pause_seconds = 0.01
 	game_root.add_child(manager)
 
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 2)
 	manager.initialize(game_root)
-	await create_timer(0.05).timeout
+	await get_tree().create_timer(0.05).timeout
 
 	_test_initial_spawn(failures, manager, player)
 	await _test_street_to_church_async(failures, manager, player)
@@ -79,7 +75,7 @@ func _test_street_to_church_async(failures: PackedStringArray, manager: Node, pl
 		return
 
 	manager.request_transition(exit, player)
-	await create_timer(0.05).timeout
+	await get_tree().create_timer(0.05).timeout
 
 	if String(manager.get_current_area_id()) != "church_entrance_test":
 		failures.append("Transition to church_entrance_test failed.")
@@ -96,7 +92,7 @@ func _test_church_return_async(failures: PackedStringArray, manager: Node, playe
 		return
 
 	manager.request_transition(exit, player)
-	await create_timer(0.05).timeout
+	await get_tree().create_timer(0.05).timeout
 
 	if String(manager.get_current_area_id()) != "street_test":
 		failures.append("Return transition to street_test failed.")
@@ -128,7 +124,7 @@ func _test_underground_transition_async(failures: PackedStringArray, manager: No
 	var to_church := _find_exit(manager.get_current_area(), &"to_church")
 	if to_church != null:
 		manager.request_transition(to_church, player)
-		await create_timer(0.05).timeout
+		await get_tree().create_timer(0.05).timeout
 
 	var underground_exit := _find_exit(manager.get_current_area(), &"to_underground")
 	if underground_exit == null:
@@ -136,7 +132,7 @@ func _test_underground_transition_async(failures: PackedStringArray, manager: No
 		return
 
 	manager.request_transition(underground_exit, player)
-	await create_timer(0.05).timeout
+	await get_tree().create_timer(0.05).timeout
 
 	if String(manager.get_current_area_id()) != "underground_test":
 		failures.append("Transition to underground_test failed.")

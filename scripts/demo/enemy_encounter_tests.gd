@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
@@ -7,12 +7,8 @@ const VS_CHURCH := "res://scenes/areas/vertical_slice_church.tscn"
 const VS_UNDERGROUND := "res://scenes/areas/vertical_slice_underground.tscn"
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "enemy_encounter_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "enemy_encounter_tests")
 	var failures: PackedStringArray = PackedStringArray()
 
 	_test_street_encounters(failures)

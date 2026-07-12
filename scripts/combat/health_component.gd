@@ -32,6 +32,19 @@ func apply_damage(amount: float, source: Node = null) -> bool:
 	return true
 
 
+func heal(amount: float) -> bool:
+	if invulnerable or is_dead or amount <= 0.0:
+		return false
+
+	var previous := current_health
+	current_health = clampf(current_health + amount, 0.0, max_health)
+	if is_equal_approx(current_health, previous):
+		return false
+
+	health_changed.emit(current_health, max_health)
+	return true
+
+
 func reset_health() -> void:
 	is_dead = false
 	current_health = max_health

@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
@@ -7,12 +7,8 @@ const SweepData := preload("res://resources/combat/chain_penitent_sweep.tres")
 const HookData := preload("res://resources/combat/chain_penitent_hook.tres")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "chain_penitent_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "chain_penitent_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
 	root.add_child(root_node)
@@ -45,7 +41,7 @@ func _test_spawn_and_defeat(failures: PackedStringArray, parent: Node2D) -> void
 	if not bool(health.get("is_dead")):
 		failures.append("Chain Penitent should be defeatable.")
 	penitent.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_vulnerable_after_miss(failures: PackedStringArray, parent: Node2D) -> void:
@@ -59,4 +55,4 @@ func _test_vulnerable_after_miss(failures: PackedStringArray, parent: Node2D) ->
 	if penitent.current_state != ChainPenitent.PenitentState.VULNERABLE:
 		failures.append("Penitent should enter VULNERABLE state after missing sweep.")
 	penitent.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)

@@ -3,6 +3,7 @@ extends CharacterBody2D
 const PLAYER_GROUP := "player"
 const CAMERA_CONTROLLER_GROUP := "camera_controller"
 const HITSTOP_GROUP := "hitstop_controller"
+const RespawnServiceScript := preload("res://scripts/core/respawn_service.gd")
 
 # All timing values are seconds. Movement values are pixels per second or pixels per second squared.
 enum PlayerState {
@@ -119,6 +120,8 @@ signal brand_breaker_released(level: int, cost: float)
 @onready var presentation_controller: PlayerPresentationController = $Controllers/PlayerPresentationController
 @onready var visual_controller: PlayerVisualController = $Controllers/PlayerVisualController
 @onready var debug_view: PlayerDebugView = $Controllers/PlayerDebugView
+@onready var body_collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var visual_debug_overlay: PlayerVisualDebugOverlay = $VisualDebugOverlay
 
 @onready var visual: Node2D = %Visual
 @onready var body_visual: Polygon2D = %BodyVisual
@@ -132,8 +135,6 @@ signal brand_breaker_released(level: int, cost: float)
 @onready var brand_hand: Polygon2D = %BrandHand
 @onready var interaction_detector: Node = %InteractionDetector
 
-const DEATH_RESPAWN_DELAY := 0.65
-
 var current_state: int = PlayerState.IDLE
 var facing_direction: int = 1
 var spawn_position: Vector2 = Vector2.ZERO
@@ -141,7 +142,8 @@ var _lock_manager: GameplayLockManager = null
 var _dialogue_lock_token: GameplayLockToken = null
 var _transition_lock_token: GameplayLockToken = null
 var _death_lock_token: GameplayLockToken = null
-var _death_respawn_pending: bool = false
+var _respawn_service: RespawnServiceScript = null
+var _fallback_respawn_running: bool = false
 
 
 func _ready() -> void:
@@ -152,6 +154,7 @@ func _ready() -> void:
 	_setup_controllers()
 	_connect_combat_signals()
 	call_deferred("_bind_lock_manager")
+	call_deferred("_bind_respawn_service")
 	call_deferred("_release_legacy_player_locks")
 
 
@@ -175,7 +178,12 @@ func _setup_controllers() -> void:
 	if hitbox_component.has_signal("hit_landed") and not hitbox_component.is_connected("hit_landed", hit_landed_callable):
 		hitbox_component.connect("hit_landed", hit_landed_callable)
 	state_coordinator.setup(self)
-	debug_view.setup(debug_label, hitbox_component, hurtbox_component)
+	visual_debug_overlay.setup(
+		self, body_collision_shape, hurtbox_component, hitbox_component, visual_controller
+	)
+	debug_view.setup(
+		debug_label, hitbox_component, hurtbox_component, visual_controller, visual_debug_overlay
+	)
 	presentation_controller.refresh_from_player(self)
 
 
@@ -253,7 +261,6 @@ func _on_gameplay_input_blocked_changed(_is_blocked: bool) -> void:
 func _physics_process(delta: float) -> void:
 	input_controller.update_jump_buffer(delta)
 	movement_controller.update_coyote_timer(delta)
-	_handle_debug_requests()
 	attack_controller.update_combo_timers(delta)
 	defense_controller.update_dodge_cooldown(delta)
 	defense_controller.update_counter_cooldown(delta)
@@ -261,6 +268,7 @@ func _physics_process(delta: float) -> void:
 
 	var input_blocked := _is_gameplay_input_blocked()
 	input_controller.poll(input_blocked)
+	_handle_debug_requests()
 
 	if input_blocked:
 		movement_controller.apply_input_lock(delta)
@@ -378,10 +386,37 @@ func set_spawn_position(position: Vector2) -> void:
 	spawn_position = position
 
 
+func set_death_vulnerability(enabled: bool) -> void:
+	if health_component != null:
+		health_component.invulnerable = enabled
+
+	if hurtbox_component != null:
+		hurtbox_component.set_deferred("monitoring", not enabled)
+		hurtbox_component.set_deferred("monitorable", not enabled)
+
+
+func restore_locomotion_state_after_respawn() -> void:
+	if is_on_floor():
+		current_state = PlayerState.IDLE
+	else:
+		current_state = PlayerState.FALL
+	_refresh_presentation_and_debug()
+
+
+func release_death_lock_after_respawn() -> void:
+	_release_death_lock()
+
+
+func reset_combat_after_respawn() -> void:
+	_reset_combat_on_recovery()
+	_refresh_presentation_and_debug()
+
+
 func apply_checkpoint(
 	checkpoint_position: Vector2,
 	restore_health: bool,
-	restore_red_brand: bool
+	restore_red_brand: bool,
+	release_death_lock_on_heal: bool = true
 ) -> void:
 	spawn_position = checkpoint_position
 	global_position = checkpoint_position
@@ -393,10 +428,12 @@ func apply_checkpoint(
 	_cancel_counter(PlayerState.IDLE)
 	_cancel_taunt(PlayerState.IDLE)
 	red_brand_controller.cancel_brand_breaker_charge(PlayerState.IDLE)
+	hitbox_component.call("deactivate")
 
 	if restore_health and health_component != null:
 		health_component.reset_health()
-		_release_death_lock()
+		if release_death_lock_on_heal:
+			_release_death_lock()
 
 	if restore_red_brand and red_brand_component != null:
 		red_brand_component.reset_energy()
@@ -564,14 +601,14 @@ func _handle_debug_requests() -> void:
 		debug_view.toggle_visibility()
 	if input_controller.debug_reset_just_pressed:
 		if _is_dead():
-			_perform_death_respawn()
+			_request_death_respawn()
 		else:
 			movement_controller.recover_to_spawn()
 
 
 func _build_debug_snapshot() -> Dictionary:
 	var interaction_debug := get_interaction_debug_info()
-	return {
+	var snapshot := {
 		"state_name": _get_state_name(current_state),
 		"velocity_x": velocity.x,
 		"velocity_y": velocity.y,
@@ -614,6 +651,8 @@ func _build_debug_snapshot() -> Dictionary:
 		"interact_distance": float(interaction_debug.get("distance", -1.0)),
 		"interact_priority": int(interaction_debug.get("priority", 0)),
 	}
+	snapshot.merge(visual_controller.get_debug_info())
+	return snapshot
 
 
 var coyote_time_remaining: float:
@@ -1061,41 +1100,58 @@ func _on_player_damaged(_amount: float, _source: Node) -> void:
 
 func _on_player_died() -> void:
 	interrupt_attack(PlayerState.DEAD)
+	current_state = PlayerState.DEAD
 	velocity = Vector2.ZERO
+	set_death_vulnerability(true)
 	_bind_lock_manager()
 	if _lock_manager != null and (_death_lock_token == null or not _death_lock_token.valid):
 		_death_lock_token = _lock_manager.acquire_lock(GameplayLockManager.LockReason.DEATH, self)
-	_schedule_death_respawn()
+	_request_death_respawn()
 
 
-func _schedule_death_respawn() -> void:
-	if _death_respawn_pending:
-		return
-	_death_respawn_pending = true
-
-	var tree := get_tree()
-	if tree == null:
-		_death_respawn_pending = false
+func _request_death_respawn() -> void:
+	_bind_respawn_service()
+	if _respawn_service != null:
+		_respawn_service.request_respawn_after_death(self)
 		return
 
-	var timer := tree.create_timer(DEATH_RESPAWN_DELAY, true)
-	timer.timeout.connect(_perform_death_respawn, CONNECT_ONE_SHOT)
+	push_warning("RespawnService not found. Using local fallback respawn.")
+	_run_fallback_death_respawn()
 
 
-func _perform_death_respawn() -> void:
-	_death_respawn_pending = false
-	if not is_inside_tree() or health_component == null:
+func _run_fallback_death_respawn() -> void:
+	if _fallback_respawn_running:
 		return
-	if not bool(health_component.get("is_dead")):
-		_release_death_lock()
+	_fallback_respawn_running = true
+	_run_fallback_death_respawn_async()
+
+
+func _run_fallback_death_respawn_async() -> void:
+	await get_tree().create_timer(0.65, true).timeout
+	if not is_instance_valid(self) or not _is_dead():
+		_fallback_respawn_running = false
 		return
 
-	var respawn_position := spawn_position
-	if respawn_position == Vector2.ZERO:
-		respawn_position = global_position
+	apply_checkpoint(get_spawn_position(), true, false, true)
+	set_death_vulnerability(false)
+	restore_locomotion_state_after_respawn()
+	release_death_lock_after_respawn()
+	reset_combat_after_respawn()
+	_fallback_respawn_running = false
 
-	apply_checkpoint(respawn_position, true, false)
-	current_state = PlayerState.IDLE
-	_release_death_lock()
-	_reset_combat_on_recovery()
-	_refresh_presentation_and_debug()
+
+func _bind_respawn_service() -> void:
+	if _respawn_service != null:
+		return
+
+	for node in get_tree().get_nodes_in_group(RespawnServiceScript.SERVICE_GROUP):
+		if node.get_script() == RespawnServiceScript:
+			_respawn_service = node as RespawnServiceScript
+			return
+
+	for node in get_tree().get_nodes_in_group(GameServices.SERVICES_GROUP):
+		if node is GameServices:
+			var services := node as GameServices
+			if services.respawn_service != null:
+				_respawn_service = services.respawn_service
+				return

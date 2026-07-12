@@ -207,6 +207,7 @@ func _clear_current_area() -> void:
 		return
 
 	var unloading_area := _current_area
+	unloading_area.prepare_for_unload()
 	area_unloaded.emit(unloading_area)
 
 	for exit in unloading_area.get_exits():

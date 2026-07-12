@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="EnvironmentKit" load_steps=2 format=3 uid="uid://envkit_street_cz"]
+
+[ext_resource type="Script" path="res://scripts/environment/environment_kit.gd" id="1_kit"]
+
+[resource]
+script = ExtResource("1_kit")
+kit_id = &"chapter_zero_street"
+display_name = "Capítulo Zero — Kit da Rua"
+region_theme_id = &"chapter_zero_street"
+tile_size_px = 16
+atlas_path = "res://art/environments/chapter_zero/street_tileset_atlas.png"

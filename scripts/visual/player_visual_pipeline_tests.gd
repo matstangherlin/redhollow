@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const VisualTestPlayerStub := preload("res://scripts/visual/visual_test_player_stub.gd")
@@ -6,28 +6,29 @@ const VisualTestPlayerStub := preload("res://scripts/visual/visual_test_player_s
 const PilotProfile := preload("res://resources/visual/calder_pilot_profile.tres")
 const PlaceholderProfile := preload("res://resources/visual/calder_placeholder_profile.tres")
 const CalderStraight := preload("res://resources/combat/calder_straight.tres")
+const BodyHook := preload("res://resources/combat/body_hook.tres")
+const RedKnuckle := preload("res://resources/combat/red_knuckle.tres")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "player_visual_pipeline_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "player_visual_pipeline_tests")
 	var failures: PackedStringArray = PackedStringArray()
 
+	_test_contract_constants(failures)
 	_test_profile_mappings(failures)
 	_test_pilot_sprite_frames(failures)
 	await _test_placeholder_mode(failures)
 	await _test_pilot_animations(failures)
+	await _test_mode_toggle(failures)
 	_test_attack_timing_independent(failures)
+	await _test_missing_clip_fallback(failures)
 
-	suite.finish(failures, 5)
+	suite.finish(failures, 8)
 
 
 func _mount_visual_fixture(profile: PlayerVisualProfile) -> Dictionary:
 	var test_root := Node2D.new()
-	root.add_child(test_root)
+	get_tree().root.add_child(test_root)
 
 	var player: CharacterBody2D = VisualTestPlayerStub.new()
 	player.name = "Player"
@@ -66,7 +67,7 @@ func _mount_visual_fixture(profile: PlayerVisualProfile) -> Dictionary:
 	controllers.add_child(visual_controller)
 
 	visual_controller.setup(player)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	return {
 		"root": test_root,
@@ -82,7 +83,16 @@ func _teardown_fixture(fixture: Dictionary) -> void:
 	var test_root: Node = fixture.get("root") as Node
 	if test_root != null:
 		test_root.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
+
+
+func _test_contract_constants(failures: PackedStringArray) -> void:
+	if CalderAnimationContract.CANVAS_SIZE != Vector2i(32, 56):
+		failures.append("Calder canvas must remain 32x56.")
+	if CalderAnimationContract.SPRITE_VISUAL_OFFSET != Vector2(0, -28):
+		failures.append("SpriteVisual offset contract must remain (0, -28).")
+	if CalderAnimationContract.PILOT_ANIMATION_IDS.size() != 10:
+		failures.append("Pilot animation set must contain 10 clips.")
 
 
 func _test_profile_mappings(failures: PackedStringArray) -> void:
@@ -90,13 +100,17 @@ func _test_profile_mappings(failures: PackedStringArray) -> void:
 		failures.append("Pilot profile should be in PILOT mode.")
 	if PilotProfile.get_attack_animation(&"calder_straight") != &"straight":
 		failures.append("Pilot profile must map calder_straight -> straight.")
+	if PilotProfile.get_attack_animation(&"body_hook") != &"body_hook":
+		failures.append("Pilot profile must map body_hook -> body_hook.")
+	if PilotProfile.get_attack_animation(&"red_knuckle") != &"red_knuckle":
+		failures.append("Pilot profile must map red_knuckle -> red_knuckle.")
 	if not PlaceholderProfile.uses_placeholder():
 		failures.append("Default profile should remain PLACEHOLDER.")
 
 
 func _test_pilot_sprite_frames(failures: PackedStringArray) -> void:
 	var frames := PlaceholderSpriteFactory.create_calder_pilot_sprite_frames()
-	for anim_name in ["idle", "run", "jump", "straight"]:
+	for anim_name in CalderAnimationContract.PILOT_ANIMATION_IDS:
 		if not frames.has_animation(StringName(anim_name)):
 			failures.append("Pilot SpriteFrames missing animation: %s." % anim_name)
 
@@ -119,7 +133,7 @@ func _test_pilot_animations(failures: PackedStringArray) -> void:
 	var attack_controller: PlayerAttackController = fixture["attack_controller"] as PlayerAttackController
 
 	visual_controller.set_profile(PilotProfile)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	player.current_state = PlayerStateTypes.PlayerState.IDLE
 	visual_controller.refresh_from_player(attack_controller)
@@ -132,14 +146,60 @@ func _test_pilot_animations(failures: PackedStringArray) -> void:
 		failures.append("Pilot run state should request run animation.")
 
 	player.current_state = PlayerStateTypes.PlayerState.JUMP
+	player.velocity = Vector2(0, -120)
 	visual_controller.refresh_from_player(attack_controller)
-	if visual_controller.get_current_animation() != &"jump":
-		failures.append("Pilot jump state should request jump animation.")
+	if visual_controller.get_current_animation() != &"jump_rise":
+		failures.append("Pilot jump rise should request jump_rise animation.")
+
+	player.velocity = Vector2(0, 80)
+	player.current_state = PlayerStateTypes.PlayerState.FALL
+	visual_controller.refresh_from_player(attack_controller)
+	if visual_controller.get_current_animation() != &"fall":
+		failures.append("Pilot fall state should request fall animation.")
+
+	player.current_state = PlayerStateTypes.PlayerState.DODGE
+	visual_controller.refresh_from_player(attack_controller)
+	if visual_controller.get_current_animation() != &"dodge":
+		failures.append("Pilot dodge state should request dodge animation.")
+
+	player.current_state = PlayerStateTypes.PlayerState.HURT
+	visual_controller.refresh_from_player(attack_controller)
+	if visual_controller.get_current_animation() != &"hurt":
+		failures.append("Pilot hurt state should request hurt animation.")
 
 	attack_controller.current_attack = CalderStraight
 	visual_controller.refresh_from_player(attack_controller)
 	if visual_controller.get_current_animation() != &"straight":
 		failures.append("calder_straight attack should request straight animation.")
+
+	attack_controller.current_attack = BodyHook
+	visual_controller.refresh_from_player(attack_controller)
+	if visual_controller.get_current_animation() != &"body_hook":
+		failures.append("body_hook attack should request body_hook animation.")
+
+	attack_controller.current_attack = RedKnuckle
+	visual_controller.refresh_from_player(attack_controller)
+	if visual_controller.get_current_animation() != &"red_knuckle":
+		failures.append("red_knuckle attack should request red_knuckle animation.")
+
+	await _teardown_fixture(fixture)
+
+
+func _test_mode_toggle(failures: PackedStringArray) -> void:
+	var fixture := await _mount_visual_fixture(PilotProfile)
+	var visual_controller: PlayerVisualController = fixture["visual_controller"] as PlayerVisualController
+	var body_visual: CanvasItem = fixture["body_visual"] as CanvasItem
+	var sprite: CanvasItem = fixture["sprite"] as CanvasItem
+
+	visual_controller.set_profile(PilotProfile)
+	await TestHelpers.await_frames(get_tree(), 1)
+	if body_visual.visible or not sprite.visible:
+		failures.append("PILOT mode should hide greybox and show sprite.")
+
+	visual_controller.set_profile(PlaceholderProfile)
+	await TestHelpers.await_frames(get_tree(), 1)
+	if not body_visual.visible or sprite.visible:
+		failures.append("PLACEHOLDER mode should restore greybox visibility.")
 
 	await _teardown_fixture(fixture)
 
@@ -159,3 +219,21 @@ func _test_attack_timing_independent(failures: PackedStringArray) -> void:
 
 	if combat_duration <= 0.0:
 		failures.append("Calder straight AttackData must define combat phases.")
+
+
+func _test_missing_clip_fallback(failures: PackedStringArray) -> void:
+	var fixture := await _mount_visual_fixture(PilotProfile)
+	var visual_controller: PlayerVisualController = fixture["visual_controller"] as PlayerVisualController
+	var attack_controller: PlayerAttackController = fixture["attack_controller"] as PlayerAttackController
+	var sprite: AnimatedSprite2D = fixture["sprite"] as AnimatedSprite2D
+
+	visual_controller.set_profile(PilotProfile)
+	await TestHelpers.await_frames(get_tree(), 1)
+
+	sprite.sprite_frames.remove_animation(&"body_hook")
+	attack_controller.current_attack = BodyHook
+	visual_controller.refresh_from_player(attack_controller)
+	if visual_controller.get_current_animation() != &"idle":
+		failures.append("Missing body_hook clip should fall back to idle without crashing.")
+
+	await _teardown_fixture(fixture)

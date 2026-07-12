@@ -1,53 +1,53 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
 const CombatArenaScene := preload("res://scenes/world/combat_arena.tscn")
 const CombatArenaGateScene := preload("res://scenes/world/combat_arena_gate.tscn")
 const CultBrawlerScene := preload("res://scenes/enemies/cult_brawler.tscn")
+const GunslingerScene := preload("res://scenes/enemies/vermilite_gunslinger.tscn")
+const ChainPenitentScene := preload("res://scenes/enemies/chain_penitent.tscn")
+const ProjectileScene := preload("res://scenes/combat/physical_projectile.tscn")
 const PlayerScene := preload("res://scenes/player/player.tscn")
 const ProgressionScript := preload("res://scripts/progression/progression_component.gd")
+const ShotData := preload("res://resources/combat/gunslinger_shot.tres")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "combat_arena_tests")
-	# Headless Godot 4.7 emits physics flush errors while arena gates/enemies toggle collision
-	# during isolated SceneTree runs. Assertions still validate arena behavior.
-	suite.allow_error_contains("Can't change this state while flushing queries")
-	suite.allow_warning_contains("lost a living enemy from the scene tree")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "combat_arena_tests")
+	suite.allow_error_contains("CombatArena 'church_yard_01' integrity failure")
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
 	root.add_child(root_node)
+	await TestHelpers.await_frames(get_tree(), 2)
 
-	var fixture_player: Node = PlayerScene.instantiate()
-	fixture_player.name = "Player"
-	fixture_player.global_position = Vector2(720, 848)
-	root_node.add_child(fixture_player)
-	await TestHelpers.await_frames(self, 2)
-
-	var style_manager: Node = await TestHelpers.mount_style_manager(root_node, self)
+	var style_manager: Node = await TestHelpers.mount_style_manager(root_node, get_tree())
 	var progression: Node = ProgressionScript.new()
 	root_node.add_child(progression)
 	progression.call("set_narrative_flag", &"arena_church_yard_01_complete", false)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	await _test_starts_inactive(failures, root_node)
 	await _test_activation_and_blocking(failures, root_node, style_manager, progression)
+	await _test_combined_three_archetypes(failures, root_node)
+	await _test_isolated_brawler_spawn(failures, root_node)
+	await _test_isolated_gunslinger_spawn(failures, root_node)
+	await _test_isolated_chain_penitent_spawn(failures, root_node)
 	await _test_partial_defeat(failures, root_node)
 	await _test_full_completion(failures, root_node, style_manager, progression)
+	await _test_no_double_activation(failures, root_node)
 	await _test_no_reactivation(failures, root_node, progression)
 	await _test_scene_restart(failures, root_node)
 	await _test_foreign_enemy_ignored(failures, root_node)
+	await _test_integrity_failure_on_despawn(failures, root_node)
+	await _test_death_reset_respawns_enemies(failures, root_node)
+	await _test_projectile_cleanup_on_reset(failures, root_node)
+	await _test_area_unload_opens_gates(failures, root_node)
 
-	fixture_player.queue_free()
 	root_node.queue_free()
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 2)
 
-	suite.finish(failures, 7)
+	suite.finish(failures, 15)
 
 
 func _build_test_arena(parent: Node2D) -> CombatArenaController:
@@ -74,7 +74,7 @@ func _add_exit(parent: Node2D, position: Vector2, exit_name: String) -> AreaExit
 	shape.shape = rectangle
 	exit.add_child(shape)
 	parent.add_child(exit)
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 2)
 	return exit as AreaExit
 
 
@@ -107,37 +107,26 @@ func _wire_arena(
 		arena._activation_zone.body_entered.connect(arena._on_activation_body_entered)
 
 
-func _defeat_tracked_enemies(arena: CombatArenaController, player: Node) -> void:
-	for enemy in arena._tracked_enemies.duplicate():
-		if not is_instance_valid(enemy):
-			continue
-		var health: HealthComponent = arena._find_health_component(enemy)
-		if health != null and not health.is_dead:
-			if not health.apply_damage(health.max_health, player):
-				health.set_health_values(0.0, health.max_health)
-		arena._on_enemy_died(enemy)
-
-
 func _activate_arena(arena: CombatArenaController, player: Node) -> void:
+	arena.arm_activation_monitoring()
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	arena.call_deferred("_on_activation_body_entered", player)
-	await TestHelpers.await_physics_frames(self, 3)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_seconds(get_tree(), 0.5)
 
 
 func _free_arena_run(
 	arena: CombatArenaController,
 	player: Node,
-	extra_nodes: Array = []
+	extra_nodes: Array = [],
+	progression: ProgressionComponent = null
 ) -> void:
-	_defeat_tracked_enemies(arena, player)
-	await TestHelpers.await_physics_frames(self, 1)
+	if is_instance_valid(arena) and arena.state == CombatArenaController.ArenaState.ACTIVE:
+		arena.on_area_unloading()
+		await TestHelpers.await_physics_frames(get_tree(), 2)
+		await TestHelpers.await_frames(get_tree(), 2)
 
 	var was_paused := paused
 	paused = true
-
-	for enemy in arena._tracked_enemies.duplicate():
-		if is_instance_valid(enemy):
-			enemy.free()
 
 	for node in extra_nodes:
 		if node != null and is_instance_valid(node):
@@ -146,16 +135,21 @@ func _free_arena_run(
 	if player != null and is_instance_valid(player):
 		player.free()
 
-	arena.free()
+	if is_instance_valid(arena):
+		arena.free()
+
+	if progression != null and is_instance_valid(progression):
+		progression.set_narrative_flag(&"arena_church_yard_01_complete", false)
+
 	paused = was_paused
 
-	await TestHelpers.await_physics_frames(self, 2)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_starts_inactive(failures: PackedStringArray, parent: Node2D) -> void:
 	var arena := _build_test_arena(parent)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if arena.state != CombatArenaController.ArenaState.INACTIVE:
 		failures.append("Arena should start inactive.")
@@ -166,7 +160,7 @@ func _test_starts_inactive(failures: PackedStringArray, parent: Node2D) -> void:
 	paused = true
 	arena.free()
 	paused = was_paused
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 
 
 func _test_activation_and_blocking(
@@ -184,24 +178,108 @@ func _test_activation_and_blocking(
 	arena.arena_message_shown.connect(func(message: String) -> void: messages.append(message))
 
 	var player := _add_player(parent, Vector2(720, 848))
-	await TestHelpers.await_frames(self, 2)
-
+	await TestHelpers.await_frames(get_tree(), 2)
 	await _activate_arena(arena, player)
 
 	if arena.state != CombatArenaController.ArenaState.ACTIVE:
 		failures.append("Arena should activate when Calder enters.")
-	if arena.get_remaining_enemy_count() != 2:
-		failures.append("Arena should spawn two Cult Brawlers.")
+	if arena.get_remaining_enemy_count() != 3:
+		failures.append("Combined arena should spawn three archetype enemies.")
 	if not arena.is_blocking_exits():
 		failures.append("Active arena should block exits.")
 	if not exit_left.is_arena_blocked():
 		failures.append("Street exit should be blocked during combat.")
 	if not exit_right.is_arena_blocked():
 		failures.append("Underground exit should be blocked during combat.")
-	if not messages.has("Derrote os cultistas para abrir as portas"):
+	if not messages.has("Derrote os três arquetipos para abrir as portas"):
 		failures.append("Arena should show combat start hint.")
 
+	await _free_arena_run(arena, player, [exit_left, exit_right], progression as ProgressionComponent)
+
+
+func _test_combined_three_archetypes(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := _build_test_arena(parent)
+	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
+	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
+	_wire_arena(arena, [exit_left, exit_right])
+
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+
+	var script_paths: Dictionary = {}
+	for enemy in arena._tracked_enemies:
+		var script := enemy.get_script() as Script
+		if script != null:
+			script_paths[script.resource_path] = true
+
+	if not script_paths.has("res://scripts/enemies/cult_brawler.gd"):
+		failures.append("Combined arena should include a Cult Brawler.")
+	if not script_paths.has("res://scripts/enemies/vermilite_gunslinger.gd"):
+		failures.append("Combined arena should include a Vermilite Gunslinger.")
+	if not script_paths.has("res://scripts/enemies/chain_penitent.gd"):
+		failures.append("Combined arena should include a Chain Penitent.")
+
 	await _free_arena_run(arena, player, [exit_left, exit_right])
+
+
+func _test_isolated_brawler_spawn(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := await _build_single_enemy_arena(parent, CultBrawlerScene)
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+
+	if arena._spawned_count != 1:
+		failures.append("Isolated brawler arena should spawn exactly one enemy.")
+	if arena._tracked_enemies.is_empty() or not _enemy_uses_script(arena._tracked_enemies[0], "cult_brawler.gd"):
+		failures.append("Isolated brawler arena should spawn CultBrawler.")
+
+	await _free_arena_run(arena, player)
+
+
+func _test_isolated_gunslinger_spawn(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := await _build_single_enemy_arena(parent, GunslingerScene)
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+
+	if arena._spawned_count != 1:
+		failures.append("Isolated gunslinger arena should spawn exactly one enemy.")
+	if arena._tracked_enemies.is_empty() or not (arena._tracked_enemies[0] is VermiliteGunslinger):
+		failures.append("Isolated gunslinger arena should spawn VermiliteGunslinger.")
+
+	await _free_arena_run(arena, player)
+
+
+func _test_isolated_chain_penitent_spawn(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := await _build_single_enemy_arena(parent, ChainPenitentScene)
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+
+	if arena._spawned_count != 1:
+		failures.append("Isolated penitent arena should spawn exactly one enemy.")
+	if arena._tracked_enemies.is_empty() or not (arena._tracked_enemies[0] is ChainPenitent):
+		failures.append("Isolated penitent arena should spawn ChainPenitent.")
+
+	await _free_arena_run(arena, player)
+
+
+func _build_single_enemy_arena(parent: Node2D, enemy_scene: PackedScene) -> CombatArenaController:
+	var arena := _build_test_arena(parent)
+	await TestHelpers.await_frames(get_tree(), 1)
+
+	var spawn := arena.get_node("EnemySpawns/SpawnA") as CombatArenaSpawnPoint
+	spawn.enemy_scene = enemy_scene
+	arena.enemy_spawn_paths = [NodePath("EnemySpawns/SpawnA")]
+	arena.enemy_scene = enemy_scene
+	arena._resolve_nodes()
+	arena._set_state(CombatArenaController.ArenaState.INACTIVE)
+	arena._spawned_count = 0
+	arena._tracked_enemies.clear()
+	arena._defeated_instance_ids.clear()
+	if arena._activation_zone != null and not arena._activation_zone.body_entered.is_connected(
+		arena._on_activation_body_entered
+	):
+		arena._activation_zone.body_entered.connect(arena._on_activation_body_entered)
+	await TestHelpers.await_frames(get_tree(), 1)
+	return arena
 
 
 func _test_partial_defeat(failures: PackedStringArray, parent: Node2D) -> void:
@@ -211,7 +289,6 @@ func _test_partial_defeat(failures: PackedStringArray, parent: Node2D) -> void:
 	_wire_arena(arena, [exit_left, exit_right], true, null, null)
 
 	var player := _add_player(parent, Vector2(720, 848))
-	await TestHelpers.await_frames(self, 2)
 	await _activate_arena(arena, player)
 
 	var enemies := arena._tracked_enemies.duplicate()
@@ -222,12 +299,12 @@ func _test_partial_defeat(failures: PackedStringArray, parent: Node2D) -> void:
 		var health: HealthComponent = arena._find_health_component(first_enemy)
 		if health != null:
 			health.apply_damage(health.max_health, player)
-			await TestHelpers.await_frames(self, 1)
+			await TestHelpers.await_frames(get_tree(), 2)
 
 		if arena.state != CombatArenaController.ArenaState.ACTIVE:
 			failures.append("Arena should stay active after one enemy dies.")
-		if arena.get_remaining_enemy_count() != 1:
-			failures.append("One arena enemy should remain alive.")
+		if arena.get_remaining_enemy_count() != 2:
+			failures.append("Two arena enemies should remain alive after one defeat.")
 
 	await _free_arena_run(arena, player, [exit_left, exit_right])
 
@@ -253,16 +330,15 @@ func _test_full_completion(
 
 	var style_before: float = style_manager.get("style_score")
 	var player := _add_player(parent, Vector2(720, 848))
-	await TestHelpers.await_frames(self, 2)
 	await _activate_arena(arena, player)
 
 	for enemy in arena._tracked_enemies.duplicate():
 		var health: HealthComponent = arena._find_health_component(enemy)
 		if health != null and not health.is_dead:
 			health.apply_damage(health.max_health, player)
-			await TestHelpers.await_frames(self, 1)
+			await TestHelpers.await_frames(get_tree(), 1)
 
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 3)
 
 	if arena.state != CombatArenaController.ArenaState.COMPLETED:
 		failures.append("Arena should complete after all enemies are defeated.")
@@ -279,6 +355,27 @@ func _test_full_completion(
 	if not bool(progression.get("narrative_flags").get("arena_church_yard_01_complete", false)):
 		failures.append("Arena should set completion flag in progression.")
 
+	await _free_arena_run(arena, player, [exit_left, exit_right], progression as ProgressionComponent)
+
+
+func _test_no_double_activation(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := _build_test_arena(parent)
+	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
+	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
+	_wire_arena(arena, [exit_left, exit_right])
+
+	var player := _add_player(parent, Vector2(720, 848))
+	arena.call_deferred("_on_activation_body_entered", player)
+	arena.call_deferred("_on_activation_body_entered", player)
+	arena.call_deferred("_on_activation_body_entered", player)
+	await TestHelpers.await_physics_frames(get_tree(), 5)
+	await TestHelpers.await_frames(get_tree(), 2)
+
+	if arena._spawned_count != 3:
+		failures.append("Rapid activation should not duplicate arena enemies.")
+	if arena.get_remaining_enemy_count() != 3:
+		failures.append("Rapid activation should keep exactly three living arena enemies.")
+
 	await _free_arena_run(arena, player, [exit_left, exit_right])
 
 
@@ -289,13 +386,12 @@ func _test_no_reactivation(failures: PackedStringArray, parent: Node2D, progress
 	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
 	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
 	_wire_arena(arena, [exit_left, exit_right], false, null, progression as ProgressionComponent)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if arena.state != CombatArenaController.ArenaState.COMPLETED:
 		failures.append("Completed arena should restore as completed on load.")
 
 	var player := _add_player(parent, Vector2(720, 848))
-	await TestHelpers.await_frames(self, 1)
 	await _activate_arena(arena, player)
 
 	if arena.get_remaining_enemy_count() != 0:
@@ -304,18 +400,18 @@ func _test_no_reactivation(failures: PackedStringArray, parent: Node2D, progress
 		failures.append("Completed arena should not reactivate.")
 
 	progression.call("set_narrative_flag", &"arena_church_yard_01_complete", false)
-	await _free_arena_run(arena, player, [exit_left, exit_right])
+	await _free_arena_run(arena, player, [exit_left, exit_right], progression as ProgressionComponent)
 
 
 func _test_scene_restart(failures: PackedStringArray, parent: Node2D) -> void:
 	var arena_a := _build_test_arena(parent)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	var initial_state := arena_a.state
 	arena_a.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	var arena_b := _build_test_arena(parent)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if arena_b.state != initial_state:
 		failures.append("Reinstantiating arena scene should restore initial inactive state.")
@@ -323,7 +419,7 @@ func _test_scene_restart(failures: PackedStringArray, parent: Node2D) -> void:
 		failures.append("Fresh arena instance should have no tracked enemies.")
 
 	arena_b.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_foreign_enemy_ignored(failures: PackedStringArray, parent: Node2D) -> void:
@@ -335,21 +431,21 @@ func _test_foreign_enemy_ignored(failures: PackedStringArray, parent: Node2D) ->
 	var foreign_brawler: Node = CultBrawlerScene.instantiate()
 	foreign_brawler.global_position = Vector2(1200, 848)
 	parent.add_child(foreign_brawler)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	var player := _add_player(parent, Vector2(720, 848))
 	await _activate_arena(arena, player)
 
-	if arena._spawned_count != 2:
+	if arena._spawned_count != 3:
 		failures.append("Arena should only track its configured enemy count.")
 
 	for enemy in arena._tracked_enemies.duplicate():
 		var health: HealthComponent = arena._find_health_component(enemy)
 		if health != null and not health.is_dead:
 			health.apply_damage(health.max_health, player)
-			await TestHelpers.await_frames(self, 1)
+			arena._on_enemy_died(enemy)
 
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 4)
 
 	if arena.state != CombatArenaController.ArenaState.COMPLETED:
 		failures.append("Arena completion should ignore foreign enemies outside its roster.")
@@ -359,3 +455,109 @@ func _test_foreign_enemy_ignored(failures: PackedStringArray, parent: Node2D) ->
 		failures.append("Foreign enemy should not be counted by arena defeat logic.")
 
 	await _free_arena_run(arena, player, [exit_left, exit_right, foreign_brawler])
+
+
+func _test_integrity_failure_on_despawn(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := _build_test_arena(parent)
+	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
+	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
+	_wire_arena(arena, [exit_left, exit_right])
+
+	var integrity_tracker := {"reason": ""}
+	arena.arena_integrity_failed.connect(
+		func(_arena_id: StringName, reason: String) -> void:
+			integrity_tracker["reason"] = reason
+	)
+
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+
+	if arena._tracked_enemies.is_empty():
+		failures.append("Integrity test expected spawned enemies.")
+	else:
+		var living_enemy: Node = arena._tracked_enemies[0]
+		living_enemy.free()
+		await TestHelpers.await_physics_frames(get_tree(), 2)
+		await TestHelpers.await_frames(get_tree(), 2)
+
+		if arena.state != CombatArenaController.ArenaState.INACTIVE:
+			failures.append("Living enemy despawn should abort arena to inactive state.")
+		if String(integrity_tracker.get("reason", "")).is_empty():
+			failures.append("Living enemy despawn should emit arena_integrity_failed.")
+		if exit_left.is_arena_blocked():
+			failures.append("Integrity failure should reopen blocked exits.")
+
+	await _free_arena_run(arena, player, [exit_left, exit_right])
+
+
+func _test_death_reset_respawns_enemies(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := _build_test_arena(parent)
+	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
+	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
+	_wire_arena(arena, [exit_left, exit_right])
+
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+	var before_count := arena._spawned_count
+
+	arena.reset_active_encounter_for_player_death()
+	await TestHelpers.await_physics_frames(get_tree(), 4)
+	await TestHelpers.await_frames(get_tree(), 2)
+
+	if arena.state != CombatArenaController.ArenaState.ACTIVE:
+		failures.append("Death reset should keep arena active.")
+	if arena._spawned_count != before_count:
+		failures.append("Death reset should respawn the full arena roster.")
+	if arena.get_remaining_enemy_count() != before_count:
+		failures.append("Death reset should restore living enemies.")
+	if not exit_left.is_arena_blocked():
+		failures.append("Death reset should keep exits blocked while arena remains active.")
+
+	await _free_arena_run(arena, player, [exit_left, exit_right])
+
+
+func _test_projectile_cleanup_on_reset(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := await _build_single_enemy_arena(parent, GunslingerScene)
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+
+	if arena._tracked_enemies.is_empty():
+		failures.append("Projectile cleanup test expected a gunslinger enemy.")
+	else:
+		var gunslinger: Node = arena._tracked_enemies[0]
+		var projectile := ProjectileScene.instantiate() as PhysicalProjectile
+		parent.add_child(projectile)
+		projectile.global_position = Vector2(720, 848)
+		projectile.launch(gunslinger, 1, ShotData)
+		await TestHelpers.await_frames(get_tree(), 1)
+
+		arena.reset_active_encounter_for_player_death()
+		await TestHelpers.await_physics_frames(get_tree(), 4)
+		await TestHelpers.await_frames(get_tree(), 2)
+
+		if not get_tree().get_nodes_in_group("physical_projectile").is_empty():
+			failures.append("Arena reset should clear projectiles owned by arena enemies.")
+
+	await _free_arena_run(arena, player)
+
+
+func _test_area_unload_opens_gates(failures: PackedStringArray, parent: Node2D) -> void:
+	var arena := _build_test_arena(parent)
+	var exit_left := await _add_exit(parent, Vector2(40, 848), "ExitLeft")
+	var exit_right := await _add_exit(parent, Vector2(960, 848), "ExitRight")
+	_wire_arena(arena, [exit_left, exit_right])
+
+	var player := _add_player(parent, Vector2(720, 848))
+	await _activate_arena(arena, player)
+
+	arena.on_area_unloading()
+	await TestHelpers.await_frames(get_tree(), 3)
+
+	if exit_left.is_arena_blocked():
+		failures.append("Area unload should unblock exits.")
+	await _free_arena_run(arena, player, [exit_left, exit_right])
+
+
+func _enemy_uses_script(enemy: Node, script_suffix: String) -> bool:
+	var script := enemy.get_script() as Script
+	return script != null and String(script.resource_path).ends_with(script_suffix)

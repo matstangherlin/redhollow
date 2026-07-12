@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://kitmod_sign"]
+
+[ext_resource type="Script" path="res://scripts/environment/kit_visual_prop.gd" id="1_prop"]
+
+[node name="KitSign" type="Node2D"]
+script = ExtResource("1_prop")
+module_id = &"sign"
+expected_asset_path = "res://art/environments/chapter_zero/modules/street_mod_sign.png"
+footprint_size = Vector2(48, 24)

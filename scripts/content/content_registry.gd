@@ -6,6 +6,7 @@ class_name ContentRegistry
 static var _active: ContentRegistry = null
 
 var manifest: ContentManifest = null
+var world_graph: WorldGraphData = null
 var _chapter_by_id: Dictionary = {}
 var _area_by_id: Dictionary = {}
 var _area_by_scene: Dictionary = {}
@@ -54,6 +55,8 @@ func _rebuild_indexes() -> void:
 
 	if manifest == null:
 		return
+
+	_load_world_graph()
 
 	for chapter in manifest.chapters:
 		if chapter == null:
@@ -184,6 +187,36 @@ func get_manifest_id() -> StringName:
 	if manifest == null:
 		return &""
 	return manifest.manifest_id
+
+
+func get_world_graph() -> WorldGraphData:
+	if world_graph == null:
+		world_graph = WorldGraphFactory.create_beta_graph()
+	return world_graph
+
+
+func get_graph_node(area_id: StringName) -> AreaData:
+	return get_world_graph().get_node(area_id)
+
+
+func get_graph_connections_from(area_id: StringName) -> Array[AreaConnectionData]:
+	return get_world_graph().get_connections_from(area_id)
+
+
+func _load_world_graph() -> void:
+	world_graph = null
+	if manifest == null:
+		return
+	if not manifest.world_graph_path.is_empty() and ResourceLoader.exists(manifest.world_graph_path):
+		var loaded: Variant = load(manifest.world_graph_path)
+		if loaded is WorldGraphData:
+			world_graph = loaded as WorldGraphData
+			world_graph.ensure_built_in()
+			return
+	if String(manifest.manifest_id) == "full_game":
+		world_graph = WorldGraphFactory.create_full_graph()
+	else:
+		world_graph = WorldGraphFactory.create_beta_graph()
 
 
 func should_migrate_beta_save_to_full() -> bool:

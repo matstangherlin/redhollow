@@ -36,6 +36,15 @@ func refresh_from_flags(flags: Dictionary) -> void:
 	all_objectives_completed.emit()
 
 
+func get_active_objective_id() -> String:
+	if not _library.is_loaded():
+		return ""
+	var objectives := _library.get_objectives()
+	if _current_index >= objectives.size():
+		return ""
+	return String(objectives[_current_index].get("id", ""))
+
+
 func _is_objective_complete(objective: Dictionary, flags: Dictionary) -> bool:
 	var any_flags: Array = objective.get("complete_flags_any", [])
 	if not any_flags.is_empty():

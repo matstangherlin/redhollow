@@ -86,6 +86,10 @@ static func await_physics_frames(tree: SceneTree, frame_count: int = 1) -> void:
 		await tree.physics_frame
 
 
+static func await_seconds(tree: SceneTree, seconds: float) -> void:
+	await tree.create_timer(maxf(seconds, 0.0)).timeout
+
+
 static func mount_style_manager(parent: Node, tree: SceneTree, frame_count: int = 2) -> Node:
 	var style_manager: Node = StyleManagerScene.instantiate()
 	parent.add_child(style_manager)

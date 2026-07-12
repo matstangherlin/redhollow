@@ -2,6 +2,10 @@ extends SceneTree
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
+const BOOTSTRAP_SCENE := "res://scenes/tests/test_bootstrap.tscn"
+const DEFAULT_SUITE_TIMEOUT_SEC := 180.0
+const TIMEOUT_EXIT_CODE := 124
+
 const SUITES: Array[Dictionary] = [
 	{
 		"name": "vertical_slice_verification",
@@ -38,6 +42,7 @@ const SUITES: Array[Dictionary] = [
 	{
 		"name": "player_regression_tests",
 		"path": "res://scripts/player/player_regression_tests.gd",
+		"timeout_sec": 300.0,
 	},
 	{
 		"name": "vertical_slice_regression_tests",
@@ -72,8 +77,28 @@ const SUITES: Array[Dictionary] = [
 		"path": "res://scripts/feedback/feedback_system_tests.gd",
 	},
 	{
+		"name": "player_respawn_tests",
+		"path": "res://scripts/player/player_respawn_tests.gd",
+	},
+	{
 		"name": "content_registry_tests",
 		"path": "res://scripts/content/content_registry_tests.gd",
+	},
+	{
+		"name": "beta_integration_smoke_tests",
+		"path": "res://scripts/demo/beta_integration_smoke_tests.gd",
+	},
+	{
+		"name": "street_art_toggle_tests",
+		"path": "res://scripts/visual/street_art_toggle_tests.gd",
+	},
+	{
+		"name": "modular_kit_tests",
+		"path": "res://scripts/environment/modular_kit_tests.gd",
+	},
+	{
+		"name": "world_map_graph_tests",
+		"path": "res://scripts/world/world_map_graph_tests.gd",
 	},
 ]
 
@@ -97,6 +122,7 @@ func _run_all() -> void:
 	print("Red Hollow headless test runner")
 	print("Project: %s" % project_path)
 	print("Godot: %s" % godot_executable)
+	print("Bootstrap: %s" % BOOTSTRAP_SCENE)
 	print("Suites: %d" % total_tests)
 	print("")
 
@@ -126,14 +152,16 @@ func _run_all() -> void:
 
 	for result in suite_results:
 		var status := "PASS" if int(result.get("exit_code", 1)) == 0 else "FAIL"
+		var timeout_note := " TIMEOUT" if bool(result.get("timed_out", false)) else ""
 		print(
-			"[%s] %s (exit=%d, unexpected=%d, allowed=%d)"
+			"[%s] %s (exit=%d, unexpected=%d, allowed=%d)%s"
 			% [
 				status,
 				String(result.get("name", "")),
 				int(result.get("exit_code", 1)),
 				int(result.get("unexpected_issues", 0)),
 				int(result.get("allowed_issues", 0)),
+				timeout_note,
 			]
 		)
 
@@ -150,25 +178,71 @@ func _resolve_project_path() -> String:
 func _run_suite(godot_executable: String, project_path: String, suite: Dictionary) -> Dictionary:
 	var suite_name := String(suite.get("name", "unknown"))
 	var script_path := String(suite.get("path", ""))
+	var timeout_sec := float(suite.get("timeout_sec", DEFAULT_SUITE_TIMEOUT_SEC))
 	print("--- Running %s ---" % suite_name)
 
+	var args: PackedStringArray = PackedStringArray([
+		"--headless",
+		"--path",
+		project_path,
+		"--main-scene",
+		BOOTSTRAP_SCENE,
+		"--",
+		script_path,
+	])
+
 	var output: Array = []
-	var exit_code := OS.execute(
-		godot_executable,
-		["--headless", "--path", project_path, "--script", script_path],
-		output,
-		true,
-		false
-	)
+	var exec_result := await _execute_with_timeout(godot_executable, args, output, timeout_sec)
+	var exit_code := int(exec_result.get("exit_code", -1))
+	var timed_out := bool(exec_result.get("timed_out", false))
 
 	var combined_output := "\n".join(output)
 	if not combined_output.is_empty():
 		print(combined_output)
 
+	if timed_out:
+		push_error("Suite %s exceeded timeout (%.0fs)." % [suite_name, timeout_sec])
+
 	var parsed := _parse_suite_output(combined_output)
 	parsed["name"] = suite_name
 	parsed["exit_code"] = exit_code
+	parsed["timed_out"] = timed_out
 	return parsed
+
+
+func _execute_with_timeout(
+	godot_executable: String,
+	args: PackedStringArray,
+	output: Array,
+	timeout_sec: float
+) -> Dictionary:
+	var worker := {
+		"done": false,
+		"exit_code": 1,
+		"output": [] as Array,
+	}
+	var thread := Thread.new()
+	var err := thread.start(_execute_worker.bind(worker, godot_executable, args))
+	if err != OK:
+		push_error("Failed to start suite worker thread (error %d)." % err)
+		return {"exit_code": -1, "timed_out": false}
+
+	var deadline_ms := Time.get_ticks_msec() + int(timeout_sec * 1000.0)
+	while not bool(worker.get("done", false)):
+		if Time.get_ticks_msec() >= deadline_ms:
+			thread.wait_to_finish()
+			return {"exit_code": TIMEOUT_EXIT_CODE, "timed_out": true}
+		await self.process_frame
+
+	thread.wait_to_finish()
+	for line in worker.get("output", []):
+		output.append(line)
+	return {"exit_code": int(worker.get("exit_code", 1)), "timed_out": false}
+
+
+func _execute_worker(worker: Dictionary, godot_executable: String, args: PackedStringArray) -> void:
+	worker["exit_code"] = OS.execute(godot_executable, args, worker["output"], true, false)
+	worker["done"] = true
 
 
 func _parse_suite_output(output: String) -> Dictionary:

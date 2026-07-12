@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dqo7yr6hgwivc"]
+
+[ext_resource type="Script" path="res://scripts/ui/world_map_overlay.gd" id="1_overlay"]
+[ext_resource type="Script" path="res://scripts/ui/world_map_view.gd" id="2_view"]
+
+[node name="WorldMapOverlay" type="CanvasLayer"]
+layer = 45
+script = ExtResource("1_overlay")
+
+[node name="WorldMapView" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_view")
+world_map_service_path = NodePath("../../ProgressionSystem/WorldMapService")

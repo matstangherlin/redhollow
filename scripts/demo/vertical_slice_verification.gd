@@ -1,6 +1,7 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
+const TestRuntimeContext := preload("res://scripts/tests/test_runtime_context.gd")
 
 const VS_STREET := "res://scenes/areas/vertical_slice_street.tscn"
 const VS_CHURCH := "res://scenes/areas/vertical_slice_church.tscn"
@@ -10,12 +11,8 @@ const PRODUCT_MAIN := "res://scenes/product/main_menu.tscn"
 const DIALOGUE_PATH := "res://data/dialogues/dialogues_pt_br.json"
 
 
-func _initialize() -> void:
-	call_deferred("_run_verification")
-
-
-func _run_verification() -> void:
-	var suite := TestHelpers.begin_suite(self, "vertical_slice_verification")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "vertical_slice_verification")
 	var failures: PackedStringArray = PackedStringArray()
 
 	_verify_main_scene(failures)
@@ -129,13 +126,7 @@ func _verify_demo_scene_nodes(failures: PackedStringArray) -> void:
 
 
 func _verify_no_autoload_duplicates(failures: PackedStringArray) -> void:
-	var autoloads: Variant = ProjectSettings.get_setting("autoload", {})
-	if not (autoloads is Dictionary):
-		return
-	var names: PackedStringArray = PackedStringArray((autoloads as Dictionary).keys())
-	for required in ["SettingsManager", "GameBootState", "InputDeviceManager", "InputSetup"]:
-		if not names.has(required):
-			failures.append("Expected autoload missing: %s." % required)
+	failures.append_array(TestRuntimeContext.validate_autoloads(get_tree()))
 
 
 func _verify_boss_encounter_paths(failures: PackedStringArray) -> void:

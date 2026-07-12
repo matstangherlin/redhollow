@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
@@ -7,12 +7,8 @@ const VALID_ID := &"elias_church_warning"
 const INVALID_ID := &"missing_dialogue_id"
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "dialogue_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "dialogue_tests")
 	suite.allow_warning_contains("Dialogue id not found: missing_dialogue_id")
 
 	var failures: PackedStringArray = PackedStringArray()
@@ -50,8 +46,8 @@ func _test_library(failures: PackedStringArray) -> void:
 
 
 func _test_controller(failures: PackedStringArray) -> void:
-	var player := await TestHelpers.mount_player(root, self)
-	var controller_root := await TestHelpers.mount_dialogue_system(root, self)
+	var player := await TestHelpers.mount_player(root, get_tree())
+	var controller_root := await TestHelpers.mount_dialogue_system(root, get_tree())
 	var controller := controller_root as DialogueController
 	if controller == null:
 		failures.append("Dialogue system root is not a DialogueController.")
@@ -100,12 +96,12 @@ func _test_controller(failures: PackedStringArray) -> void:
 
 	controller_root.queue_free()
 	player.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_player_input_lock(failures: PackedStringArray) -> void:
-	var lock_manager := await TestHelpers.mount_gameplay_lock_manager(root, self)
-	var player := await TestHelpers.mount_player(root, self)
+	var lock_manager := await TestHelpers.mount_gameplay_lock_manager(root, get_tree())
+	var player := await TestHelpers.mount_player(root, get_tree())
 	player.call("enter_dialogue_mode")
 
 	if not bool(player.call("is_in_dialogue")):
@@ -120,4 +116,4 @@ func _test_player_input_lock(failures: PackedStringArray) -> void:
 	player.call("exit_dialogue_mode")
 	player.queue_free()
 	lock_manager.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)

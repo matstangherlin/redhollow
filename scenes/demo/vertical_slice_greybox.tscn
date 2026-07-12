@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://0urvw8i3af5"]
+[gd_scene load_steps=24 format=3 uid="uid://0urvw8i3af5"]
 
 [ext_resource type="Script" path="res://scripts/core/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/core/hitstop_controller.gd" id="2_hitstop"]
@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/objective_hud.tscn" id="19_objective"]
 [ext_resource type="Script" path="res://scripts/narrative/chapter_zero_finale.gd" id="20_finale"]
 [ext_resource type="PackedScene" path="res://scenes/core/feedback_system.tscn" id="21_feedback"]
+[ext_resource type="Script" path="res://scripts/core/respawn_service.gd" id="22_respawn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/world_map_overlay.tscn" id="23_world_map"]
 
 [node name="vertical_slice_greybox" type="Node"]
 script = ExtResource("1_game")
@@ -52,6 +54,9 @@ unique_name_in_owner = true
 script = ExtResource("8_save")
 auto_load_on_ready = false
 
+[node name="RespawnService" type="Node" parent="."]
+script = ExtResource("22_respawn")
+
 [node name="AreaTransitionManager" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("9_transition")
@@ -74,6 +79,8 @@ script = ExtResource("18_narrative")
 
 [node name="ObjectiveHud" parent="." instance=ExtResource("19_objective")]
 
+[node name="WorldMapOverlay" parent="." instance=ExtResource("23_world_map")]
+
 [node name="DemoHints" type="CanvasLayer" parent="VerticalSliceController"]
 layer = 5
 
@@ -87,7 +94,7 @@ offset_bottom = -10.0
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 0.85)
 theme_override_font_sizes/font_size = 12
-text = "Use o controle ou teclado. Menu/Pausa: Esc ou Start."
+text = "A/D mover | Espaço pular | J atacar | K esquivar | L counter | E interagir | U Red Brand | T provocar | M mapa | Esc pausa | R respawn (se morto) | F8/F9 save/load"
 
 [node name="ProductShell" type="Node" parent="."]
 script = ExtResource("15_shell")
@@ -137,7 +144,7 @@ horizontal_alignment = 1
 autowrap_mode = 2
 text = "Você investigou Red Hollow, atravessou o distrito da igreja, desceu às catacumbas e derrotou Deacon Rusk. Algo antigo despertou — a beta termina aqui. Pressione F7 para recomeçar."
 
-[node name="WorldHost" type="Node2D" parent="."]
+[node name="WorldHost" type="Node2D" parent="." groups=["world_host"]]
 unique_name_in_owner = true
 
 [node name="Player" parent="." instance=ExtResource("10_player")]

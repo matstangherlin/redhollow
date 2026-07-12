@@ -296,6 +296,7 @@ func _capture_game_state() -> Dictionary:
 		save_data["narrative_flags"] = progression_state.get("narrative_flags", {})
 		save_data["activated_checkpoints"] = progression_state.get("activated_checkpoints", [])
 		save_data["settings"] = progression_state.get("settings", {})
+		save_data["world_map"] = progression_state.get("world_map", {})
 
 	if _barrier_registry != null:
 		save_data["destroyed_barriers"] = _barrier_registry.export_destroyed_state()
@@ -341,6 +342,7 @@ func _apply_save_state(save_data: Dictionary) -> void:
 			"activated_checkpoints": save_data.get("activated_checkpoints", []),
 			"settings": save_data.get("settings", {}),
 			"can_break_red_barriers": _progression.can_break_red_barriers,
+			"world_map": save_data.get("world_map", {}),
 		})
 
 	if _barrier_registry != null:

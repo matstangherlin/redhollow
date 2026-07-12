@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://kitmod_crate"]
+
+[ext_resource type="Script" path="res://scripts/environment/kit_visual_prop.gd" id="1_prop"]
+
+[node name="KitCrate" type="Node2D"]
+script = ExtResource("1_prop")
+module_id = &"crate"
+expected_asset_path = "res://art/environments/chapter_zero/modules/street_mod_crate.png"
+footprint_size = Vector2(24, 24)

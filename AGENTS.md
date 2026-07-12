@@ -67,43 +67,50 @@ Consulte antes de implementar conteúdo, arte ou narrativa:
 
 ## Estado atual do repositório
 
-O projeto **não está vazio**. Existe uma demonstração técnica jogável (greybox) com sistemas reais.
+O projeto **não está vazio**. Existe fundação beta jogável com product shell, greybox Capítulo Zero e sistemas reais.
 
-**Baseline protegida:** tag `greybox-vertical-slice-v0.1` (`ae65a5084c1cbece80672a67d4bc0a6b4d40e5df`).  
-**Branch de trabalho:** `beta-foundation`.
+**Baseline greybox (tag):** `greybox-vertical-slice-v0.1` (`ae65a5084c1cbece80672a67d4bc0a6b4d40e5df`).  
+**Baseline beta foundation (commit):** `e07ba0ecb8502d7a368017f1764599155e3e87bf` (`e07ba0e`).  
+**Versão:** `0.2.0-beta.1`
 
-**Main scene:** `res://scenes/demo/vertical_slice_greybox.tscn`
+**Main scene:** `res://scenes/product/main_menu.tscn`  
+**Gameplay (via boot):** `res://scenes/demo/vertical_slice_greybox.tscn`
+
+**Autoloads:** `SettingsManager`, `GameBootState`, `InputDeviceManager`, `InputSetup`
 
 **Implementado e razoavelmente funcional** (detalhe em `CURRENT_IMPLEMENTATION.md`):
 
-- movimento lateral, pulo, combo, esquiva, counter, provocação;
+- product shell: menu, opções, pausa, créditos, loading (infra — validação manual pendente);
+- movimento lateral, pulo, combo, esquiva, counter, provocação (controllers);
 - hitbox/hurtbox e ataques orientados por Resource;
-- estilo, Red Brand, barreira destrutível;
-- diálogo, interação, checkpoint;
-- save/load **manual** (F8/F9);
-- três áreas e transição (rua → igreja → subterrâneo);
-- arena, Cult Brawler, mini-chefe Deacon Rusk;
-- HUD estilo, HUD chefe, overlay de conclusão;
-- `GameplayLockManager`, testes headless (`test_runner.gd`).
+- estilo, Red Brand, barreira destrutível, feedback combate;
+- diálogo, interação, checkpoint, NarrativeDirector + objetivos Cap. Zero (provisório);
+- save/load **manual** (F8/F9); auto-load **desativado** na sessão greybox;
+- três áreas e transição; arena; Cult Brawler; Gunslinger; Chain Penitent; Deacon Rusk;
+- ContentRegistry + manifests `beta_demo` / `full_game`;
+- pipeline visual Calder (placeholder/pilot); áudio procedural provisório;
+- export preset Windows + `tools/build_windows.ps1`;
+- test_runner **18 suítes** (gate automatizado **FAIL** no commit — ver KI-005).
 
 **Implementado com dívida técnica** (ver `docs/TECH_DEBT.md`):
 
-- `player.gd` monolítico (~1700 linhas no baseline);
-- acoplamento por grupos e chamadas dinâmicas;
-- SaveManager captura vida/Red Brand via paths internos (baseline);
-- panic unlock (Esc) como escape hatch;
-- auto-load de save **desativado** na vertical slice (`auto_load_on_ready = false`);
-- fluxo morte/respawn não consolidado.
+- gate headless ~8/18 PASS com subprocesso `--script` (autoloads ausentes);
+- morte/respawn parcial (auto ~0,65 s); serviço unificado pendente;
+- arena physics flush (KI-002); panic unlock Esc;
+- `player.gd` coordenador ~800 linhas;
+- build Windows não aprovada QA;
+- playthrough menu→fim não assinado.
 
-**Planejado para beta** (`BETA_DEMO_SCOPE.md`): arte final Capítulo Zero, catacumbas, três inimigos visuais, set pieces Mol-Khar/Arcturus, UI mapa/diário/pausa.
+**Planejado para beta** (`BETA_DEMO_SCOPE.md`): arte final Capítulo Zero, UI mapa/diário final, balanceamento encontros, build aprovada.
 
 **Planejado para jogo final** (`FINAL_GAME_SCOPE.md`): barões, Palácio Rubro, Mol-Khar completo, finais.
 
 ### Salvamento na demo atual
 
 - **F8** salva; **F9** carrega manualmente.
-- **Não há auto-load** ao iniciar a vertical slice greybox.
+- **Não há auto-load** ao iniciar sessão greybox (`SaveManager.auto_load_on_ready = false` em `game.gd`).
 - Checkpoint no subterrâneo grava save ao ativar.
+- Menu/boot via `GameBootState` — política continue/auto-load sujeita a D-013.
 
 ## Regras de edição
 
@@ -135,7 +142,7 @@ O projeto **não está vazio**. Existe uma demonstração técnica jogável (gre
 - Use sinais para reduzir acoplamento entre sistemas.
 - Não use `get_node` com caminhos frágeis espalhados pelo projeto.
 - Use referências exportadas, grupos, sinais ou componentes quando apropriado.
-- Autoloads devem ser raros; a vertical slice usa shell persistente na main scene.
+- Autoloads de product shell (`SettingsManager`, `GameBootState`, `InputDeviceManager`, `InputSetup`); gameplay greybox usa shell persistente em `vertical_slice_greybox.tscn`.
 
 ## Estrutura recomendada
 

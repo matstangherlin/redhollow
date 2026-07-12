@@ -17,6 +17,8 @@ const CONTROLLER_GROUP := "combat_arena_controller"
 const PLAYER_GROUP := "player"
 const STYLE_MANAGER_GROUP := "style_manager"
 const PROGRESSION_GROUP := "progression_component"
+const ARENA_ENEMY_META := "combat_arena_id"
+const ARENA_OWNER_META := "combat_arena_owner_id"
 
 @export var arena_id: StringName = &"arena_01"
 @export var activation_zone_path: NodePath
@@ -43,6 +45,9 @@ var _defeated_instance_ids: Dictionary = {}
 var _spawned_count: int = 0
 var _status_timer: SceneTreeTimer = null
 var _integrity_compromised: bool = false
+var _activation_scheduled: bool = false
+var _player_death_reset_in_progress: bool = false
+var _teardown_in_progress: bool = false
 var _style_manager: StyleManager = null
 var _progression: ProgressionComponent = null
 
@@ -57,7 +62,16 @@ func _ready() -> void:
 
 	_set_state(ArenaState.INACTIVE)
 	if _activation_zone != null:
+		_activation_zone.monitoring = false
 		_activation_zone.body_entered.connect(_on_activation_body_entered)
+
+
+func arm_activation_monitoring() -> void:
+	if state != ArenaState.INACTIVE:
+		return
+	if _activation_zone == null:
+		return
+	_activation_zone.set_deferred("monitoring", true)
 
 
 func bind_combat_services(
@@ -68,6 +82,18 @@ func bind_combat_services(
 	_progression = progression
 
 
+func on_area_unloading() -> void:
+	_activation_scheduled = false
+	_teardown_in_progress = true
+	_clear_runtime_projectiles()
+
+	if state == ArenaState.ACTIVE:
+		_set_gates_closed(false)
+		_set_exits_blocked(false)
+
+	_despawn_container_enemies()
+
+
 func debug_force_recover_arena() -> void:
 	if state != ArenaState.ACTIVE:
 		return
@@ -76,6 +102,22 @@ func debug_force_recover_arena() -> void:
 	_tracked_enemies = _tracked_enemies.filter(func(enemy: Node) -> bool: return is_instance_valid(enemy))
 	_show_status_message("Debug: arena recuperada")
 	arena_debug_recovered.emit(arena_id)
+
+
+func reset_active_encounter_for_player_death() -> void:
+	if state != ArenaState.ACTIVE:
+		return
+
+	_player_death_reset_in_progress = true
+	_integrity_compromised = false
+	_clear_runtime_projectiles()
+	_despawn_container_enemies()
+	_tracked_enemies.clear()
+	_defeated_instance_ids.clear()
+	_spawned_count = 0
+	_set_gates_closed(true)
+	_set_exits_blocked(true)
+	call_deferred("_respawn_enemies_after_player_death")
 
 
 func try_complete_if_enemies_cleared() -> bool:
@@ -102,10 +144,16 @@ func get_remaining_enemy_count() -> int:
 	for enemy in _tracked_enemies:
 		if not is_instance_valid(enemy):
 			continue
+		if not _is_arena_owned_enemy(enemy):
+			continue
 		var health := _find_health_component(enemy)
 		if health == null or not health.is_dead:
 			alive += 1
 	return alive
+
+
+func owns_enemy(enemy: Node) -> bool:
+	return _is_arena_owned_enemy(enemy)
 
 
 func _resolve_nodes() -> void:
@@ -135,18 +183,31 @@ func _resolve_nodes() -> void:
 func _on_activation_body_entered(body: Node) -> void:
 	if state != ArenaState.INACTIVE:
 		return
+	if _activation_scheduled:
+		return
 	if not body.is_in_group(PLAYER_GROUP):
 		return
-	_activate_arena()
+
+	_activation_scheduled = true
+	call_deferred("_begin_activation_sequence")
 
 
-func _activate_arena() -> void:
+func _begin_activation_sequence() -> void:
 	if state != ArenaState.INACTIVE:
+		_activation_scheduled = false
 		return
 
 	_set_state(ArenaState.ACTIVE)
 	_set_gates_closed(true)
 	_set_exits_blocked(true)
+	call_deferred("_finalize_activation_spawn")
+
+
+func _finalize_activation_spawn() -> void:
+	_activation_scheduled = false
+	if state != ArenaState.ACTIVE:
+		return
+
 	_spawn_configured_enemies()
 	if _spawned_count <= 0:
 		push_warning("CombatArena '%s' failed to spawn enemies. Releasing the arena." % String(arena_id))
@@ -158,9 +219,11 @@ func _activate_arena() -> void:
 
 
 func _abort_arena_activation(message: String) -> void:
+	_activation_scheduled = false
+	_player_death_reset_in_progress = false
+	_clear_runtime_projectiles()
 	_set_state(ArenaState.INACTIVE)
-	_set_gates_closed(false)
-	_set_exits_blocked(false)
+	_despawn_container_enemies()
 	_tracked_enemies.clear()
 	_defeated_instance_ids.clear()
 	_spawned_count = 0
@@ -172,11 +235,17 @@ func _spawn_configured_enemies() -> void:
 	_defeated_instance_ids.clear()
 	_spawned_count = 0
 
+	var previous_teardown := _teardown_in_progress
+	_teardown_in_progress = true
+	_despawn_container_enemies()
+
 	if enemy_scene == null or _enemies_container == null:
+		_teardown_in_progress = previous_teardown or _player_death_reset_in_progress
 		push_warning("CombatArena '%s' has no enemy scene or container." % String(arena_id))
 		return
 
 	if _spawn_points.is_empty():
+		_teardown_in_progress = previous_teardown or _player_death_reset_in_progress
 		push_warning("CombatArena '%s' has no enemy spawn points." % String(arena_id))
 		return
 
@@ -192,6 +261,17 @@ func _spawn_configured_enemies() -> void:
 		_register_enemy(enemy)
 		_spawned_count += 1
 
+	_teardown_in_progress = previous_teardown or _player_death_reset_in_progress
+
+
+func _respawn_enemies_after_player_death() -> void:
+	if state != ArenaState.ACTIVE:
+		_player_death_reset_in_progress = false
+		return
+
+	_spawn_configured_enemies()
+	_player_death_reset_in_progress = false
+
 
 func _resolve_enemy_scene_for_spawn(spawn_point: Node2D) -> PackedScene:
 	if spawn_point is CombatArenaSpawnPoint:
@@ -206,7 +286,8 @@ func _register_enemy(enemy: Node) -> void:
 		return
 
 	_tracked_enemies.append(enemy)
-	enemy.set_meta("combat_arena_id", arena_id)
+	enemy.set_meta(ARENA_ENEMY_META, arena_id)
+	enemy.set_meta(ARENA_OWNER_META, arena_id)
 
 	var health := _find_health_component(enemy)
 	if health != null:
@@ -216,6 +297,9 @@ func _register_enemy(enemy: Node) -> void:
 
 
 func _on_enemy_died(enemy: Node) -> void:
+	if not _is_arena_owned_enemy(enemy):
+		return
+
 	var instance_id := enemy.get_instance_id()
 	if _defeated_instance_ids.has(instance_id):
 		return
@@ -225,9 +309,15 @@ func _on_enemy_died(enemy: Node) -> void:
 
 func _on_enemy_tree_exiting(enemy: Node) -> void:
 	_tracked_enemies.erase(enemy)
+	if _player_death_reset_in_progress or _teardown_in_progress:
+		return
+
 	var instance_id := enemy.get_instance_id()
 	if _defeated_instance_ids.has(instance_id):
 		_check_for_completion()
+		return
+
+	if not _is_arena_owned_enemy(enemy):
 		return
 
 	var health := _find_health_component(enemy)
@@ -258,6 +348,8 @@ func _check_for_completion() -> void:
 		return
 	if _defeated_instance_ids.size() < _spawned_count:
 		return
+	if get_remaining_enemy_count() > 0:
+		return
 	_complete_arena()
 
 
@@ -265,9 +357,8 @@ func _complete_arena() -> void:
 	if state != ArenaState.ACTIVE:
 		return
 
+	_clear_runtime_projectiles()
 	_set_state(ArenaState.COMPLETED)
-	_set_gates_closed(false)
-	_set_exits_blocked(false)
 	_disable_activation_zone()
 	_mark_complete_in_progression()
 	_grant_style_completion_bonus()
@@ -276,9 +367,8 @@ func _complete_arena() -> void:
 
 
 func _apply_completed_state(from_activation: bool) -> void:
+	_activation_scheduled = false
 	_set_state(ArenaState.COMPLETED)
-	_set_gates_closed(false)
-	_set_exits_blocked(false)
 	_disable_activation_zone()
 	if from_activation:
 		_show_status_message("Arena concluída")
@@ -286,9 +376,12 @@ func _apply_completed_state(from_activation: bool) -> void:
 
 func _set_state(new_state: ArenaState) -> void:
 	state = new_state
-	if new_state == ArenaState.INACTIVE:
+	if new_state == ArenaState.INACTIVE or new_state == ArenaState.COMPLETED:
 		_set_gates_closed(false)
 		_set_exits_blocked(false)
+	elif new_state == ArenaState.ACTIVE:
+		_set_gates_closed(true)
+		_set_exits_blocked(true)
 
 
 func _set_gates_closed(closed: bool) -> void:
@@ -306,6 +399,43 @@ func _set_exits_blocked(blocked: bool) -> void:
 func _disable_activation_zone() -> void:
 	if _activation_zone != null:
 		_activation_zone.set_deferred("monitoring", false)
+
+
+func _despawn_container_enemies() -> void:
+	if _enemies_container == null:
+		return
+
+	for child in _enemies_container.get_children():
+		if not is_instance_valid(child):
+			continue
+		if _teardown_in_progress or _player_death_reset_in_progress:
+			child.free()
+		else:
+			child.queue_free()
+
+
+func _clear_runtime_projectiles() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+
+	for node in tree.get_nodes_in_group("physical_projectile"):
+		if not (node is PhysicalProjectile):
+			continue
+		var projectile := node as PhysicalProjectile
+		var owner := projectile.owner_node
+		if owner != null and _is_arena_owned_enemy(owner):
+			projectile.queue_free()
+
+
+func _is_arena_owned_enemy(enemy: Node) -> bool:
+	if enemy == null:
+		return false
+	if enemy.get_meta(ARENA_ENEMY_META, &"") == arena_id:
+		return true
+	if _enemies_container != null and _enemies_container.is_ancestor_of(enemy):
+		return true
+	return false
 
 
 func _show_status_message(message: String) -> void:

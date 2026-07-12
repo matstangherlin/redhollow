@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://kitroom_saloon_front"]
+
+[ext_resource type="Script" path="res://scripts/environment/kit_modular_room.gd" id="1_room"]
+[ext_resource type="Resource" path="res://resources/environment/kits/chapter_zero_street_kit.tres" id="2_kit"]
+
+[node name="KitRoomSaloonFront" type="Node2D"]
+script = ExtResource("1_room")
+area_id = &"kit_room_saloon_front"
+area_display_name = "Kit Test — Frente do Saloon"
+camera_limits = Rect2(0, 200, 640, 1000)
+fall_recovery_y = 1200.0
+room_template = "saloon_front"
+environment_kit = ExtResource("2_kit")

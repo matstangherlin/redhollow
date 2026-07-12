@@ -2,6 +2,7 @@ extends Node
 class_name GameServices
 
 const SERVICES_GROUP := "game_services"
+const RespawnServiceScript := preload("res://scripts/core/respawn_service.gd")
 
 var world_host: Node2D = null
 var player: CharacterBody2D = null
@@ -18,6 +19,8 @@ var boss_health_hud: BossHealthHud = null
 var feedback_system: FeedbackSystem = null
 var audio_manager: AudioManager = null
 var combat_feedback_director: CombatFeedbackDirector = null
+var respawn_service: RespawnServiceScript = null
+var world_map_service: WorldMapService = null
 
 
 func _ready() -> void:
@@ -38,6 +41,7 @@ func bind_from_shell(game_root: Node) -> void:
 	dialogue_controller = game_root.get_node_or_null("DialogueSystem") as DialogueController
 	boss_health_hud = game_root.get_node_or_null("BossHealthHud") as BossHealthHud
 	gameplay_lock_manager = game_root.get_node_or_null("GameplayLockManager") as GameplayLockManager
+	respawn_service = game_root.get_node_or_null("RespawnService") as RespawnServiceScript
 	feedback_system = game_root.get_node_or_null("FeedbackSystem") as FeedbackSystem
 
 	if feedback_system != null:
@@ -49,8 +53,18 @@ func bind_from_shell(game_root: Node) -> void:
 	if progression_system != null:
 		progression = progression_system.get_node_or_null("ProgressionComponent") as ProgressionComponent
 		barrier_registry = progression_system.get_node_or_null("BarrierRegistry") as BarrierRegistry
+		world_map_service = progression_system.get_node_or_null("WorldMapService") as WorldMapService
 
+	_bind_world_map()
 	_bind_persistent_combat()
+
+
+func _bind_world_map() -> void:
+	if world_map_service == null:
+		return
+	var registry := ContentRegistry.get_active()
+	var graph := registry.get_world_graph() if registry != null else WorldGraphFactory.create_beta_graph()
+	world_map_service.bind(graph, progression, area_transition_manager)
 
 
 func on_area_unloaded(area: AreaRoot) -> void:
@@ -70,6 +84,9 @@ func on_area_loaded(area: AreaRoot) -> void:
 
 	if area != null:
 		area.bind_runtime_services(self)
+
+	if world_map_service != null:
+		world_map_service.on_area_entered(area.area_id)
 
 
 func _bind_persistent_combat() -> void:

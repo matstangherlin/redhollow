@@ -37,6 +37,7 @@ const RED_BRAND_BREAKER_TAGS := ["red_brand_breaker", "breaker"]
 const SUPER_ARMOR_TAGS := ["super_armor"]
 const NOT_COUNTERABLE_TAGS := ["not_counterable"]
 const FLOOR_VELOCITY_RESET_THRESHOLD := 0.0
+const HealthDropSpawner := preload("res://scripts/combat/health_drop_spawner.gd")
 
 const TAUNT_LINES := [
 	"Calder Knox. A Red Brand deveria tê-lo transformado — não libertado.",
@@ -104,12 +105,16 @@ var _phase_transition_triggered: bool = false
 var _combat_pressure_active: bool = false
 var _last_attack_kind: int = AttackKind.NONE
 var _rng := RandomNumberGenerator.new()
+var _default_collision_layer: int = 0
+var _default_collision_mask: int = 0
 
 
 func _ready() -> void:
 	add_to_group(STYLE_TRACKABLE_GROUP)
 	add_to_group("boss_enemy")
 	floor_snap_length = floor_snap_distance
+	_default_collision_layer = collision_layer
+	_default_collision_mask = collision_mask
 	_rng.randomize()
 	_initialize_health()
 	_connect_components()
@@ -188,6 +193,28 @@ func mark_encounter_cleared() -> void:
 	is_boss_active = false
 	_set_dormant(true)
 	visible = false
+
+
+func reset_for_player_death() -> void:
+	if not is_boss_active and current_state != RuskState.DEAD:
+		return
+
+	velocity = Vector2.ZERO
+	_interrupt_attack()
+	_stagger_meter = 0.0
+	_stagger_immunity_remaining = 0.0
+	_phase_transition_triggered = false
+	_combat_pressure_active = false
+	_initialize_health()
+	collision_layer = _default_collision_layer
+	collision_mask = _default_collision_mask
+	var body_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if body_shape != null:
+		body_shape.set_deferred("disabled", false)
+	is_boss_active = true
+	visible = true
+	_set_dormant(false)
+	_enter_state(RuskState.INTRO)
 
 
 func _set_dormant(dormant: bool) -> void:
@@ -579,6 +606,7 @@ func _on_died() -> void:
 	CorpseCollisionHelper.disable_body_collision(self)
 	velocity = Vector2.ZERO
 	boss_defeated.emit(boss_id)
+	HealthDropSpawner.try_spawn_from_defeat(self, HealthDropSpawner.PROFILE_BOSS)
 
 
 func _has_super_armor() -> bool:

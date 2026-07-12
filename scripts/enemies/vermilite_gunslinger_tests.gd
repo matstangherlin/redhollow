@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
@@ -8,12 +8,8 @@ const ShotData := preload("res://resources/combat/gunslinger_shot.tres")
 const WhipData := preload("res://resources/combat/gunslinger_whip.tres")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "vermilite_gunslinger_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "vermilite_gunslinger_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
 	root.add_child(root_node)
@@ -53,7 +49,7 @@ func _test_spawn_and_defeat(failures: PackedStringArray, parent: Node2D) -> void
 	if not bool(health.get("is_dead")):
 		failures.append("Gunslinger should be defeatable.")
 	gunslinger.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_projectile_launch(failures: PackedStringArray, parent: Node2D) -> void:
@@ -61,8 +57,8 @@ func _test_projectile_launch(failures: PackedStringArray, parent: Node2D) -> voi
 	parent.add_child(projectile)
 	projectile.global_position = Vector2(200, 848)
 	projectile.launch(parent, 1, ShotData)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	if not is_instance_valid(projectile):
 		failures.append("Projectile should remain valid after launch.")
 	projectile.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)

@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const CombatFeedbackResolverScript := preload("res://scripts/feedback/combat_feedback_resolver.gd")
@@ -15,12 +15,8 @@ const FeedbackSystemScene := preload("res://scenes/core/feedback_system.tscn")
 const CameraScene := preload("res://scenes/core/camera_controller.tscn")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "feedback_system_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "feedback_system_tests")
 	suite.allow_warning_contains("CameraController target was not found")
 	var failures: PackedStringArray = PackedStringArray()
 
@@ -77,14 +73,14 @@ func _test_audio_volume_settings(failures: PackedStringArray) -> void:
 
 	var audio: Node = AudioManagerScript.new()
 	test_root.add_child(audio)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	var settings := _ensure_settings_manager()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	if settings == null:
 		failures.append("SettingsManager autoload required for volume tests.")
 		test_root.queue_free()
-		await TestHelpers.await_frames(self, 1)
+		await TestHelpers.await_frames(get_tree(), 1)
 		return
 
 	var previous: Dictionary = settings.call("get_audio")
@@ -97,7 +93,7 @@ func _test_audio_volume_settings(failures: PackedStringArray) -> void:
 
 	settings.call("set_audio_field", "sfx", float(previous.get("sfx", 1.0)))
 	test_root.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_camera_shake_zero(failures: PackedStringArray) -> void:
@@ -106,14 +102,14 @@ func _test_camera_shake_zero(failures: PackedStringArray) -> void:
 
 	var camera_rig: Node = CameraScene.instantiate()
 	test_root.add_child(camera_rig)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	var settings_shake := _ensure_settings_manager()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	if settings_shake == null:
 		failures.append("SettingsManager autoload required for shake tests.")
 		test_root.queue_free()
-		await TestHelpers.await_frames(self, 1)
+		await TestHelpers.await_frames(get_tree(), 1)
 		return
 
 	var previous_shake: float = float(settings_shake.call("get_accessibility").get("screen_shake_intensity", 1.0))
@@ -121,7 +117,7 @@ func _test_camera_shake_zero(failures: PackedStringArray) -> void:
 
 	camera_rig.request_shake(12.0, 0.2)
 	camera_rig.request_punch_zoom(0.04, 0.12)
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 2)
 
 	if not camera_rig.get("active_shakes").is_empty():
 		failures.append("Screen shake intensity 0 should suppress camera shake requests.")
@@ -131,7 +127,7 @@ func _test_camera_shake_zero(failures: PackedStringArray) -> void:
 
 	settings_shake.call("set_accessibility_field", "screen_shake_intensity", previous_shake)
 	test_root.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_reduced_flashes(failures: PackedStringArray) -> void:
@@ -140,14 +136,14 @@ func _test_reduced_flashes(failures: PackedStringArray) -> void:
 
 	var vfx: Node = CombatVfxSpawnerScript.new()
 	test_root.add_child(vfx)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	var settings_flash := _ensure_settings_manager()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	if settings_flash == null:
 		failures.append("SettingsManager autoload required for flash tests.")
 		test_root.queue_free()
-		await TestHelpers.await_frames(self, 1)
+		await TestHelpers.await_frames(get_tree(), 1)
 		return
 
 	var previous: bool = bool(settings_flash.call("get_accessibility").get("reduced_flashes", false))
@@ -161,7 +157,7 @@ func _test_reduced_flashes(failures: PackedStringArray) -> void:
 
 	settings_flash.call("set_accessibility_field", "reduced_flashes", previous)
 	test_root.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_vfx_pool_performance(failures: PackedStringArray) -> void:
@@ -170,19 +166,19 @@ func _test_vfx_pool_performance(failures: PackedStringArray) -> void:
 
 	var vfx: Node = CombatVfxSpawnerScript.new()
 	test_root.add_child(vfx)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	var started_ms := Time.get_ticks_msec()
 	for index in range(40):
 		vfx.spawn(&"hit_normal", Vector2(100 + index, 200), 1.0)
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 2)
 	var elapsed_ms := Time.get_ticks_msec() - started_ms
 
 	if elapsed_ms > 500:
 		failures.append("Spawning 40 hit VFX should stay under 500ms (took %dms)." % elapsed_ms)
 
 	test_root.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _get_settings_manager() -> Node:

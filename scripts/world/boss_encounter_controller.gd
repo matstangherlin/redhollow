@@ -40,6 +40,7 @@ var _status_timer: SceneTreeTimer = null
 var _style_manager: StyleManager = null
 var _progression: ProgressionComponent = null
 var _boss_health_hud: BossHealthHud = null
+var _encounter_scheduled: bool = false
 
 
 func _ready() -> void:
@@ -52,7 +53,16 @@ func _ready() -> void:
 
 	_set_state(EncounterState.INACTIVE)
 	if _activation_zone != null:
+		_activation_zone.monitoring = false
 		_activation_zone.body_entered.connect(_on_activation_body_entered)
+
+
+func arm_activation_monitoring() -> void:
+	if state != EncounterState.INACTIVE:
+		return
+	if _activation_zone == null:
+		return
+	_activation_zone.set_deferred("monitoring", true)
 
 
 func bind_encounter_services(
@@ -67,6 +77,30 @@ func bind_encounter_services(
 
 func is_blocking_exits() -> bool:
 	return state == EncounterState.ACTIVE
+
+
+func on_area_unloading() -> void:
+	_encounter_scheduled = false
+	if state == EncounterState.ACTIVE:
+		_set_gates_closed(false)
+		_set_exits_blocked(false)
+
+
+func reset_active_encounter_for_player_death() -> void:
+	if state != EncounterState.ACTIVE:
+		return
+
+	if _boss_health_hud != null:
+		_boss_health_hud.unbind_boss()
+	else:
+		for node in get_tree().get_nodes_in_group(BOSS_HUD_GROUP):
+			if node is BossHealthHud:
+				(node as BossHealthHud).unbind_boss()
+				break
+
+	if _boss != null and _boss.has_method("reset_for_player_death"):
+		_boss.call("reset_for_player_death")
+		_bind_boss_hud()
 
 
 func _resolve_nodes() -> void:
@@ -90,12 +124,16 @@ func _resolve_nodes() -> void:
 func _on_activation_body_entered(body: Node) -> void:
 	if state != EncounterState.INACTIVE:
 		return
+	if _encounter_scheduled:
+		return
 	if not body.is_in_group(PLAYER_GROUP):
 		return
-	_start_encounter()
+	_encounter_scheduled = true
+	call_deferred("_start_encounter")
 
 
 func _start_encounter() -> void:
+	_encounter_scheduled = false
 	if state != EncounterState.INACTIVE:
 		return
 

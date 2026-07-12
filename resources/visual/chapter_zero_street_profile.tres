@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnvironmentVisualProfile" load_steps=2 format=3 uid="uid://envprofile_street_cz"]
+
+[ext_resource type="Script" path="res://scripts/visual/environment_visual_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"chapter_zero_street"
+area_display_name = "Rua de Red Hollow — Art Vertical Slice"
+target_area_id = &"vs_greybox_street"
+logical_resolution = Vector2i(480, 270)
+window_reference_size = Vector2i(1920, 1080)
+pixels_per_unit = 1
+tile_size_px = 16
+texture_filter = 0
+stretch_mode = "canvas_items"
+stretch_aspect = "expand"
+calder_sprite_size = Vector2i(32, 56)
+enemy_scale_notes = "Brawler 56h, Gunslinger 54h, Penitent 58h"
+playfield_width_px = 2400.0
+ground_surface_y = 876.0
+camera_limits = Rect2(0, 200, 2400, 1000)
+parallax_scroll_limits = Vector2(0.45, 0)
+max_draw_calls = 80
+max_point_lights = 6
+max_particle_count = 180
+max_texture_atlas_size = 2048
+max_parallax_layers = 5
+max_art_layers = 9

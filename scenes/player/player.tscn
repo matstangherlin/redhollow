@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://ckposgkq8gbef"]
+[gd_scene load_steps=18 format=3 uid="uid://ckposgkq8gbef"]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://scripts/player/player_debug_view.gd" id="11_debug"]
 [ext_resource type="Script" path="res://scripts/visual/player_visual_controller.gd" id="16_visual"]
 [ext_resource type="Resource" path="res://resources/visual/calder_placeholder_profile.tres" id="17_profile"]
+[ext_resource type="Script" path="res://scripts/visual/player_visual_debug_overlay.gd" id="18_visual_debug"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player_body"]
 size = Vector2(32, 56)
@@ -32,6 +33,10 @@ script = ExtResource("1_player")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_player_body")
+
+[node name="VisualDebugOverlay" type="Node2D" parent="."]
+z_index = 100
+script = ExtResource("18_visual_debug")
 
 [node name="Visual" type="Node2D" parent="."]
 unique_name_in_owner = true

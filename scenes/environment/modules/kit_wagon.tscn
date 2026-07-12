@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://kitmod_wagon"]
+
+[ext_resource type="Script" path="res://scripts/environment/kit_visual_prop.gd" id="1_prop"]
+
+[node name="KitWagon" type="Node2D"]
+script = ExtResource("1_prop")
+module_id = &"wagon"
+expected_asset_path = "res://art/environments/chapter_zero/modules/street_mod_wagon.png"
+footprint_size = Vector2(96, 64)

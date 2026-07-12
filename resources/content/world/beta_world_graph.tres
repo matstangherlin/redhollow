@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="WorldGraphData" load_steps=2 format=3 uid="uid://worldgraph_beta_cz"]
+
+[ext_resource type="Script" path="res://scripts/world/world_graph_data.gd" id="1_graph"]
+
+[resource]
+script = ExtResource("1_graph")
+graph_id = &"beta_chapter_zero"
+manifest_id = &"beta_demo"
+display_name = "Capítulo Zero — Beta"

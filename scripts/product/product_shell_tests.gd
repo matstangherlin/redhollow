@@ -1,16 +1,13 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const TEST_SLOT := "slot_01"
 const TEST_SAVE_PATH := "user://saves/%s.save.json" % TEST_SLOT
 
 
-func _initialize() -> void:
-	call_deferred("_run")
-
-
-func _run() -> void:
-	var suite := TestHelpers.begin_suite(self, "product_shell_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "product_shell_tests")
+	suite.allow_error_contains("Parse JSON failed")
 	var failures: PackedStringArray = PackedStringArray()
 
 	_test_settings_data_defaults(failures)

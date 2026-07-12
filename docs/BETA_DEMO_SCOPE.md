@@ -1,127 +1,132 @@
 # Red Hollow — Beta Demo Scope
 
 **Nome:** Capítulo Zero — O Sino Antes do Anoitecer  
+**Versão alvo:** `0.2.0-beta.1`  
 **Duração alvo:** 30–45 minutos  
 **Plataforma inicial:** Windows, 60 FPS  
-**Arte:** pixel art final (ou próxima) nas áreas listadas  
-**Base técnica:** vertical slice greybox (`vertical_slice_greybox.tscn`) — ver `CURRENT_IMPLEMENTATION.md`
+**Baseline commit:** `e07ba0ecb8502d7a368017f1764599155e3e87bf`
 
 ## Objetivo
 
 Validar núcleo jogável, narrativa, combate, exploração curta e identidade visual — **sem** escopo de jogo completo.
 
+**Entry point:** `res://scenes/product/main_menu.tscn`  
+**Sessão de gameplay:** `res://scenes/demo/vertical_slice_greybox.tscn` (via boot)
+
+---
+
+## Estado por camada (commit `e07ba0e`)
+
+| Camada | Estado | Nota |
+| --- | --- | --- |
+| Infraestrutura product shell | Criada | Menu, opções, pausa, créditos, loading — **fluxo não assinado manualmente** |
+| Integração boot → greybox | Commitada | `GameBootState` + manifest `beta_demo` |
+| Conteúdo Capítulo Zero | Provisório | JSON, diálogos `cz_*`, finale 8 passos |
+| Inimigos beta (3 arquétipos) | Provisório greybox | Gunslinger + Chain + Brawler existem; **balance/arte final pendentes** |
+| Arte final | Não produzida | Pipeline visual pronto; sprites finais pendentes |
+| UI beta (mapa/diário skin) | Parcial | HUD objetivo provisório; mapa/diário finais pendentes |
+| Testes auto gate | **FAIL** | 18 suítes; ~8 PASS no runner `--script` |
+| Build Windows | Preset + script | Build **não aprovada** QA |
+
+---
+
 ## Conteúdo pretendido
 
 ### Áreas
 
-| Área | Função |
-| --- | --- |
-| Rua de Red Hollow | Chegada, Elias, primeiro combate |
-| Distrito da igreja | Arena, cristal Coração Rubro, barreira |
-| Interior / subterrâneo da igreja | Descida, atmosfera |
-| Catacumbas | Checkpoint, confronto Deacon Rusk |
+| Área | Função | Commit |
+| --- | --- | --- |
+| Rua | Chegada, Elias, primeiro combate | Greybox OK |
+| Distrito igreja | Arena, cristal, barreira | Greybox OK |
+| Interior / subterrâneo | Descida | Greybox OK |
+| Catacumbas | Checkpoint, Rusk | Greybox OK |
 
 ### Personagens
 
-- **Calder Knox** (jogável)
-- **Elias** (NPC guia)
-- **Deacon Rusk** (mini-chefe)
+- **Calder Knox** — jogável (controllers + pipeline visual provisório)
+- **Elias** — NPC (greybox)
+- **Deacon Rusk** — mini-chefe (greybox)
 
 ### Inimigos
 
-- **Cult Brawler** — pressão melee, counterable (existente)
-- **Vermilite Gunslinger** — pistoleiro, projétil físico, recarga vulnerável (greybox)
-- **Chain Penitent** — correntes, controle de espaço, vulnerável após errar (greybox)
-- **Deacon Rusk** — mini-chefe (existente)
+| Inimigo | Estado commit | Arte/balance |
+| --- | --- | --- |
+| Cult Brawler | Integração OK | Provisório |
+| Vermilite Gunslinger | Infra + encontros | Provisório |
+| Chain Penitent | Infra + encontros | Provisório |
+| Deacon Rusk | Integração OK | Provisório |
 
 ### Narrativa e set pieces
 
-- diálogo inicial com Elias;
-- **pequena rota de backtracking** entre áreas-chave;
-- **uma habilidade** da Red Brand destacada no roteiro (Breaker já existe; beta pode nomear/encenar como marco);
-- **pista** sobre o antigo parceiro de Calder;
-- **estátua** de Mol-Khar;
-- **aparição breve** da entidade (não boss completo);
-- **referência, voz ou silhueta** de Arcturus Vale;
-- barreira **Vermilite** destrutível;
-- checkpoint funcional;
-- **uma transformação ambiental curta** (Ressonância Rubra);
-- **encerramento com gancho** narrativo para o jogo final.
+| Item | Estado |
+| --- | --- |
+| Diálogo Elias + IDs `cz_*` | Conteúdo provisório commitado |
+| Objetivos / eventos JSON | Conteúdo provisório |
+| Props (medalhão, diário, documento) | Infra commitada |
+| Estátua / Mol-Khar / Arcturus (finale) | Conteúdo provisório — **playtest pendente** |
+| Barreira Vermilite | Integração OK |
+| Corrupção ambiental (Ressonância Rubra) | Planejado — validação pendente |
 
 ### Interface
 
-- HUD vida + Red Brand + estilo (skin final);
-- mapa simples;
-- objetivos do capítulo;
-- diário curto;
-- menu pausa;
-- tela Red Brand com **no máximo três** habilidades.
-
-### Sistemas reutilizados da greybox (já implementados)
-
-| Sistema | Estado base |
+| UI | Estado commit |
 | --- | --- |
-| Movimento, pulo, plataforma | OK |
-| Combo, esquiva, counter, provocação | OK |
-| Estilo + HUD | OK |
-| Red Brand + Breaker | OK |
-| Diálogo + interação | OK |
-| 3 áreas + transição | OK |
-| Arena | OK |
-| Save F8/F9 + checkpoint | OK (load manual) |
-| Barreiras persistentes | OK |
-| Deacon Rusk + HUD chefe | OK |
-| Conclusão demo | OK (overlay — evoluir para gancho beta) |
+| HUD vida + Red Brand + estilo | Integração OK — skin final pendente |
+| Objetivos (ObjectiveHud) | Provisório |
+| Menu / opções / pausa / créditos | Infra criada — **não prova UX completa** |
+| Mapa / diário finais | Planejado |
+| Red Brand screen (≤3 habilidades) | Planejado |
+
+---
+
+## Sistemas reutilizados (greybox → beta)
+
+| Sistema | Estado | Validação |
+| --- | --- | --- |
+| Movimento, combo, esquiva, counter, taunt | OK | Runner fail (player suites) |
+| Red Brand + Breaker | OK | Idem |
+| 3 áreas + transição | OK | Runner fail |
+| Save F8/F9 + checkpoint | OK | `save_tests` PASS |
+| Auto-load boot | **Off** | Intencional — D-013 |
+| ContentRegistry | OK | `content_registry_tests` PASS |
+| Feedback combate | OK | `feedback_system_tests` PASS |
+
+---
+
+## Build Windows (escopo separado)
+
+| Etapa | Beta ship requer |
+| --- | --- |
+| `export_presets.cfg` | Criado ✅ |
+| `tools/build_windows.ps1` | Criado ✅ |
+| Build `.exe` gerada | Pendente smoke |
+| Build jogada QA | **Obrigatório antes de ship** |
+| Build aprovada | **Não** no commit atual |
+
+---
 
 ## A beta **não** deve revelar
 
-- luta completa contra **Arcturus**;
-- **Palácio Rubro**;
-- forma física **completa** de Mol-Khar;
-- **todos** os barões jogáveis;
-- **final** da história principal.
+Arcturus completo, Palácio Rubro, Mol-Khar completo, todos barões, final principal.
 
-## Fora do escopo da beta
+---
 
-- árvore extensa de habilidades;
-- equipamentos / loot aleatório complexo;
-- dezenas de colecionáveis;
-- cidade inteira de Red Hollow;
-- crafting pesado;
-- magia elemental genérica;
-- auto-load sem revisão arquitetural (`TECH_DEBT.md`, `DECISIONS.md` D-013).
+## Critérios de aceite (ainda abertos)
 
-## Relação com a demo técnica
-
-A greybox **já supera** um protótipo vazio: combate, três áreas, save, chefe e conclusão funcionam. A beta **substitui arte**, expande duração/narrativa/UI e adiciona set pieces listados — **sem** reescrever o núcleo de combate do zero.
-
-### Camada narrativa provisória (greybox — implementada)
-
-Capítulo Zero — **O Sino Antes do Anoitecer** usa sistemas estabilizados com dados orientados por JSON:
-
-| Componente | Caminho |
-| --- | --- |
-| Flags estáveis | `scripts/narrative/chapter_zero_flags.gd` |
-| Objetivos | `data/narrative/chapter_zero_objectives.json` |
-| Eventos | `data/narrative/chapter_zero_events.json` |
-| Diretor | `scripts/narrative/narrative_director.gd` |
-| HUD objetivo | `scenes/ui/objective_hud.tscn` |
-| Encerramento (8 passos curtos) | `scripts/narrative/chapter_zero_finale.gd` |
-| Props narrativos | `scenes/interactables/story_prop.tscn` |
-| Diálogos | `data/dialogues/dialogues_pt_br.json` (IDs `cz_*`) |
-
-**Pista do parceiro (provisória):** medalhão na rua + página de diário nas catacumbas. Não revela assassino, destino definitivo nem ligação completa com Mol-Khar.
-
-**Duração alvo na greybox narrativa:** 30–45 minutos (jogador novo), com seis encontros escalonados, exploração opcional e balanceamento em `CHAPTER_ZERO_BALANCE.md`.
-
-**Encerramento:** tremor subterrâneo, Red Brand reage, estátua colossal abre os olhos, sombra breve de Mol-Khar (nomeia Calder), silhueta de Arcturus, passagem revelada — beta termina. Mol-Khar completo, Arcturus jogável e Palácio Rubro **fora** do escopo.
-
-## Critérios de aceite
-
-- [ ] Fluxo 30–45 min para jogador novo.
+- [ ] Fluxo 30–45 min jogador novo (manual).
+- [ ] Menu → novo jogo → conclusão → menu (manual).
 - [ ] Três inimigos + Rusk com arte legível.
 - [ ] HUD/menus conforme `UI_BIBLE.md`.
-- [ ] Uma sequência de corrupção ambiental perceptível.
+- [ ] Sequência corrupção ambiental perceptível.
 - [ ] Save/load estável após checkpoint.
 - [ ] Nenhum softlock conhecido no roteiro.
-- [ ] `TEST_MATRIX.md` + `test_runner.gd` na build de beta.
+- [ ] `test_runner.gd` **18/18 PASS**, exit 0.
+- [ ] Build Windows smoke + playtest assinado.
+
+---
+
+## Relação com demo técnica
+
+A greybox **permanece** núcleo de gameplay. O commit `e07ba0e` adiciona **product shell**, **content registry** e **camada narrativa Capítulo Zero provisória**. A beta substitui arte, expande UI e valida roteiro — **sem** reescrever combate do zero.
+
+Ver `CURRENT_IMPLEMENTATION.md`, `CONTENT_PRODUCTION_PLAN.md`, `KNOWN_ISSUES.md`.

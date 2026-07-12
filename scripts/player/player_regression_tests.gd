@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const PlayerScript := preload("res://scripts/player/player.gd")
@@ -17,12 +17,8 @@ const FIXTURE_PLAYER_POSITION := Vector2(320, 848)
 const TEST_COUNT := 48
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "player_regression_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "player_regression_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var fixture := await _create_fixture()
 	var player: CharacterBody2D = fixture["player"]
@@ -78,7 +74,7 @@ func _run_tests() -> void:
 
 	_release_all_input()
 	fixture["root"].queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	suite.finish(failures, TEST_COUNT)
 
 
@@ -110,7 +106,7 @@ func _create_fixture() -> Dictionary:
 	var player: CharacterBody2D = PlayerScene.instantiate() as CharacterBody2D
 	player.global_position = FIXTURE_PLAYER_POSITION
 	root_node.add_child(player)
-	await TestHelpers.await_physics_frames(self, 6)
+	await TestHelpers.await_physics_frames(get_tree(), 6)
 
 	return {"root": root_node, "player": player, "ground": ground, "hitstop": hitstop, "lock_manager": lock_manager}
 
@@ -121,7 +117,7 @@ func _await_on_floor(
 	frame_budget: int = 8
 ) -> bool:
 	for _i in frame_budget:
-		await TestHelpers.await_physics_frames(self, 1)
+		await TestHelpers.await_physics_frames(get_tree(), 1)
 		if player.is_on_floor():
 			return true
 
@@ -136,7 +132,7 @@ func _release_all_input() -> void:
 
 func _advance_seconds(seconds: float) -> void:
 	var frames := maxi(int(ceil(seconds * 60.0)), 1)
-	await TestHelpers.await_physics_frames(self, frames)
+	await TestHelpers.await_physics_frames(get_tree(), frames)
 
 
 func _press(action: String) -> void:
@@ -263,9 +259,9 @@ func _test_acceleration(failures: PackedStringArray, player: CharacterBody2D, _f
 		return
 
 	_press("move_right")
-	await TestHelpers.await_physics_frames(self, 12)
+	await TestHelpers.await_physics_frames(get_tree(), 12)
 	_release("move_right")
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 
 	if player.velocity.x < 80.0:
 		var delta := 1.0 / 60.0
@@ -283,7 +279,7 @@ func _test_deceleration(failures: PackedStringArray, player: CharacterBody2D, _f
 
 	_release_all_input()
 	player.velocity = Vector2(220, 0)
-	await TestHelpers.await_physics_frames(self, 10)
+	await TestHelpers.await_physics_frames(get_tree(), 10)
 
 	if absf(player.velocity.x) > 20.0:
 		failures.append("Ground deceleration should reduce horizontal velocity without input.")
@@ -294,7 +290,7 @@ func _test_gravity(failures: PackedStringArray, player: CharacterBody2D, _fixtur
 	player.set("fall_recovery_y", 2000.0)
 	player.global_position.y -= 80.0
 	player.velocity = Vector2.ZERO
-	await TestHelpers.await_physics_frames(self, 4)
+	await TestHelpers.await_physics_frames(get_tree(), 4)
 
 	if player.velocity.y <= 0.0:
 		failures.append("Gravity should increase downward velocity while airborne.")
@@ -332,10 +328,10 @@ func _test_coyote_time(failures: PackedStringArray, player: CharacterBody2D, _fi
 	if not await _await_on_floor(failures, player):
 		return
 
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 	player.global_position.y -= 18.0
 	player.velocity = Vector2.ZERO
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 
 	if player.is_on_floor():
 		failures.append("Coyote test requires player to leave floor briefly.")
@@ -353,7 +349,7 @@ func _test_jump_buffer(failures: PackedStringArray, player: CharacterBody2D, _fi
 	if not await _await_on_floor(failures, player):
 		return
 
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 	player.global_position.y -= 20.0
 	player.velocity = Vector2(0, 120.0)
 	player.set("jump_buffer_remaining", float(player.get("jump_buffer_time")))
@@ -369,7 +365,7 @@ func _test_fall_recovery(failures: PackedStringArray, player: CharacterBody2D, _
 	player.call("apply_area_settings", {"fall_recovery_y": 900.0})
 	player.global_position = Vector2(400, 960)
 	player.velocity = Vector2(100, 200)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	if player.global_position.distance_to(Vector2(400, 848)) > 4.0:
 		failures.append("Fall recovery should teleport player back to spawn_position.")
@@ -389,7 +385,7 @@ func _test_combo_attack_resources(failures: PackedStringArray, player: Character
 
 func _test_combo_chain(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 3)
+	await TestHelpers.await_physics_frames(get_tree(), 3)
 
 	var combo_completed := [0]
 	player.connect("combo_completed", func() -> void: combo_completed[0] += 1)
@@ -407,7 +403,7 @@ func _test_combo_chain(failures: PackedStringArray, player: CharacterBody2D, _fi
 
 func _test_combo_buffer_contract(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_attack_at_index", 0)
 	player.set("attack_elapsed_time", float(CalderStraight.get("cancel_window_start")) + 0.01)
 	player.call("_buffer_next_combo_attack")
@@ -418,10 +414,10 @@ func _test_combo_buffer_contract(failures: PackedStringArray, player: CharacterB
 
 func _test_attack_phases(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 3)
+	await TestHelpers.await_physics_frames(get_tree(), 3)
 
 	player.call("_start_attack_at_index", 0)
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 	var startup_or_active := int(player.get("attack_phase")) in [
 		PlayerScript.AttackPhase.STARTUP,
 		PlayerScript.AttackPhase.ACTIVE,
@@ -440,7 +436,7 @@ func _test_attack_phases(failures: PackedStringArray, player: CharacterBody2D, _
 
 func _test_attack_finish_clears(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_attack_at_index", 0)
 	var total := (
 		float(CalderStraight.get("startup_time"))
@@ -481,9 +477,9 @@ func _test_hitbox_single_target(failures: PackedStringArray, player: CharacterBo
 
 func _test_attack_interrupt(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_attack_at_index", 0)
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 
 	player.call("interrupt_attack", PlayerScript.PlayerState.IDLE)
 	if player.get("current_attack") != null:
@@ -492,7 +488,7 @@ func _test_attack_interrupt(failures: PackedStringArray, player: CharacterBody2D
 
 func _test_counter_window(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	player.call("_start_counter")
 	await _advance_seconds(float(player.get("counter_startup")) + 0.01)
@@ -513,7 +509,7 @@ func _test_counter_window(failures: PackedStringArray, player: CharacterBody2D, 
 
 func _test_counter_early_miss(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_counter")
 
 	var attacker := Node2D.new()
@@ -527,7 +523,7 @@ func _test_counter_early_miss(failures: PackedStringArray, player: CharacterBody
 
 func _test_counter_late_miss(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_counter")
 	var total := (
 		float(player.get("counter_startup"))
@@ -548,7 +544,7 @@ func _test_counter_late_miss(failures: PackedStringArray, player: CharacterBody2
 
 func _test_counter_not_counterable(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_counter")
 	await _advance_seconds(float(player.get("counter_startup")) + 0.01)
 
@@ -563,7 +559,7 @@ func _test_counter_not_counterable(failures: PackedStringArray, player: Characte
 
 func _test_dodge_phases(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	var dodge_started := [false]
 	player.connect("dodge_started", func() -> void: dodge_started[0] = true)
@@ -572,7 +568,7 @@ func _test_dodge_phases(failures: PackedStringArray, player: CharacterBody2D, _f
 		return
 
 	player.call("_start_ground_dodge")
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	if int(player.get("dodge_phase")) == PlayerScript.DodgePhase.NONE:
 		failures.append("Dodge input should enter dodge phases.")
@@ -619,10 +615,10 @@ func _test_dodge_finished_and_cooldown(failures: PackedStringArray, player: Char
 
 func _test_taunt_lock(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	player.call("_start_taunt")
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 
 	if int(player.get("current_state")) != PlayerScript.PlayerState.TAUNT:
 		failures.append("Taunt input should enter TAUNT state.")
@@ -632,7 +628,7 @@ func _test_taunt_lock(failures: PackedStringArray, player: CharacterBody2D, _fix
 
 func _test_taunt_duration_and_signals(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	var taunt_started := [false]
 	var phrase := [""]
@@ -652,7 +648,7 @@ func _test_taunt_duration_and_signals(failures: PackedStringArray, player: Chara
 
 func _test_taunt_vulnerability_and_cooldown(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_taunt")
 	player.set("taunt_elapsed_time", float(player.get("taunt_vulnerable_start")) + 0.02)
 	player.call("_update_taunt_vulnerability")
@@ -674,7 +670,7 @@ func _test_brand_insufficient_energy(failures: PackedStringArray, player: Charac
 	var config := _brand_config(player)
 	var min_charge := float(config.get("min_energy_to_charge"))
 	brand.call("set_energy", maxf(min_charge - 5.0, 0.0))
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	if not await _await_on_floor(failures, player):
 		return
@@ -687,7 +683,7 @@ func _test_brand_breaker_charge(failures: PackedStringArray, player: CharacterBo
 	_reset_player(player)
 	var brand: Node = player.get_node("%RedBrandComponent")
 	brand.call("set_energy", 60.0)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	var charge_started := [false]
 	player.connect("brand_breaker_charge_started", func() -> void: charge_started[0] = true)
@@ -696,7 +692,7 @@ func _test_brand_breaker_charge(failures: PackedStringArray, player: CharacterBo
 		return
 
 	player.call("_start_brand_charge")
-	await TestHelpers.await_physics_frames(self, 4)
+	await TestHelpers.await_physics_frames(get_tree(), 4)
 	player.call("_cancel_brand_breaker_charge")
 
 	if not charge_started[0]:
@@ -707,7 +703,7 @@ func _test_brand_cancel_emits_signal(failures: PackedStringArray, player: Charac
 	_reset_player(player)
 	var brand: Node = player.get_node("%RedBrandComponent")
 	brand.call("set_energy", 60.0)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	var cancelled := [false]
 	player.connect("brand_breaker_charge_cancelled", func() -> void: cancelled[0] = true)
@@ -716,7 +712,7 @@ func _test_brand_cancel_emits_signal(failures: PackedStringArray, player: Charac
 		return
 
 	player.call("_start_brand_charge")
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_cancel_brand_breaker_charge")
 
 	if not cancelled[0]:
@@ -727,7 +723,7 @@ func _test_brand_level1_release(failures: PackedStringArray, player: CharacterBo
 	_reset_player(player)
 	var brand: Node = player.get_node("%RedBrandComponent")
 	brand.call("set_energy", 60.0)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	var released := [false]
 	var release_level := [0]
@@ -805,7 +801,7 @@ func _test_death_gameplay_lock(failures: PackedStringArray, player: CharacterBod
 	_reset_player(player)
 	var health: Node = player.get_node("%HealthComponent")
 	health.call("apply_damage", 999.0, null)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	var lock_manager: GameplayLockManager = fixture["lock_manager"]
 	if not lock_manager.has_lock(GameplayLockManager.LockReason.DEATH):
@@ -834,9 +830,9 @@ func _test_unlock_out_of_order(failures: PackedStringArray, player: CharacterBod
 
 func _test_damage_hurt_interrupts(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 	player.call("_start_attack_at_index", 0)
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 
 	var health: Node = player.get_node("%HealthComponent")
 	player.call("_on_player_damaged", 2.0, null)
@@ -887,7 +883,7 @@ func _test_hitstop_contract(failures: PackedStringArray, player: CharacterBody2D
 	var hitstop: Node = fixture["hitstop"]
 	var lock_manager: GameplayLockManager = fixture["lock_manager"]
 	lock_manager.request_hitstop(0.065)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if not bool(hitstop.get("hitstop_active")):
 		failures.append("Hitstop controller should activate on request.")
@@ -905,10 +901,10 @@ func _test_visual_independence(failures: PackedStringArray, player: CharacterBod
 	var brand_hand: CanvasItem = player.get_node("%BrandHand")
 	body_visual.visible = false
 	brand_hand.visible = false
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	player.call("_start_attack_at_index", 0)
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 	if player.get("current_attack") == null:
 		failures.append("Attack must work when provisional body visuals are hidden.")
 

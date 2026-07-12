@@ -45,6 +45,8 @@ func _initialize_runtime_systems() -> void:
 
 	if game_services != null:
 		game_services.bind_from_shell(self)
+		if game_services.respawn_service != null:
+			game_services.respawn_service.bind_from_services(game_services)
 
 	_configure_content_systems()
 

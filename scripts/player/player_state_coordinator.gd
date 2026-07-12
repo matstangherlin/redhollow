@@ -11,6 +11,11 @@ func setup(player: CharacterBody2D) -> void:
 func apply_blocked_state() -> void:
 	if _player == null:
 		return
+
+	if _player.call("_is_dead"):
+		_player.set("current_state", PlayerStateTypes.PlayerState.DEAD)
+		return
+
 	_player.set("current_state", PlayerStateTypes.PlayerState.INTERACT)
 
 

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/progression/progression_component.gd" id="1_progression"]
 [ext_resource type="Script" path="res://scripts/world/barrier_registry.gd" id="2_barrier_registry"]
+[ext_resource type="Script" path="res://scripts/world/world_map_service.gd" id="3_world_map"]
 
 [node name="ProgressionSystem" type="Node"]
 
@@ -11,3 +12,6 @@ can_break_red_barriers = true
 
 [node name="BarrierRegistry" type="Node" parent="."]
 script = ExtResource("2_barrier_registry")
+
+[node name="WorldMapService" type="Node" parent="."]
+script = ExtResource("3_world_map")

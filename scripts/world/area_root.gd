@@ -62,12 +62,26 @@ func bind_runtime_services(services: GameServices) -> void:
 
 	for node: Node in find_children("*", "CombatArenaController", true, false):
 		if node is CombatArenaController:
-			(node as CombatArenaController).bind_combat_services(services.style_manager, services.progression)
+			var arena := node as CombatArenaController
+			arena.bind_combat_services(services.style_manager, services.progression)
+			arena.arm_activation_monitoring()
 
 	for node: Node in find_children("*", "BossEncounterController", true, false):
 		if node is BossEncounterController:
-			(node as BossEncounterController).bind_encounter_services(
+			var encounter := node as BossEncounterController
+			encounter.bind_encounter_services(
 				services.style_manager,
 				services.progression,
 				services.boss_health_hud
 			)
+			encounter.arm_activation_monitoring()
+
+
+func prepare_for_unload() -> void:
+	for node: Node in find_children("*", "CombatArenaController", true, false):
+		if node is CombatArenaController:
+			(node as CombatArenaController).on_area_unloading()
+
+	for node: Node in find_children("*", "BossEncounterController", true, false):
+		if node is BossEncounterController:
+			(node as BossEncounterController).on_area_unloading()

@@ -8,5 +8,15 @@ profile_id = &"calder_pilot"
 visual_mode = 1
 use_procedural_pilot_frames = true
 attack_animation_map = {
-"calder_straight": "straight"
+"body_hook": "body_hook",
+"calder_straight": "straight",
+"red_knuckle": "red_knuckle"
+}
+state_animation_map = {
+"dodge": "dodge",
+"fall": "fall",
+"hurt": "hurt",
+"idle": "idle",
+"jump": "jump_rise",
+"run": "run"
 }

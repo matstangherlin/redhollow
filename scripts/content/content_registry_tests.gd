@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const ContentRegistryScript := preload("res://scripts/content/content_registry.gd")
@@ -8,12 +8,8 @@ const BETA_MANIFEST_PATH := "res://resources/content/manifests/beta_demo.tres"
 const FULL_MANIFEST_PATH := "res://resources/content/manifests/full_game.tres"
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "content_registry_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "content_registry_tests")
 	var failures: PackedStringArray = PackedStringArray()
 
 	_test_manifests_load(failures)

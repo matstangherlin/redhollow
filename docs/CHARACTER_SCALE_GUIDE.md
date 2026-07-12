@@ -75,10 +75,24 @@ Hitboxes de inimigos **permanecem** nos valores de greybox até revisão explíc
 
 ## Substituir placeholder
 
-1. Exportar PNG com pivô inferior central.
+1. Exportar PNG com pivô inferior central (32×56 canvas).
 2. Importar com regras de `ASSET_IMPORT_RULES.md`.
 3. Manter offset `%SpriteVisual` = `(0, -28)` até revisão de colisão aprovada.
 4. Validar que pés alinham com sombra opcional no chão (±2 px).
+5. Trocar perfil em `PlayerVisualController` — ver `ANIMATION_PIPELINE.md`.
+
+## Contrato Calder (resumo)
+
+| Campo | Valor |
+| --- | --- |
+| Canvas | 32 × 56 px |
+| Pivot frame | (16, 56) — centro inferior |
+| Origin gameplay | pés em `CharacterBody2D.position` |
+| Sprite offset | `(0, -28)` em `%SpriteVisual` |
+| Facing | `Visual.scale.x = ±1` |
+| Clip piloto | 10 animações — ver `CalderAnimationContract` |
+
+Código: `scripts/visual/calder_animation_contract.gd`
 
 ## Documentos relacionados
 

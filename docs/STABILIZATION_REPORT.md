@@ -1,249 +1,186 @@
 # Red Hollow — Stabilization Gate Report
 
-**Data:** 2026-07-11  
-**Branch / commit base:** `main` @ `1c8e89d` (+ working tree local não commitada)  
-**Main scene:** `res://scenes/demo/vertical_slice_greybox.tscn`  
-**Godot:** 4.7 stable  
-**Escopo:** Gate formal pós-refatoração (controllers player, `GameServices`, contratos save/área/estilo)
+**Data:** 2026-07-11 (atualizado pós-commit beta foundation)  
+**Commit baseline:** `e07ba0ecb8502d7a368017f1764599155e3e87bf` (`e07ba0e`)  
+**Main scene:** `res://scenes/product/main_menu.tscn`  
+**Gameplay scene:** `res://scenes/demo/vertical_slice_greybox.tscn`  
+**Versão:** `0.2.0-beta.1`  
+**Godot:** 4.7 stable
 
 ---
 
-## Conclusão do gate
+## Conclusão do gate (commit `e07ba0e`)
 
-# APROVADO COM RESTRIÇÕES
+# REPROVADO PARA SHIP BETA — APROVADO PARA PRODUÇÃO DE CONTEÚDO COM RESTRIÇÕES
 
-O MVP técnico está **seguro para iniciar produção de conteúdo da beta** (arte, level dressing, diálogo final), desde que:
+O commit consolida a **fundação beta** (menu, autoloads, content registry, Capítulo Zero provisório, inimigos greybox, feedback, export preset). Porém:
 
-1. A refatoração local seja **commitada e taggeada** antes de virar baseline da equipe (KI-003).
-2. Um **playthrough manual completo** (20 passos + stress) seja assinado por humano (KI-004).
-3. **KI-001** (morte/respawn) e **KI-002** (arena physics) sejam resolvidos antes do **ship** da beta pública, não necessariamente antes de artes paralelas.
+1. **Gate automatizado FAIL** — runner 18 suítes não passa com invocação `--script` (KI-005, P0).
+2. **Playthrough manual** menu→fim **não assinado** (KI-004, P1).
+3. **Build Windows** — preset/script existem; build **não aprovada** QA (KI-106).
+4. **Morte/respawn** — melhoria parcial (auto-respawn); serviço unificado pendente (KI-001).
+5. **Arena physics flush** — não corrigido; allowlist headless (KI-002).
 
-**Não há P0 confirmado** pelo gate automatizado. Por isso não se aplica “REPROVADO”. Restrições impedem “APROVADO” pleno sem ressalvas.
+**Produção de arte e level dressing** pode avançar em paralelo, desde que regressões sejam rastreadas após estabilização do runner.
 
 ---
 
-## 1. Testes automatizados
+## 1. Testes automatizados (estado no commit)
 
-**Comando:**
+**Comando registrado:**
 
 ```bash
 godot --headless --path . --script res://scripts/tests/test_runner.gd
 ```
 
-**Resultado (2026-07-11):**
+**Resultado no commit `e07ba0e`:**
 
 | Métrica | Valor |
 | --- | --- |
-| Suítes | 10 |
-| Suítes PASS | **10** |
-| Exit code | **0** |
-| Unexpected issues | **0** |
-| Allowed issues | 45 |
-| Tempo | ~17.5 s |
+| Suítes registradas | **18** |
+| Invocação subprocesso | `--script` (autoloads **não** disponíveis) |
+| Gate | **FAIL** (exit code 1) |
+| Suítes PASS (estimativa) | **~8** |
+| Suítes FAIL (estimativa) | **~10** |
 
-| Suíte | Tests | Assertions | Unexpected |
-| --- | ---: | ---: | ---: |
-| vertical_slice_verification | 6 | 6 | 0 |
-| dialogue_tests | 3 | 3 | 0 |
-| save_tests | 5 | 5 | 0 |
-| area_transition_tests | 6 | 6 | 0 |
-| combat_arena_tests | 7 | 7 | 0 |
-| cult_brawler_tests | 4 | 4 | 0 |
-| deacon_rusk_tests | 7 | 7 | 0 |
-| gameplay_lock_tests | 10 | 10 | 0 |
-| player_regression_tests | 48 | 48 | 0 |
-| vertical_slice_regression_tests | 13 | 13 | 0 |
+### Suítes registradas
 
-**Critérios atendidos:**
+| # | Suíte | Tendência no commit |
+| --- | --- | --- |
+| 1 | `vertical_slice_verification` | FAIL (autoload check / player deps) |
+| 2 | `dialogue_tests` | FAIL |
+| 3 | `save_tests` | PASS |
+| 4 | `area_transition_tests` | FAIL |
+| 5 | `combat_arena_tests` | FAIL |
+| 6 | `cult_brawler_tests` | FAIL |
+| 7 | `deacon_rusk_tests` | FAIL |
+| 8 | `gameplay_lock_tests` | FAIL |
+| 9 | `player_regression_tests` | FAIL |
+| 10 | `vertical_slice_regression_tests` | PASS |
+| 11 | `product_shell_tests` | FAIL |
+| 12 | `narrative_chapter_zero_tests` | FAIL |
+| 13 | `vermilite_gunslinger_tests` | PASS |
+| 14 | `chain_penitent_tests` | PASS |
+| 15 | `enemy_encounter_tests` | PASS |
+| 16 | `player_visual_pipeline_tests` | PASS |
+| 17 | `feedback_system_tests` | PASS |
+| 18 | `content_registry_tests` | PASS |
 
-- Exit code 0
-- Zero script errors inesperados
-- Zero runtime errors inesperados (parser monitor)
-- Zero referências inválidas reportadas
-- Zero nós obrigatórios ausentes (`player_regression_tests` scene contract)
-- Zero `get_tree` nulos inesperados
+**Causa raiz:** subprocessos `--script` não inicializam autoloads de `project.godot`. Suítes que montam `player.tscn` ou UI com globals falham.
 
----
-
-## 2. Warnings / errors permitidos (documentados)
-
-| Origem | Tipo | Quantidade | Motivo |
-| --- | --- | ---: | --- |
-| `dialogue_tests` | WARNING | 2 | ID `missing_dialogue_id` injetado |
-| `save_tests` | ERROR/WARNING | 7 | JSON corrompido / backup recovery injetado |
-| `combat_arena_tests` | ERROR | 36 | Physics flush ao spawnar inimigos em SceneTree isolado |
-
-Nenhum destes conta como falha de gate (allowlist explícita nas suítes).
+**Meta de estabilização (próxima tarefa):** bootstrap `--main-scene`, 18/18 PASS, exit 0.
 
 ---
 
-## 3. Auditoria por sistema
+## 2. Warnings / errors permitidos (allowlist)
 
-### Arquitetura
+| Suíte | Tipo | Motivo |
+| --- | --- | --- |
+| `dialogue_tests` | WARNING | `missing_dialogue_id` injetado |
+| `save_tests` | ERROR/WARNING | JSON corrompido / backup recovery injetado |
+| `combat_arena_tests` | ERROR | Physics flush (`Can't change this state while flushing queries`) |
 
-| Item | Estado pós-refatoração |
+Válidos **somente** quando a suíte executa e declara allowlist. No gate FAIL atual, várias suítes nem chegam a concluir.
+
+---
+
+## 3. Auditoria por sistema (commit `e07ba0e`)
+
+### Product shell
+
+| Item | Estado |
 | --- | --- |
-| Shell greybox | OK — `game.gd` + filhos persistentes |
-| `GameServices` | OK — referências tipadas, bind área |
-| `AreaTransitionManager` | OK — sinais `area_loaded` / `area_unloaded` |
-| Troca de áreas | OK — headless 6/6 |
-| Autoloads gameplay | Nenhum (intencional) |
+| Main menu, opções, pausa, créditos, loading | Infra commitada — **manual pendente** |
+| Autoloads settings/boot/input | OK em runtime normal (`--main-scene`) |
+| Boot → greybox | Integrado — **não assinado** |
 
-### Player (~1057 linhas coordenador)
+### Arquitetura conteúdo
 
-| Controller | Linhas | Responsabilidade |
-| --- | ---: | --- |
-| `PlayerInputController` | — | Entrada, buffers |
-| `PlayerMovementController` | — | Física, coyote, recovery |
-| `PlayerAttackController` | 332 | Combo, hitbox, counter ofensivo |
-| `PlayerDefenseController` | 390 | Esquiva, counter defensivo |
-| `PlayerTauntController` | 207 | Provocação |
-| `PlayerRedBrandController` | 241 | Brand breaker |
-| `PlayerStateCoordinator` | — | Estados alto nível |
-| `PlayerPresentationController` | — | Cores provisórias |
-| `PlayerDebugView` | — | Overlay F |
+| Item | Estado |
+| --- | --- |
+| `ContentRegistry` + manifests | OK — teste auto passa |
+| Capítulo Zero data-driven | Conteúdo provisório — teste auto falha no runner atual |
 
-**Contratos:** `PLAYER_BEHAVIOR_CONTRACT.md`, `PLAYER_PUBLIC_API.md`, 48 casos regression.
+### Player
 
-### Locks
+| Item | Estado |
+| --- | --- |
+| Controllers (attack, defense, taunt, brand, …) | OK |
+| `player.gd` coordenador | DEBT (~800 linhas) |
+| Morte / respawn | Parcial — auto 0,65 s; serviço unificado P1 |
 
-- `GameplayLockManager` + tokens: OK (10 testes)
-- Diálogo, transição, morte, loading: cobertos em regression
-- Panic Esc: DEBT (P2) — escape hatch ativo
+### Combate / inimigos
 
-### Hitstop
-
-- Não altera `Engine.time_scale`; OK
-- Counter, brand, barreira, hitbox: request via grupo
-- Testes: `gameplay_lock_tests` (pause/death during hitstop), `player_regression_tests` hitstop contract
-
-### Morte / respawn
-
-- Morte → lock DEATH + `interrupt_attack(DEAD)`: OK (auto)
-- Respawn unificado: **P1** — sem serviço dedicado (KI-001)
-- Recuperação queda (`recover_if_out_of_arena`): OK (auto)
-- R / F7 / F9: contrato verificado em `vertical_slice_regression_tests`
+| Item | Estado |
+| --- | --- |
+| Cult Brawler, Rusk | OK greybox |
+| Gunslinger, Chain Penitent | OK provisório — testes unitários passam |
+| Arena | DEBT physics flush |
 
 ### Save
 
-- `export_save_state` / `import_save_state` + `PlayerStateSnapshot`: OK
-- F8/F9, backup, JSON inválido: OK (save_tests)
-- Auto-load boot: desativado (intencional)
+| Item | Estado |
+| --- | --- |
+| F8/F9, checkpoint, snapshot | OK — `save_tests` passa |
+| Auto-load | **Off** intencional |
 
-### Transições
+### Build Windows
 
-- 3 áreas vertical slice: OK (area_transition_tests + regression)
-- Rebind via `GameServices`: OK
-
-### Diálogo
-
-- Controller + cooldown 250 ms: OK
-- Lock input: OK (regression)
-
-### Arenas / chefe
-
-- Arena 2 brawlers: OK (combat_arena_tests)
-- Integridade despawn: OK (`arena_integrity_failed`)
-- Deacon Rusk: OK (deacon_rusk_tests 7/7)
-- Boss HUD bind tipado: OK
-
-### Red Brand / estilo / HUD
-
-- Brand regression: 5 casos OK
-- StyleManager bind opcional HUD: OK
-- Taunt/contexto combate: OK
-
-### Debug
-
-- F toggle, F7 reset, label debug: OK (DEBT P2 para release)
+| Etapa | Estado |
+| --- | --- |
+| Preset | Criado |
+| Script `tools/build_windows.ps1` | Criado |
+| Build gerada | Local possível; não no repo |
+| Testada / aprovada | **Não** |
 
 ---
 
-## 4. Teste manual completo (20 passos)
+## 4. Teste manual (pendente)
 
-**Status deste gate:** NÃO EXECUTADO por agente (requer runtime interativo).
+Roteiro: `VERTICAL_SLICE_TEST_PLAN.md` + fluxo **menu → novo jogo → Capítulo Zero → conclusão → menu**.
 
-| # | Passo | Auto parcial | Manual |
-| --- | --- | --- | --- |
-| 1 | Rua | regression nós | **Pendente** |
-| 2 | Elias | dialogue_tests | **Pendente** |
-| 3 | Plataformas | fall_recovery auto | **Pendente** |
-| 4 | Cult Brawler rua | cult_brawler_tests | **Pendente** |
-| 5 | Igreja | area_transition | **Pendente** |
-| 6 | Arena | combat_arena_tests | **Pendente** |
-| 7 | Red Brand | brand regression | **Pendente** |
-| 8 | Barreira | barrier registry save | **Pendente** |
-| 9 | Subterrâneo | underground nodes | **Pendente** |
-| 10 | Checkpoint | checkpoint contract | **Pendente** |
-| 11 | Deacon Rusk | deacon_rusk_tests | **Pendente** |
-| 12 | Conclusão | completion controller | **Pendente** |
-| 13 | Morte pré-checkpoint | death lock auto | **Pendente** |
-| 14 | Morte pós-checkpoint | — | **Pendente** |
-| 15 | Morte no boss | — | **Pendente** |
-| 16–20 | Save/load/reboot/demo | save_tests parcial | **Pendente** |
-
-**Roteiro:** `VERTICAL_SLICE_TEST_PLAN.md`
-
----
-
-## 5. Stress tests
-
-| Cenário | Cobertura automatizada | Manual |
+| Área | Auto parcial | Manual |
 | --- | --- | --- |
-| Spam ataque | combo chain/buffer tests | Pendente |
-| Trocar direção durante ataque | parcial (movement) | Pendente |
-| Pausa durante hitstop | gameplay_lock_tests | Pendente |
-| Morrer durante hitstop | gameplay_lock_tests | Pendente |
-| Diálogo pós-combate | dialogue lock tests | Pendente |
-| Sair durante arena | — | Pendente |
-| Save em áreas diferentes | save_tests parcial | Pendente |
-| Load área diferente | save_tests parcial | Pendente |
-| Barreira destruída + load | — | Pendente |
-| Boss derrotado + load | — | Pendente |
-| Reconectar controle | N/A | N/A |
-| Alt-tab / foco | N/A | Pendente |
+| Menu / boot | `product_shell_tests` (runner fail) | **Pendente** |
+| Capítulo Zero completo | narrative + regression parcial | **Pendente** |
+| Morte / respawn cenários 13–15 | death lock (runner fail) | **Pendente** |
+| Build exportada smoke | — | **Pendente** |
 
 ---
 
-## 6. Bugs classificados (resumo)
+## 5. Bugs classificados (resumo)
 
-Ver `KNOWN_ISSUES.md` para detalhes.
+Ver `KNOWN_ISSUES.md`.
 
 | ID | P | Título |
 | --- | --- | --- |
-| KI-001 | P1 | Morte/respawn não consolidado |
-| KI-002 | P1 | Arena spawn durante physics flush |
-| KI-003 | P1 | Refatoração não commitada |
+| KI-005 | **P0** | Runner headless FAIL (18 suítes, `--script`) |
+| KI-001 | P1 | Morte/respawn não consolidado (parcial) |
+| KI-002 | P1 | Arena spawn physics flush |
 | KI-004 | P1 | Playthrough manual pendente |
-| KI-101 | P2 | Panic unlock Esc |
-| KI-102 | P2 | Auto-load desativado |
-| KI-103 | P2 | `_player.call` residual nos controllers |
-| KI-104 | P2 | Hitstop via grupo |
-| KI-105 | P2 | Debug overlay |
-| KI-201–203 | P3 | Nomenclatura, controle, warnings de teste |
+| KI-006 | P1 | Product shell não validado manualmente |
+| KI-101–106 | P2 | Panic unlock, auto-load, acoplamentos, build |
+| KI-201–203 | P3 | Nomenclatura, controle, warnings teste |
+
+**KI-003 resolvido** — baseline commitada em `e07ba0e`.
 
 ---
 
-## 7. Arquivos modificados no working tree (não commitados)
+## 6. Próximos passos (ordem)
 
-Inclui refatorações pós-`1c8e89d`: controllers player, `GameServices`, `PlayerStateSnapshot`, acoplamentos save/área/estilo/arena/boss, cenas `game.tscn` / `vertical_slice_greybox.tscn` / `player.tscn`.
-
----
-
-## 8. Próximos passos recomendados
-
-1. Commit + tag `stabilization-gate-2026-07-11` (ou similar).
-2. Playthrough manual + stress (1 sessão, ~30–45 min).
-3. P1: `PlayerRespawn` ou equivalente; arena spawn deferred.
-4. Iniciar produção beta (arte Capítulo Zero) em paralelo com P1 eng.
-5. Antes de beta pública: resolver KI-001/002, decisão auto-load, remover panic unlock de builds release.
+1. Estabilizar runner — bootstrap + 18/18 PASS (P0).
+2. Playthrough manual menu→fim + stress (P1).
+3. Build Windows smoke após runner verde (P2).
+4. P1 eng: respawn unificado; arena deferred spawn.
+5. Produção arte Capítulo Zero em paralelo (restrições acima).
 
 ---
 
-## 9. Assinaturas
+## 7. Assinaturas
 
 | Papel | Status |
 | --- | --- |
-| Gate automatizado | **PASS** (agente, 2026-07-11) |
+| Gate automatizado (commit `e07ba0e`) | **FAIL** |
 | Gate manual | **PENDENTE** |
-| Produção beta | **LIBERADA COM RESTRIÇÕES** |
+| Produção beta (arte/conteúdo) | **LIBERADA COM RESTRIÇÕES** |
+| Ship beta pública | **BLOQUEADO** (P0 + P1 + build) |

@@ -12,6 +12,7 @@ var unlocked_abilities: Array[String] = []
 var narrative_flags: Dictionary = {}
 var activated_checkpoints: Array[String] = []
 var persistent_settings: Dictionary = {}
+var world_map_state: WorldMapState = WorldMapState.new()
 
 
 func _ready() -> void:
@@ -64,6 +65,7 @@ func export_save_state() -> Dictionary:
 		"activated_checkpoints": activated_checkpoints.duplicate(),
 		"settings": persistent_settings.duplicate(),
 		"can_break_red_barriers": can_break_red_barriers,
+		"world_map": world_map_state.export_dict(),
 	}
 
 
@@ -74,6 +76,7 @@ func reset_for_demo() -> void:
 	activated_checkpoints.clear()
 	persistent_settings.clear()
 	can_break_red_barriers = true
+	world_map_state.reset()
 	progression_changed.emit(&"reset_for_demo", true)
 
 
@@ -86,6 +89,8 @@ func import_save_state(state: Dictionary) -> void:
 
 	if state.has("can_break_red_barriers"):
 		can_break_red_barriers = bool(state.get("can_break_red_barriers"))
+
+	world_map_state.import_dict(state.get("world_map", {}))
 
 	progression_changed.emit(&"import_save_state", state)
 

@@ -1,8 +1,7 @@
 # Red Hollow — Roadmap
 
-Roadmap alinhado ao repositório real (Godot 4.7, vertical slice greybox jogável, tag `greybox-vertical-slice-v0.1`) e à meta **Capítulo Zero — O Sino Antes do Anoitecer**.
-
-**Branch de trabalho:** `beta-foundation`.
+Roadmap alinhado ao repositório no commit **`e07ba0e`** (Godot 4.7, beta foundation).  
+**Meta:** Capítulo Zero — O Sino Antes do Anoitecer (`0.2.0-beta.1`).
 
 ## Legenda
 
@@ -13,121 +12,88 @@ Roadmap alinhado ao repositório real (Godot 4.7, vertical slice greybox jogáve
 
 ---
 
-## Histórico — fases concluídas (greybox técnico)
-
-Registro das fases originais do protótipo. **Não remover** — marcam o que já foi entregue antes da estabilização beta.
+## Histórico — greybox técnico (tag `greybox-vertical-slice-v0.1`)
 
 | Fase | Entrega | Estado |
 | --- | --- | --- |
-| 0 | Base projeto, git, convenções | ✅ |
-| 1 | Main scene + shell persistente | ✅ |
-| 2–3 | Movimento, pulo, colisão, recuperação queda | ✅ |
-| 4 | Estados do jogador | 🔧 |
-| 5 | Combo + AttackData + hitbox/hurtbox | ✅ |
-| 6 | Cult Brawler + dummies de teste | ✅ |
-| 7 | Esquiva + counter | ✅ |
-| 8 | Estilo + provocações | ✅ |
-| 9 | Red Brand + barreira | ✅ |
-| 10 | Exploração rua → igreja → sub | ✅ |
-| 11 | Diálogo + checkpoint | ✅ |
-| 12 | Save versionado F8/F9 (auto-load off) | 🔧 |
-| 13 | Arena + Deacon Rusk + conclusão demo | ✅ |
-| 14 | Documentação canônica inicial | ✅ |
-| 15a | GameplayLockManager + testes regressão | 🔧 |
+| 0–15a | Movimento, combate, 3 áreas, save, arena, Rusk, locks, testes | ✅ / 🔧 |
 
-Detalhe jogável: `VERTICAL_SLICE_TEST_PLAN.md`, `CURRENT_IMPLEMENTATION.md`.
+Detalhe: `VERTICAL_SLICE_TEST_PLAN.md`, tag `ae65a508`.
 
 ---
 
-## Roadmap ativo (pós-tag greybox)
+## Entregue no commit `e07ba0e` ✅ / 🔧
 
-### 1. Estabilização 🎯
+| # | Entrega | Estado |
+| --- | --- | --- |
+| B0 | Product shell (menu, opções, pausa, créditos, loading) | 🔧 infra — manual pendente |
+| B1 | Autoloads settings/boot/input | ✅ |
+| B2 | ContentManifest + ContentRegistry + manifests | ✅ |
+| B3 | Capítulo Zero data-driven (JSON, stubs, director) | 🔧 conteúdo provisório |
+| B4 | Inimigos Gunslinger + Chain Penitent + projétil | 🔧 greybox |
+| B5 | FeedbackSystem + áudio placeholder | 🔧 |
+| B6 | Pipeline visual Calder (placeholder/pilot) | 🔧 |
+| B7 | Player controllers (attack, defense, taunt, brand) | 🔧 |
+| B8 | Export preset Windows + `build_windows.ps1` | 🔧 preset/script; build não aprovada |
+| B9 | test_runner **18 suítes** | 🔧 gate FAIL (KI-005) |
+| B10 | Auto-respawn parcial (~0,65 s) | 🔧 KI-001 |
+
+---
+
+## Roadmap ativo
+
+### 1. Estabilização 🎯 (bloqueia ship)
 
 | # | Entrega | Gate |
 | --- | --- | --- |
-| S1 | Zero runtime errors inesperados nos testes headless | `test_runner.gd` |
-| S2 | Fluxo morte/respawn consolidado | Sem softlock |
-| S3 | Reduzir/remover panic unlock onde locks cobrem | `TECH_DEBT.md` P0 |
-| S4 | Allowlist arena headless → fix produção | Deferred collision |
+| S1 | Runner 18/18 PASS (bootstrap autoloads) | exit 0 |
+| S2 | Playthrough manual menu→fim | KI-004 |
+| S3 | Build Windows smoke | KI-106 |
+| S4 | Morte/respawn consolidado | KI-001 |
+| S5 | Arena spawn deferred | KI-002 |
 
-### 2. Refatoração 📋
-
-| # | Entrega |
-| --- | --- |
-| R1 | Split `player.gd` (input, movimento, estado, apresentação, debug) |
-| R2 | API pública save no player |
-| R3 | Contratos rebinding troca de área |
-| R4 | StyleManager desacoplado do HUD |
-
-### 3. Produto (decisões beta) 🎯
+### 2. Produto beta 📋
 
 | # | Entrega |
 | --- | --- |
-| P1 | Decisão auto-load save (`DECISIONS.md` D-013) |
+| P1 | Decisão auto-load (D-013) |
 | P2 | Critérios aceite beta formalizados |
-| P3 | ~~Branch/scene beta vs greybox~~ → **ContentManifest** (`beta_demo` / `full_game`) ✅ |
+| P3 | Validar pausa/HUD/mapa/diário finais |
 
-### 3b. Arquitetura de conteúdo ✅
+### 3. Conteúdo Capítulo Zero 📋
 
-| # | Entrega |
-| --- | --- |
-| C0 | Resources: Chapter, Area, Manifest, Boss, Encounter, Objective, Event |
-| C1 | Capítulo Zero registrado — compatível com beta e jogo final |
-| C2 | Manifestos `beta_demo.tres` + `full_game.tres` |
-| C3 | Gate centralizado (`ContentRegistry`) — sem `if demo` espalhado |
-| C4 | Testes `content_registry_tests.gd` |
+Ver `BETA_DEMO_SCOPE.md` — arte final, balanceamento, set pieces Mol-Khar/Arcturus.
 
-### 4. Conteúdo da beta 📋
+### 4. Arte 📋
 
-Capítulo Zero — ver `BETA_DEMO_SCOPE.md`:
+Pixel art Calder, ambientes, inimigos, Rusk — `CONTENT_PRODUCTION_PLAN.md` fase C.
 
-- rua, igreja, subterrâneo/catacumbas;
-- Elias, 3 arquétipos inimigos, Deacon Rusk;
-- estátua + aparição Mol-Khar, teaser Arcturus;
-- pista parceiro antigo; gancho final;
-- backtracking curto; uma habilidade Red Brand destacada.
+### 5. Áudio 📋
 
-### 5. Arte 📋
+Placeholder → produção licenciada.
 
-Pixel art Calder, ambientes Capítulo Zero, inimigos, Rusk, set pieces — `CONTENT_PRODUCTION_PLAN.md` fase C, `ART_BIBLE.md`.
+### 6. QA / ship 📋
 
-### 6. Áudio 📋
+Runner verde + playtest + build aprovada.
 
-SFX combate, ambiente por área, stingers chefe, placeholder → produção.
+### 7. Jogo final 📋
 
-### 7. QA 📋
-
-`TEST_MATRIX.md` completo; playtest externo; regressão antes de build.
-
-### 8. Build 📋
-
-Windows 60 FPS; pacote beta Capítulo Zero; instruções save manual ou auto conforme S/P.
-
-### 9. Jogo final 📋
-
-Ver `FINAL_GAME_SCOPE.md`:
-
-- prólogo;
-- arcos Silas Crow, Rosa La Serpiente, Magnus Vane, Arcturus Vale;
-- Palácio Rubro;
-- confronto Mol-Khar;
-- finais ligados à Red Brand e escolhas de Calder.
+`FINAL_GAME_SCOPE.md` — barões, Palácio Rubro, Mol-Khar completo.
 
 ---
 
-## O que não está no roadmap imediato
-
-- cidade inteira antes da beta;
-- luta completa Arcturus / forma física completa Mol-Khar;
-- crafting complexo / loot aleatório;
-- duplicação manual de mapas corrompidos;
-- magia elemental genérica.
-
 ## Marcos
 
-| Marco | Critério |
-| --- | --- |
-| **Tag greybox v0.1** | ✅ `greybox-vertical-slice-v0.1` |
-| **Beta pública** | Capítulo Zero 30–45 min, arte final áreas-chave |
-| **Alpha distrito** | Múltiplas áreas interligadas pós-beta |
-| **Jogo completo** | Barões, Palácio Rubro, finais |
+| Marco | Critério | Estado |
+| --- | --- | --- |
+| Tag greybox v0.1 | Demo técnica | ✅ |
+| Commit beta foundation | `e07ba0e` | ✅ |
+| Gate auto 18/18 | Runner PASS | 🎯 |
+| Beta pública | 30–45 min, arte áreas-chave, QA | 📋 |
+| Jogo completo | Escopo final | 📋 |
+
+---
+
+## Fora do roadmap imediato
+
+Cidade inteira, Arcturus/Mol-Khar completos, magia elemental genérica, auto-load sem decisão D-013.

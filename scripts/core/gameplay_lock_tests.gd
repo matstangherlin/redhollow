@@ -1,17 +1,14 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const LockManagerScript := preload("res://scripts/core/gameplay_lock_manager.gd")
 const HitstopScript := preload("res://scripts/core/hitstop_controller.gd")
+const RespawnServiceScript := preload("res://scripts/core/respawn_service.gd")
 const PlayerScene := preload("res://scenes/player/player.tscn")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "gameplay_lock_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "gameplay_lock_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var fixture := await _create_fixture()
 
@@ -27,7 +24,7 @@ func _run_tests() -> void:
 	await _test_demo_completion_lock(failures, fixture)
 
 	fixture["root"].queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	suite.finish(failures, 10)
 
 
@@ -49,7 +46,17 @@ func _create_fixture() -> Dictionary:
 	player.global_position = Vector2(320, 848)
 	root_node.add_child(player)
 
-	await TestHelpers.await_physics_frames(self, 3)
+	var respawn_service: RespawnServiceScript = RespawnServiceScript.new()
+	respawn_service.death_respawn_delay = 9999.0
+	root_node.add_child(respawn_service)
+	var services := GameServices.new()
+	root_node.add_child(services)
+	services.gameplay_lock_manager = lock_manager
+	services.player = player
+	services.respawn_service = respawn_service
+	respawn_service.bind_from_services(services)
+
+	await TestHelpers.await_physics_frames(get_tree(), 3)
 
 	return {
 		"root": root_node,
@@ -143,7 +150,7 @@ func _test_dialogue_during_transition(failures: PackedStringArray, fixture: Dict
 
 	manager.acquire_lock(GameplayLockManager.LockReason.AREA_TRANSITION, transition_owner)
 	manager.acquire_lock(GameplayLockManager.LockReason.DIALOGUE, dialogue_owner)
-	await TestHelpers.await_physics_frames(self, 1)
+	await TestHelpers.await_physics_frames(get_tree(), 1)
 
 	if bool(player.call("can_interact_now")):
 		failures.append("Player should stay blocked during dialogue plus transition.")
@@ -164,7 +171,7 @@ func _test_pause_during_dialogue(failures: PackedStringArray, fixture: Dictionar
 
 	manager.acquire_lock(GameplayLockManager.LockReason.DIALOGUE, dialogue_owner)
 	manager.acquire_lock(GameplayLockManager.LockReason.PAUSE, pause_owner)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if not paused:
 		failures.append("Pause lock should pause the scene tree.")
@@ -172,7 +179,7 @@ func _test_pause_during_dialogue(failures: PackedStringArray, fixture: Dictionar
 		failures.append("Pause lock should still count as blocking player input.")
 
 	manager.release_locks_for_reason(GameplayLockManager.LockReason.PAUSE)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	if paused:
 		failures.append("Releasing pause should unpause while dialogue remains.")
 
@@ -187,7 +194,7 @@ func _test_pause_during_hitstop(failures: PackedStringArray, fixture: Dictionary
 
 	manager.request_hitstop(0.07)
 	manager.acquire_lock(GameplayLockManager.LockReason.PAUSE, pause_owner)
-	await TestHelpers.await_frames(self, 2)
+	await TestHelpers.await_frames(get_tree(), 2)
 
 	if not bool(hitstop.get("hitstop_active")):
 		failures.append("Hitstop should remain active while pause is active.")
@@ -195,7 +202,7 @@ func _test_pause_during_hitstop(failures: PackedStringArray, fixture: Dictionary
 		failures.append("Pause should remain active while hitstop is active.")
 
 	manager.release_locks_for_reason(GameplayLockManager.LockReason.PAUSE)
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 	if paused:
 		failures.append("Releasing pause should not break hitstop tracking.")
 
@@ -209,7 +216,7 @@ func _test_death_during_hitstop(failures: PackedStringArray, fixture: Dictionary
 
 	manager.request_hitstop(0.07)
 	player.call("_on_player_died")
-	await TestHelpers.await_physics_frames(self, 2)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
 
 	if not manager.has_lock(GameplayLockManager.LockReason.DEATH):
 		failures.append("Death during hitstop should acquire a death lock.")
@@ -218,6 +225,7 @@ func _test_death_during_hitstop(failures: PackedStringArray, fixture: Dictionary
 
 	var health: Node = player.get_node("%HealthComponent")
 	health.call("reset_health")
+	player.call("set_death_vulnerability", false)
 	player.call("clear_input_locks")
 	hitstop.call("force_release")
 

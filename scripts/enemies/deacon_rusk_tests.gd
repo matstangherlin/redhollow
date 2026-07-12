@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
@@ -8,12 +8,8 @@ const RedBrandBreaker := preload("res://resources/combat/red_brand_breaker_lv1.t
 const BodyHook := preload("res://resources/combat/body_hook.tres")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "deacon_rusk_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "deacon_rusk_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
 	root.add_child(root_node)
@@ -27,12 +23,12 @@ func _run_tests() -> void:
 	ground.add_child(ground_shape)
 	root_node.add_child(ground)
 
-	var player: Node = await TestHelpers.mount_player(root_node, self, Vector2(560, 848))
+	var player: Node = await TestHelpers.mount_player(root_node, get_tree(), Vector2(560, 848))
 
 	var boss: DeaconRusk = DeaconRuskScene.instantiate()
 	boss.global_position = Vector2(780, 848)
 	root_node.add_child(boss)
-	await process_frame
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	_prepare_active_boss(boss, player)
 	await _test_attack_patterns(failures, boss)
@@ -74,12 +70,12 @@ func _test_attack_patterns(failures: PackedStringArray, boss: DeaconRusk) -> voi
 			DeaconRusk.AttackKind.ARMORED_CHARGE,
 		] else 1
 		boss._begin_attack(kind)
-		await process_frame
+		await TestHelpers.await_frames(get_tree(), 1)
 		if boss.current_state != DeaconRusk.RuskState.ATTACK:
 			failures.append("Attack kind %s should enter ATTACK state." % kind)
 		boss._interrupt_attack()
 		boss.current_state = DeaconRusk.RuskState.CHOOSE_ATTACK
-		await process_frame
+		await TestHelpers.await_frames(get_tree(), 1)
 
 
 func _test_counterable_attacks(failures: PackedStringArray, boss: DeaconRusk) -> void:
@@ -100,7 +96,7 @@ func _test_non_counterable_attacks(failures: PackedStringArray, boss: DeaconRusk
 		failures.append("Armored charge should not be counterable.")
 
 	boss._begin_attack(DeaconRusk.AttackKind.CHARGE)
-	await process_frame
+	await TestHelpers.await_frames(get_tree(), 1)
 	if boss.warning_visual == null or not boss.warning_visual.visible:
 		failures.append("Non-counterable charge should show warning telegraph.")
 	boss._interrupt_attack()
@@ -112,10 +108,10 @@ func _test_phase_transition(failures: PackedStringArray, boss: DeaconRusk) -> vo
 	boss.health_component.current_health = boss.max_health * 0.49
 	boss.health_component.invulnerable = false
 	boss._begin_attack(DeaconRusk.AttackKind.CHARGE)
-	await process_frame
+	await TestHelpers.await_frames(get_tree(), 1)
 	boss._interrupt_attack()
 	boss._check_phase_transition()
-	await process_frame
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if boss.current_state != DeaconRusk.RuskState.PHASE_TRANSITION:
 		failures.append("Boss should enter phase transition below 50% HP.")
@@ -126,7 +122,7 @@ func _test_phase_transition(failures: PackedStringArray, boss: DeaconRusk) -> vo
 
 	boss.state_time_remaining = 0.0
 	boss._advance_timed_state()
-	await process_frame
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if boss.current_phase != 2:
 		failures.append("Boss should reach phase 2 after transition.")
@@ -153,7 +149,7 @@ func _test_stagger_and_red_brand(
 	boss.current_state = DeaconRusk.RuskState.CHOOSE_ATTACK
 	boss._stagger_meter = 0.0
 	boss._apply_stagger_from_attack(RedBrandBreaker)
-	await process_frame
+	await TestHelpers.await_frames(get_tree(), 1)
 	if boss.current_state != DeaconRusk.RuskState.STAGGERED:
 		failures.append("Red Brand should cause a major stagger.")
 	if boss.get_stagger_ratio() < 0.99:
@@ -181,8 +177,8 @@ func _test_boss_death(failures: PackedStringArray, boss: DeaconRusk, player: Nod
 	boss.health_component.invulnerable = false
 	boss.health_component.current_health = 8.0
 	boss.health_component.apply_damage(999.0, player)
-	await process_frame
-	await process_frame
+	await TestHelpers.await_frames(get_tree(), 1)
+	await TestHelpers.await_frames(get_tree(), 1)
 
 	if not boss.health_component.is_dead:
 		failures.append("Boss should die from lethal damage.")

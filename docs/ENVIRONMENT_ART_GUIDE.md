@@ -43,6 +43,8 @@ Diretrizes para cenários 2D de Red Hollow — Capítulo Zero e expansão futura
 
 Greybox atual usa `Polygon2D` + labels — substituir **camada a camada** por tilemap/sprites.
 
+**Kit modular:** ver `MODULAR_ENVIRONMENT_KIT.md` — `EnvironmentKit`, salas `kit_room_*`, validação de layers.
+
 ## Contraste para combate
 
 - Plano jogável: valor médio 40–60% (HSV V).

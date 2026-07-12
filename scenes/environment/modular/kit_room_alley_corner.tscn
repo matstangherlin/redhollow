@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://kitroom_alley_corner"]
+
+[ext_resource type="Script" path="res://scripts/environment/kit_modular_room.gd" id="1_room"]
+[ext_resource type="Resource" path="res://resources/environment/kits/chapter_zero_street_kit.tres" id="2_kit"]
+[ext_resource type="Script" path="res://scripts/world/area_exit.gd" id="3_exit"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(24, 96)
+
+[node name="KitRoomAlleyCorner" type="Node2D"]
+script = ExtResource("1_room")
+area_id = &"kit_room_alley_corner"
+area_display_name = "Kit Test — Canto do Beco"
+camera_limits = Rect2(0, 200, 560, 1000)
+fall_recovery_y = 1200.0
+room_template = "alley_corner"
+environment_kit = ExtResource("2_kit")
+
+[node name="Exits" type="Node2D" parent="."]
+
+[node name="ToSaloon" type="Area2D" parent="Exits"]
+position = Vector2(24, 848)
+collision_mask = 1
+script = ExtResource("3_exit")
+exit_id = &"to_saloon"
+target_scene = "res://scenes/environment/modular/kit_room_saloon_front.tscn"
+target_spawn_id = &"from_alley"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/ToSaloon"]
+shape = SubResource("RectangleShape2D_exit")

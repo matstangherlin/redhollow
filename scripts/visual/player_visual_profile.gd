@@ -15,9 +15,21 @@ enum VisualMode {
 @export var sprite_frames_path: String = ""
 @export var use_procedural_pilot_frames: bool = true
 
-## attack_id (String) -> animation name (String)
+## attack_id (String) -> animation clip name (String)
 @export var attack_animation_map: Dictionary = {
 	"calder_straight": "straight",
+	"body_hook": "body_hook",
+	"red_knuckle": "red_knuckle",
+}
+
+## PlayerState name (String) -> animation clip name (String)
+@export var state_animation_map: Dictionary = {
+	"idle": "idle",
+	"run": "run",
+	"jump": "jump_rise",
+	"fall": "fall",
+	"dodge": "dodge",
+	"hurt": "hurt",
 }
 
 ## Full production target list (documentation + validation helpers).
@@ -49,6 +61,13 @@ static var PRODUCTION_ANIMATION_IDS: PackedStringArray = PackedStringArray([
 
 func get_attack_animation(attack_id: StringName) -> StringName:
 	var mapped: Variant = attack_animation_map.get(String(attack_id), "")
+	if String(mapped).is_empty():
+		return &""
+	return StringName(String(mapped))
+
+
+func get_state_animation(state_name: String) -> StringName:
+	var mapped: Variant = state_animation_map.get(state_name, "")
 	if String(mapped).is_empty():
 		return &""
 	return StringName(String(mapped))

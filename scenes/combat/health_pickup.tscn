@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://cnbuv7ipkcg1m"]
+
+[ext_resource type="Script" path="res://scripts/combat/health_pickup.gd" id="1_pickup"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pickup"]
+radius = 10.0
+
+[node name="HealthPickup" type="Area2D"]
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+script = ExtResource("1_pickup")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_pickup")
+
+[node name="OrbVisual" type="Polygon2D" parent="."]
+color = Color(0.92, 0.18, 0.22, 0.95)
+polygon = PackedVector2Array(-7, 0, -4, -6, 0, -7, 4, -6, 7, 0, 4, 6, 0, 7, -4, 6)
+
+[node name="Glow" type="Polygon2D" parent="."]
+color = Color(0.98, 0.45, 0.42, 0.35)
+polygon = PackedVector2Array(-10, 0, -6, -8, 0, -10, 6, -8, 10, 0, 6, 8, 0, 10, -6, 8)

@@ -341,6 +341,15 @@ func _refresh_objectives() -> void:
 	if _progression == null:
 		return
 	_objective_tracker.refresh_from_flags(_progression.narrative_flags)
+	_sync_world_map_objective()
+
+
+func _sync_world_map_objective() -> void:
+	var objective_id := _objective_tracker.get_active_objective_id()
+	for node in get_tree().get_nodes_in_group(WorldMapService.SERVICE_GROUP):
+		if node is WorldMapService:
+			(node as WorldMapService).set_objective_from_id(objective_id)
+			return
 
 
 func _load_events(path: String = EVENTS_PATH) -> void:

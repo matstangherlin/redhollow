@@ -36,21 +36,50 @@ art/environments/chapter_zero/street_bg_far.png
 art/vfx/vfx_hit_spark_small.png
 ```
 
-Spritesheets:
+Spritesheets (Calder):
 
 ```
-{char}_{anim}_sheet.png
-Frame size fixo por animação (ex.: 32×56 idle/run).
+art/characters/calder/calder_{anim}_sheet.png
+Frame size fixo: 32×56 px por frame.
+Frames dispostos horizontalmente (frame 0 à esquerda).
 ```
 
-## Organização de atlas
+### Contrato Calder (obrigatório)
+
+| Parâmetro | Valor |
+| --- | --- |
+| Canvas | **32 × 56 px** por frame |
+| Personagem | **~32 × 56 px** silhueta |
+| Pivot | centro inferior do frame |
+| Pés | alinhados ao origin do `CharacterBody2D` via offset `(0, -28)` |
+| Facing padrão | olhando **direita** |
+| Filtro | **Nearest** |
+| Loop | conforme tabela em `ANIMATION_PIPELINE.md` |
+
+### Piloto — arquivos esperados
+
+| Animação | Arquivo | Frames | FPS |
+| --- | --- | ---: | ---: |
+| idle | `calder_idle_sheet.png` | 6 | 8 |
+| run | `calder_run_sheet.png` | 6 | 12 |
+| jump_rise | `calder_jump_rise_sheet.png` | 2 | 10 |
+| fall | `calder_fall_sheet.png` | 2 | 8 |
+| land | `calder_land_sheet.png` | 3 | 10 |
+| straight | `calder_straight_sheet.png` | 4 | 14 |
+| body_hook | `calder_body_hook_sheet.png` | 4 | 12 |
+| red_knuckle | `calder_red_knuckle_sheet.png` | 5 | 10 |
+| dodge | `calder_dodge_sheet.png` | 4 | 14 |
+| hurt | `calder_hurt_sheet.png` | 2 | 10 |
+
+Largura do PNG = `frames × 32`. Altura = `56`.
+
+### Atlas (opcional — fase final)
 
 | Atlas | Conteúdo | Tamanho máx sugerido |
 | --- | --- | --- |
-| `calder_combat_sheet` | straight, hook, knuckle | 256×256 |
-| `calder_locomotion_sheet` | idle, run, jump, land | 256×256 |
-| `calder_defense_sheet` | dodge, counter, hurt | 256×256 |
-| Por inimigo | idle + attacks | 128×128 |
+| `calder_locomotion_atlas.png` | idle, run, jump, land | 256×256 |
+| `calder_combat_atlas.png` | straight, hook, knuckle | 256×256 |
+| `calder_defense_atlas.png` | dodge, hurt | 128×128 |
 
 Evitar mega-atlas > 1024×1024 na beta.
 
@@ -84,10 +113,19 @@ Godot: criar `SpriteFrames` resource em `resources/visual/` ou `art/.../frames/`
 | De | Para | Ação |
 | --- | --- | --- |
 | Greybox | Piloto | Profile `calder_pilot_profile.tres` |
-| Piloto | Final | Profile final + SpriteFrames importado |
+| Piloto procedural | Piloto sheets | `use_procedural_pilot_frames = false` + PNGs em `art/characters/calder/` |
+| Piloto | Final | Profile final + `SpriteFrames` ou sheets |
 | Final → Greybox (debug) | `calder_placeholder_profile.tres` | Restaura Polygon2D |
 
+Cena de teste: `scenes/tests/calder_visual_pilot_test.tscn` (F alterna modos).
+
 Greybox `%BodyVisual` / `%BrandHand` **permanecem na cena** — apenas ocultos quando sprite ativo.
+
+## Fallback em importação
+
+- PNG ausente → clip procedural da mesma animação (`CalderSpriteFramesBuilder`).
+- `push_warning` controlado (uma vez por contexto) — **não bloqueia build**.
+- Clip ausente em runtime → substitui por `idle`.
 
 ## Como sincronizar animação e ataque
 

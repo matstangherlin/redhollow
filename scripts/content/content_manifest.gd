@@ -23,6 +23,7 @@ const PATH_FULL_GAME := "res://resources/content/manifests/full_game.tres"
 
 @export var starting_chapter_id: StringName = &""
 @export var beta_end_chapter_id: StringName = &""
+@export var world_graph_path: String = ""
 
 ## Explicit policy: beta saves are NOT auto-migrated when opening full_game.
 @export var migrate_beta_saves_to_full: bool = false

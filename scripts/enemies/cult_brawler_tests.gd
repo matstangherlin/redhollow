@@ -1,4 +1,4 @@
-extends SceneTree
+extends HeadlessSuiteRunner
 
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
@@ -6,12 +6,8 @@ const CultBrawlerScene := preload("res://scenes/enemies/cult_brawler.tscn")
 const TestHit := preload("res://resources/combat/cult_brawler_hook.tres")
 
 
-func _initialize() -> void:
-	call_deferred("_run_tests")
-
-
-func _run_tests() -> void:
-	var suite := TestHelpers.begin_suite(self, "cult_brawler_tests")
+func _run_suite() -> void:
+	var suite := TestHelpers.begin_suite(get_tree(), "cult_brawler_tests")
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
 	root.add_child(root_node)
@@ -25,7 +21,7 @@ func _run_tests() -> void:
 	ground.add_child(ground_shape)
 	root_node.add_child(ground)
 
-	var player: Node = await TestHelpers.mount_player(root_node, self, Vector2(420, 848))
+	var player: Node = await TestHelpers.mount_player(root_node, get_tree(), Vector2(420, 848))
 
 	_test_single_brawler(failures, root_node, player)
 	_test_two_brawlers(failures, root_node)
@@ -100,7 +96,7 @@ func _test_combo_and_defeat(failures: PackedStringArray, parent: Node2D, player:
 	if died_events > 0:
 		failures.append("Dead brawler should not emit died again.")
 
-	var style_manager: Node = await TestHelpers.mount_style_manager(parent, self)
+	var style_manager: Node = await TestHelpers.mount_style_manager(parent, get_tree())
 	var style_before := float(style_manager.get("style_score"))
 	style_manager.call("_on_enemy_died", brawler)
 	var style_after := float(style_manager.get("style_score"))
@@ -109,4 +105,4 @@ func _test_combo_and_defeat(failures: PackedStringArray, parent: Node2D, player:
 
 	style_manager.queue_free()
 	brawler.queue_free()
-	await TestHelpers.await_frames(self, 1)
+	await TestHelpers.await_frames(get_tree(), 1)

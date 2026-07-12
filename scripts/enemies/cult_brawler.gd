@@ -4,6 +4,7 @@ const PLAYER_GROUP := "player"
 const STYLE_TRACKABLE_GROUP := "style_trackable"
 const HURTBOX_LAYER := 64
 const FLOOR_VELOCITY_RESET_THRESHOLD := 0.0
+const HealthDropSpawner := preload("res://scripts/combat/health_drop_spawner.gd")
 
 signal combat_pressure_changed(is_active: bool)
 
@@ -364,6 +365,7 @@ func _on_died() -> void:
 	CorpseCollisionHelper.disable_body_collision(self)
 	velocity = Vector2.ZERO
 	_update_visual()
+	HealthDropSpawner.try_spawn_from_defeat(self, HealthDropSpawner.PROFILE_STANDARD)
 	_update_debug_label()
 
 
