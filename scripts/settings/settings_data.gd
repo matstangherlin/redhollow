@@ -47,6 +47,10 @@ static func create_default() -> Dictionary:
 		"accessibility": {
 			"screen_shake_intensity": 1.0,
 			"reduced_flashes": false,
+			"reduced_particles": false,
+			"reduced_distortion": false,
+			"reduced_extreme_contrast": false,
+			"disable_chromatic_aberration": false,
 			"telegraph_contrast": 1.0,
 			"text_speed": 1.0,
 			"instant_text": false,

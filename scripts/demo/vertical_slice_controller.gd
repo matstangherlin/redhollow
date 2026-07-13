@@ -10,7 +10,7 @@ const AREA_TRANSITION_GROUP := "area_transition_manager"
 const STYLE_MANAGER_GROUP := "style_manager"
 const RED_BRAND_DIRECTOR_GROUP := "red_brand_director"
 
-const VS_STREET_SCENE := "res://scenes/areas/vertical_slice_street.tscn"
+const VS_STREET_SCENE := "res://scenes/areas/vertical_slice_street_art.tscn"
 const VS_MAIN_SCENE := "res://scenes/demo/vertical_slice_greybox.tscn"
 
 @export var finale_controller_path: NodePath = NodePath("ChapterZeroFinale")

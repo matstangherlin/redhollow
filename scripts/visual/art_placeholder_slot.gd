@@ -17,6 +17,9 @@ func _ready() -> void:
 
 
 func _build_placeholder() -> void:
+	if placeholder_color.a <= 0.01:
+		return
+
 	var body := Polygon2D.new()
 	body.name = "PlaceholderBody"
 	body.color = placeholder_color
@@ -33,8 +36,8 @@ func _build_placeholder() -> void:
 
 	_label = Label.new()
 	_label.name = "SlotLabel"
-	_label.theme_override_colors/font_color = Color(0.92, 0.86, 0.74, 0.75)
-	_label.theme_override_font_sizes/font_size = 9
+	_label.add_theme_color_override("font_color", Color(0.92, 0.86, 0.74, 0.75))
+	_label.add_theme_font_size_override("font_size", 9)
 	_label.position = Vector2(-footprint_size.x * 0.5, -footprint_size.y * 0.5 - 14.0)
 	_label.text = "%s\n%s" % [String(slot_id), expected_asset_path.get_file()]
 	add_child(_label)

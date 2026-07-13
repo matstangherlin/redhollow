@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://b58fmqb0dr2ll"]
+
+[ext_resource type="Script" path="res://scripts/ui/hud_layout_test_scene.gd" id="1_test"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_v2.tscn" id="2_hud"]
+
+[node name="HudLayoutTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_test")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.18, 0.14, 0.12, 1)
+
+[node name="HudV2" parent="." instance=ExtResource("2_hud")]
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 50
+
+[node name="ScenarioLabel" type="Label" parent="UI"]
+unique_name_in_owner = true
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 900.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "HUD Layout Test"

@@ -153,7 +153,7 @@
       "conditions": {},
       "choices": []
     },
-    "cz_alley_bulletin": {
+	"cz_alley_bulletin": {
       "dialogue_id": "cz_alley_bulletin",
       "speaker": "Aviso rasgado",
       "lines": [
@@ -163,6 +163,32 @@
       "portrait": null,
       "actions_on_end": [],
       "actions_on_start": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_street_entrance_sign": {
+      "dialogue_id": "cz_street_entrance_sign",
+      "speaker": "Placa desbotada",
+      "lines": [
+        "RED HOLLOW — entrada sul. Mineração suspensa por ordem eclesiástica.",
+        "Viajantes: apresentem-se ao saloon antes do sino."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
+      "conditions": {},
+      "choices": []
+    },
+    "cz_saloon_facade": {
+      "dialogue_id": "cz_saloon_facade",
+      "speaker": "Calder",
+      "lines": [
+        "Portas pregadas. O saloon fechou quando a Ordem assumiu.",
+        "Luz ainda vaza das frestas — alguém está dentro, ou algo quer que pareça."
+      ],
+      "portrait": null,
+      "actions_on_start": [],
+      "actions_on_end": [],
       "conditions": {},
       "choices": []
     },

@@ -105,6 +105,13 @@ func get_debug_info() -> Dictionary:
 		"sprite_rect": sprite_rect,
 		"pivot_global": _player.global_position if _player != null else Vector2.ZERO,
 		"sprite_offset": _sprite.offset if _sprite != null else Vector2.ZERO,
+		"facing_direction": int(_player.facing_direction) if _player != null else 1,
+		"uses_production_sheets": (
+			CalderAnimationContract.profile_uses_production_sheets(profile)
+			if profile != null else false
+		),
+		"approved_frame_size": CalderAnimationContract.APPROVED_FRAME_SIZE,
+		"gameplay_collision_size": CalderAnimationContract.GAMEPLAY_COLLISION_SIZE,
 	}
 
 
@@ -126,7 +133,8 @@ func _apply_profile() -> void:
 
 	var sprite_frames := CalderSpriteFramesBuilder.build_for_profile(profile)
 	_sprite.sprite_frames = sprite_frames
-	_sprite.offset = CalderAnimationContract.SPRITE_VISUAL_OFFSET
+	var use_production := CalderAnimationContract.profile_uses_production_sheets(profile)
+	_sprite.offset = CalderAnimationContract.get_sprite_visual_offset(use_production)
 	_sprite.centered = true
 	_sprite_ready = sprite_frames != null and sprite_frames.get_animation_names().size() > 0
 	_show_placeholder(not _sprite_ready)

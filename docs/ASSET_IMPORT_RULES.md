@@ -36,25 +36,29 @@ art/environments/chapter_zero/street_bg_far.png
 art/vfx/vfx_hit_spark_small.png
 ```
 
-Spritesheets (Calder):
+Spritesheets (Calder) — **produção aprovada** (`docs/VISUAL_SCALE_STUDY.md`):
 
 ```
-art/characters/calder/calder_{anim}_sheet.png
-Frame size fixo: 32×56 px por frame.
+art/characters/calder/sheets/calder_{anim}_sheet.png
+Frame size fixo: 40×72 px por frame.
 Frames dispostos horizontalmente (frame 0 à esquerda).
 ```
 
+Spritesheets placeholder (procedural interno): 32×56 até arte real substituir.
+
 ### Contrato Calder (obrigatório)
 
-| Parâmetro | Valor |
-| --- | --- |
-| Canvas | **32 × 56 px** por frame |
-| Personagem | **~32 × 56 px** silhueta |
-| Pivot | centro inferior do frame |
-| Pés | alinhados ao origin do `CharacterBody2D` via offset `(0, -28)` |
-| Facing padrão | olhando **direita** |
-| Filtro | **Nearest** |
-| Loop | conforme tabela em `ANIMATION_PIPELINE.md` |
+| Parâmetro | Valor produção | Valor placeholder |
+| --- | --- | --- |
+| Canvas | **40 × 72 px** por frame | 32 × 56 px |
+| Personagem | silhueta ~40 × 72 | ~32 × 56 |
+| Pivot | centro inferior `(20, 72)` | `(16, 56)` |
+| Pés | offset sprite `(0, -36)` | `(0, -28)` |
+| Facing padrão | olhando **direita** | idem |
+| Filtro | **Nearest** | idem |
+| Colisão gameplay | **32 × 56** (inalterada) | idem |
+
+Ver checklist completo: `docs/CALDER_ASSET_CHECKLIST.md`.
 
 ### Piloto — arquivos esperados
 
@@ -62,6 +66,7 @@ Frames dispostos horizontalmente (frame 0 à esquerda).
 | --- | --- | ---: | ---: |
 | idle | `calder_idle_sheet.png` | 6 | 8 |
 | run | `calder_run_sheet.png` | 6 | 12 |
+| jump_start | `calder_jump_start_sheet.png` | 2 | 12 |
 | jump_rise | `calder_jump_rise_sheet.png` | 2 | 10 |
 | fall | `calder_fall_sheet.png` | 2 | 8 |
 | land | `calder_land_sheet.png` | 3 | 10 |
@@ -71,7 +76,7 @@ Frames dispostos horizontalmente (frame 0 à esquerda).
 | dodge | `calder_dodge_sheet.png` | 4 | 14 |
 | hurt | `calder_hurt_sheet.png` | 2 | 10 |
 
-Largura do PNG = `frames × 32`. Altura = `56`.
+Largura do PNG = `frames × 40`. Altura = `72` (produção). Placeholder procedural permanece 32×56 internamente.
 
 ### Atlas (opcional — fase final)
 

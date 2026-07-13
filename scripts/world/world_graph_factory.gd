@@ -3,9 +3,9 @@ class_name WorldGraphFactory
 
 const CHAPTER_ZERO := &"chapter_zero_bell_before_nightfall"
 
-const SCENE_STREET := "res://scenes/areas/vertical_slice_street.tscn"
-const SCENE_CHURCH := "res://scenes/areas/vertical_slice_church.tscn"
-const SCENE_UNDERGROUND := "res://scenes/areas/vertical_slice_underground.tscn"
+const SCENE_STREET := "res://scenes/areas/vertical_slice_street_art.tscn"
+const SCENE_CHURCH := "res://scenes/areas/vertical_slice_church_art.tscn"
+const SCENE_UNDERGROUND := "res://scenes/areas/vertical_slice_underground_art.tscn"
 
 
 static func create_beta_graph() -> WorldGraphData:

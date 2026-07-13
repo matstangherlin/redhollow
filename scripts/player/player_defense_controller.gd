@@ -52,8 +52,12 @@ func setup(
 
 
 func handle_dodge_input() -> void:
-	if _input.dodge_just_pressed and _can_start_ground_dodge():
-		start_ground_dodge()
+	if not _input.dodge_just_pressed:
+		return
+	if _can_start_ground_dodge():
+		start_dodge()
+	elif _can_start_air_dodge():
+		start_dodge()
 
 
 func handle_counter_input() -> void:
@@ -128,6 +132,10 @@ func try_counter_hit(attack_data: Resource, _hitbox: Area2D, attacker: Node) -> 
 			_player.call("set_facing_direction", direction)
 
 	return true
+
+
+func start_dodge() -> void:
+	start_ground_dodge()
 
 
 func start_ground_dodge() -> void:
@@ -263,13 +271,29 @@ func _can_start_ground_dodge() -> bool:
 		return false
 	if dodge_phase != PlayerStateTypes.DodgePhase.NONE or dodge_cooldown_time_remaining > 0.0:
 		return false
-	return _can_dodge_cancel_current_state()
+	return _can_dodge_cancel_current_state(true)
 
 
-func _can_dodge_cancel_current_state() -> bool:
+func _can_start_air_dodge() -> bool:
+	if _player.is_on_floor() or _player.call("_is_dead") or _attack.is_attacking():
+		return false
+	if is_countering() or _player.call("_is_taunting") or _player.call("_is_charging_brand_breaker"):
+		return false
+	if dodge_phase != PlayerStateTypes.DodgePhase.NONE or dodge_cooldown_time_remaining > 0.0:
+		return false
+	return _can_dodge_cancel_current_state(false)
+
+
+func _can_dodge_cancel_current_state(on_floor: bool) -> bool:
 	var current_state: int = int(_player.get("current_state"))
+	if on_floor:
+		match current_state:
+			PlayerStateTypes.PlayerState.IDLE, PlayerStateTypes.PlayerState.RUN, PlayerStateTypes.PlayerState.FALL:
+				return true
+			_:
+				return false
 	match current_state:
-		PlayerStateTypes.PlayerState.IDLE, PlayerStateTypes.PlayerState.RUN, PlayerStateTypes.PlayerState.FALL:
+		PlayerStateTypes.PlayerState.JUMP, PlayerStateTypes.PlayerState.FALL:
 			return true
 		_:
 			return false
@@ -356,10 +380,6 @@ func _on_hit_countered(attack_data: Resource, _hitbox: Area2D, attacker: Node) -
 	var hitstop_duration := float(_player.get("counter_hitstop_duration"))
 	if hitstop_duration > 0.0:
 		hitstop_requested.emit(hitstop_duration)
-	screen_shake_requested.emit(
-		float(_player.get("counter_shake_intensity")),
-		float(_player.get("counter_shake_duration"))
-	)
 	_begin_counter_attack()
 
 

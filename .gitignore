@@ -28,6 +28,11 @@ desktop.ini
 .vscode/
 .idea/
 
+# Large Calder source art — export game-ready sheets to art/characters/calder/sheets/
+art/characters/calder/source/**
+!art/characters/calder/source/.gitkeep
+!art/characters/calder/source/README.md
+
 # C#/.NET local build output if ever generated; Red Hollow uses GDScript.
 .mono/
 bin/

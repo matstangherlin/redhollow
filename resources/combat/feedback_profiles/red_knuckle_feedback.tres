@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CombatFeedbackProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/feedback/combat_feedback_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"red_knuckle_feedback"
+attack_id = &"red_knuckle"
+impact_tier = 2
+attacker_hitstop = 0.06
+target_hitstop = 0.075
+shake_intensity = 7.8
+shake_duration = 0.16
+camera_effect = 1
+zoom_amount = 0.022
+zoom_duration = 0.1
+vfx_kind = &"hit_heavy"
+particle_count = 10
+particle_lifetime = 0.22
+impact_color = Color(0.98, 0.42, 0.18, 0.92)
+flash_strength = 0.38
+flash_color = Color(1, 0.88, 0.72, 1)
+swing_trail_enabled = true
+swing_trail_particles = 6
+swing_trail_on_active = true
+sfx_id = &"impact_vermilite"
+sfx_volume_scale = 1.0
+pitch_min = 0.86
+pitch_max = 0.94
+reaction_intensity = 1.2
+vibration_intensity = 0.45
+vibration_duration = 0.08

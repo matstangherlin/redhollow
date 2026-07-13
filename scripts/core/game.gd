@@ -123,7 +123,12 @@ func _debug_panic_unlock() -> void:
 
 func _bind_narrative_systems() -> void:
 	var director := get_node_or_null("NarrativeDirector")
-	var objective_hud := get_node_or_null("ObjectiveHud") as ObjectiveHud
+	var layout_controller := get_node_or_null("HudLayoutController") as HudLayoutController
+	var objective_hud: ObjectiveHud = null
+	if layout_controller != null:
+		objective_hud = layout_controller.get_active_objective_hud()
+	else:
+		objective_hud = get_node_or_null("ObjectiveHud") as ObjectiveHud
 	if director != null and objective_hud != null and director.has_method("bind_objective_hud"):
 		director.call("bind_objective_hud", objective_hud)
 

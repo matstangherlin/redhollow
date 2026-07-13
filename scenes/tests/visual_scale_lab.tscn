@@ -1,0 +1,84 @@
+[gd_scene load_steps=2 format=3 uid="uid://visual_scale_lab_scene"]
+
+[ext_resource type="Script" path="res://scripts/visual/visual_scale_lab.gd" id="1_lab"]
+
+[node name="VisualScaleLab" type="Node2D"]
+script = ExtResource("1_lab")
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Columns" type="Node2D" parent="World"]
+
+[node name="LabCamera" type="Camera2D" parent="."]
+position = Vector2(1100, 720)
+zoom = Vector2(0.85, 0.85)
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="Panel" type="PanelContainer" parent="UI"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 620.0
+offset_bottom = 280.0
+
+[node name="Margin" type="MarginContainer" parent="UI/Panel"]
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="UI/Panel/Margin"]
+theme_override_constants/separation = 6
+
+[node name="HeaderLabel" type="Label" parent="UI/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.95, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "Visual Scale Lab"
+
+[node name="MetricsLabel" type="Label" parent="UI/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.82, 0.78, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+autowrap_mode = 3
+text = "Métricas..."
+
+[node name="HelpLabel" type="Label" parent="UI/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.65, 0.62, 0.56, 1)
+theme_override_font_sizes/font_size = 9
+autowrap_mode = 3
+text = "Controles..."
+
+[node name="PreviewFrame" type="PanelContainer" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -404.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 226.0
+grow_horizontal = 0
+
+[node name="SubViewport" type="SubViewport" parent="UI/PreviewFrame"]
+handle_input_locally = false
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="PreviewWorld" type="Node2D" parent="UI/PreviewFrame/SubViewport"]
+
+[node name="PreviewCamera" type="Camera2D" parent="UI/PreviewFrame/SubViewport"]
+position = Vector2(360, 740)
+zoom = Vector2(1, 1)
+
+[node name="HudMock" type="ColorRect" parent="UI/PreviewFrame/SubViewport"]
+offset_right = 1152.0
+offset_bottom = 48.0
+color = Color(0.08, 0.06, 0.05, 0.55)
+
+[node name="HudMockLabel" type="Label" parent="UI/PreviewFrame/SubViewport/HudMock"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 300.0
+offset_bottom = 36.0
+theme_override_colors/font_color = Color(0.92, 0.86, 0.74, 0.9)
+theme_override_font_sizes/font_size = 11
+text = "HUD compacto (mock)"

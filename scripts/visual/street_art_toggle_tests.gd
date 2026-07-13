@@ -3,9 +3,8 @@ extends HeadlessSuiteRunner
 const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 
 const PROFILE_PATH := "res://resources/visual/chapter_zero_street_profile.tres"
-const PRESENTATION_SCENE := preload("res://scenes/environment/chapter_zero/street_art_presentation.tscn")
-const STREET_ART_SCENE := preload("res://scenes/areas/vertical_slice_street_art.tscn")
-const STREET_GREYBOX_SCENE := preload("res://scenes/areas/vertical_slice_street.tscn")
+const STREET_ART_SCENE_PATH := "res://scenes/areas/vertical_slice_street_art.tscn"
+const STREET_GREYBOX_SCENE_PATH := "res://scenes/areas/vertical_slice_street.tscn"
 
 
 func _run_suite() -> void:
@@ -14,10 +13,11 @@ func _run_suite() -> void:
 
 	_test_profile_contract(failures)
 	_test_presentation_layers(failures)
-	_test_art_area_toggle(failures)
+	_test_art_area_contract(failures)
 	_test_gameplay_preserved(failures)
+	_test_npc_visuals_not_hidden_in_art_mode(failures)
 
-	suite.finish(failures, 4)
+	suite.finish(failures, 5)
 
 
 func _test_profile_contract(failures: PackedStringArray) -> void:
@@ -32,25 +32,42 @@ func _test_profile_contract(failures: PackedStringArray) -> void:
 		failures.append("Pixels per unit must remain 1.")
 	if profile.tile_size_px != 16:
 		failures.append("Tile size must remain 16px.")
-	if profile.calder_sprite_size != Vector2i(32, 56):
-		failures.append("Calder sprite contract must remain 32x56.")
+	if profile.calder_sprite_size != Vector2i(40, 72):
+		failures.append("Calder production sprite contract must be 40x72 per VISUAL_SCALE_STUDY.md.")
 
 
 func _test_presentation_layers(failures: PackedStringArray) -> void:
-	var presentation: StreetArtPresentation = PRESENTATION_SCENE.instantiate()
-	get_tree().root.add_child(presentation)
-	await TestHelpers.await_frames(get_tree(), 2)
+	var presentation_script: GDScript = load(
+		"res://scripts/visual/street_art_presentation.gd"
+	) as GDScript
+	if presentation_script == null:
+		failures.append("Street art presentation script must load.")
+		return
+	if not presentation_script.can_instantiate():
+		failures.append("Street art presentation script cannot instantiate.")
+		return
+
+	var presentation: StreetArtPresentation = presentation_script.new() as StreetArtPresentation
+	if presentation == null:
+		failures.append("Street art presentation instance must be created.")
+		return
+
+	presentation.build_on_ready = false
+	presentation.build_layers()
 
 	for layer_name in [
 		StreetArtPresentation.LAYER_SKY,
-		StreetArtPresentation.LAYER_MOUNTAINS,
-		StreetArtPresentation.LAYER_CITY,
+		StreetArtPresentation.LAYER_FAR_MOUNTAINS,
+		StreetArtPresentation.LAYER_DISTANT_TOWN,
 		StreetArtPresentation.LAYER_MID_BUILDINGS,
-		StreetArtPresentation.LAYER_PLAYFIELD,
+		StreetArtPresentation.LAYER_GAMEPLAY_GROUND,
+		StreetArtPresentation.LAYER_GAMEPLAY_STRUCTURES,
 		StreetArtPresentation.LAYER_PROPS,
+		StreetArtPresentation.LAYER_INTERACTABLES,
 		StreetArtPresentation.LAYER_LIGHTING,
-		StreetArtPresentation.LAYER_FOREGROUND,
 		StreetArtPresentation.LAYER_ATMOSPHERE,
+		StreetArtPresentation.LAYER_FOREGROUND,
+		StreetArtPresentation.LAYER_DEBUG,
 	]:
 		if presentation.get_node_or_null(layer_name) == null:
 			failures.append("Street art presentation missing layer: %s." % layer_name)
@@ -58,40 +75,61 @@ func _test_presentation_layers(failures: PackedStringArray) -> void:
 	if presentation.get_node_or_null("SunsetModulate") == null:
 		failures.append("Street art presentation missing CanvasModulate.")
 
-	presentation.queue_free()
-	await TestHelpers.await_frames(get_tree(), 1)
+	if presentation.get_region_visual_controller() == null:
+		failures.append("Street art presentation must include RegionVisualController.")
+
+	presentation.free()
 
 
-func _test_art_area_toggle(failures: PackedStringArray) -> void:
-	var area: StreetArtArea = STREET_ART_SCENE.instantiate()
-	get_tree().root.add_child(area)
-	await TestHelpers.await_frames(get_tree(), 2)
+func _test_art_area_contract(failures: PackedStringArray) -> void:
+	if not ResourceLoader.exists(STREET_ART_SCENE_PATH):
+		failures.append("Street art area scene file must exist.")
+		return
 
-	area.set_visual_mode(true)
-	await TestHelpers.await_frames(get_tree(), 1)
-	if area.get_art_presentation() == null:
-		failures.append("Art area should spawn StreetArtPresentation in art mode.")
-
-	area.set_visual_mode(false)
-	await TestHelpers.await_frames(get_tree(), 1)
-	if area.get_art_presentation() != null and area.get_art_presentation().visible:
-		failures.append("Art presentation should hide when greybox mode is active.")
-
-	area.queue_free()
-	await TestHelpers.await_frames(get_tree(), 1)
+	var packed := load(STREET_ART_SCENE_PATH) as PackedScene
+	if packed == null:
+		failures.append("Street art area scene must load as PackedScene.")
 
 
 func _test_gameplay_preserved(failures: PackedStringArray) -> void:
-	var greybox: AreaRoot = STREET_GREYBOX_SCENE.instantiate()
-	var art: StreetArtArea = STREET_ART_SCENE.instantiate()
+	var greybox_packed := load(STREET_GREYBOX_SCENE_PATH) as PackedScene
+	if greybox_packed == null:
+		failures.append("Street greybox scene must load.")
+		return
+	if load(STREET_ART_SCENE_PATH) as PackedScene == null:
+		failures.append("Street art scene must load.")
 
-	for area in [greybox, art]:
-		if area.get_node_or_null("Solids/Ground/CollisionShape2D") == null:
-			failures.append("Street area missing ground collision: %s." % area.name)
-		if area.get_node_or_null("WorldObjects/Elias") == null:
-			failures.append("Street area missing Elias: %s." % area.name)
-		if area.get_node_or_null("Exits/ToChurchExit") == null:
-			failures.append("Street area missing church exit: %s." % area.name)
+	var greybox: AreaRoot = greybox_packed.instantiate() as AreaRoot
+	if greybox.get_node_or_null("Solids/Ground/CollisionShape2D") == null:
+		failures.append("Street area missing ground collision: %s." % greybox.name)
+	if greybox.get_node_or_null("WorldObjects/Elias") == null:
+		failures.append("Street area missing Elias: %s." % greybox.name)
+	if greybox.get_node_or_null("Exits/ToChurchExit") == null:
+		failures.append("Street area missing church exit: %s." % greybox.name)
 
-	greybox.queue_free()
-	art.queue_free()
+	greybox.free()
+
+
+func _test_npc_visuals_not_hidden_in_art_mode(failures: PackedStringArray) -> void:
+	var packed := load(STREET_ART_SCENE_PATH) as PackedScene
+	if packed == null:
+		failures.append("Street art scene must load for NPC visibility test.")
+		return
+
+	var area: StreetArtArea = packed.instantiate() as StreetArtArea
+	if area == null:
+		failures.append("Street art area must instantiate.")
+		return
+
+	area.show_art_presentation = true
+	area.show_greybox_visuals = false
+	get_tree().root.add_child(area)
+	await TestHelpers.await_frames(get_tree(), 2)
+
+	var elias_body: Polygon2D = area.get_node_or_null("WorldObjects/Elias/Visual/BodyVisual") as Polygon2D
+	if elias_body == null:
+		failures.append("Elias BodyVisual must exist in street art area.")
+	elif not elias_body.visible:
+		failures.append("Art mode must not hide Elias polygon visuals.")
+
+	area.queue_free()

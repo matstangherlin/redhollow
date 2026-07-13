@@ -2,7 +2,8 @@
 
 Inventário do que **existe no repositório** no commit de baseline beta.
 
-**Baseline commit:** `e07ba0ecb8502d7a368017f1764599155e3e87bf` (`e07ba0e`) — *Add beta foundation: content manifest, product shell, and Chapter Zero systems.*  
+**Baseline commit:** `4babadc9a1c16b838aba541f89c17d5c9174f21a` (`4babadc`) — *Add world map graph, street art slice, and visual pilot pipeline.*  
+**Commit anterior beta:** `e07ba0ecb8502d7a368017f1764599155e3e87bf` (`e07ba0e`)  
 **Tag histórica greybox:** `greybox-vertical-slice-v0.1` (`ae65a5084c1cbece80672a67d4bc0a6b4d40e5df`).  
 **Versão alvo:** `0.2.0-beta.1`  
 **Engine:** Godot **4.7**
@@ -32,11 +33,30 @@ Tags rápidas: **OK** funcional | **DEBT** dívida | **BETA** escopo beta penden
 
 ---
 
-## Tabela de status (commit `e07ba0e`)
+## Tabela de status (commit `4babadc` — auditoria 2026-07-13)
 
 | Sistema | Implementado | Testado auto | Testado manual | Dívida | Bloqueia beta | Próximo passo |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Main menu + boot** | Infra criada (`main_menu.tscn`, `GameBootState`) | Parcial (`product_shell_tests` falha no runner `--script`) | Pendente | Sim — fluxo menu→jogo não assinado | Sim (gate QA) | Playthrough menu→Capítulo Zero |
+| **Main menu + boot** | Integração concluída | Sim (`product_shell_tests` 10/10) | Pendente | Sim — fluxo menu→jogo não assinado | Sim (gate QA) | Playthrough menu→Capítulo Zero |
+| **Opções / settings** | Integração concluída | Parcial (`product_shell_tests`) | Pendente | Sim | Não direto | Validar persistência + a11y |
+| **Pausa** | Integração concluída | Parcial (smoke beta) | Pendente | Sim | Não direto | Testar pausa combate/diálogo/arena |
+| **Product shell** | Integração concluída | Sim (`vertical_slice_regression`, smoke beta) | Pendente | Sim | Não direto | Assinar fluxo completo |
+| **World map (grafo + overlay)** | Integração concluída | Sim (`world_map_graph_tests` 10/10) | Pendente | Baixa | Não | UI final + playtest tecla **M** |
+| **Descoberta de áreas (save)** | Integração concluída | Sim (world map tests) | Pendente | Baixa | Não | Validar persistência F8/F9 |
+| **RespawnService** | Integração concluída | Sim (`player_respawn_tests` 6/6) | Pendente | Média | Não direto | Playtest morte 13–15 |
+| **Health pickups** | Infra criada | Indireto (smoke beta) | Pendente | Baixa | Não | Tuning + arte |
+| **Street art (molde)** | Integração concluída | Sim (`street_art_toggle_tests` 4/4) | Pendente | Sim (G1/G2 art) | Arte final sim | Corrigir plataformas/labels debug |
+| **Kit modular cenário** | Integração concluída | Sim (`modular_kit_tests` 7/7) | Pendente | Baixa | Não | Salas igreja/catacumbas |
+| **Pipeline visual PILOT** | Integração concluída | Sim (`player_visual_pipeline_tests` 8/8) | Pendente | Sim — sprites finais ausentes | Arte final sim | Produzir sprites Cap. Zero |
+| **Player — movimento/combate** | Integração concluída | Sim (`player_regression_tests` 48/48) | Pendente | Sim (`player.gd` ~800 linhas) | Não (runner verde) | Playtest manual |
+| **test_runner (23 suítes)** | Integração concluída | **Gate PASS** 23/23, exit 0 | N/A | Leaks P2 (KI-107) | Não | Commitar correções auditoria |
+| **Build Windows** | Infra criada | Não | Não | — | Sim (release) | Smoke após playtest manual |
+
+*Demais linhas da tabela `e07ba0e` permanecem válidas salvo onde indicado acima (arena KI-002, save OK, inimigos OK, etc.).*
+
+---
+
+## Tabela de status legada (commit `e07ba0e` — referência histórica)
 | **Opções / settings** | Infra criada (`options_menu`, `SettingsManager`, `SettingsData`) | Parcial (mesma falha runner) | Pendente | Sim | Não direto | Validar persistência + a11y em runtime |
 | **Pausa** | Infra criada (`pause_menu`, `ProductShell`) | Não confiável no runner atual | Pendente | Sim | Não direto | Testar pausa durante combate/diálogo/arena |
 | **Créditos / loading / confirmação** | Infra criada (cenas UI) | Não | Pendente | Sim | Não | Integrar no roteiro manual |
@@ -100,8 +120,8 @@ Controllers dedicados: input, movimento, ataque, defesa, provocação, Red Brand
 | --- | --- | --- |
 | Movimento / combo / esquiva / counter / taunt / Brand | OK | Controllers + `AttackData` |
 | Coordenador `player.gd` | DEBT | ~800 linhas; orquestração residual |
-| Morte / respawn | DEBT | Auto-respawn 0,65 s; **sem** overlay/serviço/chefe reset |
-| Pipeline visual | OK | Placeholder/pilot; arte final BETA |
+| Morte / respawn | OK | `RespawnService` + auto 0,65 s + **R**; testes 6/6 |
+| Pipeline visual | OK | PILOT 10 animações + fallback; arte final BETA |
 
 ## Arquitetura de conteúdo
 
@@ -112,6 +132,42 @@ Controllers dedicados: input, movimento, ataque, defesa, provocação, Red Brand
 | Manifest beta | `resources/content/manifests/beta_demo.tres` | OK |
 | Manifest jogo final | `resources/content/manifests/full_game.tres` | OK |
 | Capítulo Zero | `resources/content/chapters/chapter_zero_bell_before_nightfall.tres` | Conteúdo provisório |
+
+## World map e descoberta
+
+| Item | Caminho | Tag |
+| --- | --- | --- |
+| `WorldGraph` beta | `resources/world/beta_world_graph.tres` | OK |
+| `WorldMapService` | `scripts/world/world_map_service.gd` | OK |
+| `WorldMapState` (save) | `scripts/world/world_map_state.gd` | OK |
+| Overlay UI (**M**) | `scenes/ui/world_map_overlay.tscn` | OK (provisório) |
+| Grafo jogo completo | `resources/world/full_game_world_graph.tres` | Infra (stub) |
+
+## Street art e ambiente visual
+
+| Item | Caminho | Tag |
+| --- | --- | --- |
+| Perfil visual rua | `resources/visual/chapter_zero_street_profile.tres` | OK |
+| Apresentação 9 camadas | `scripts/visual/street_art_presentation.gd` | OK |
+| Área art | `scenes/areas/vertical_slice_street_art.tscn` | OK (molde) |
+| Demo principal | `vertical_slice_greybox` → **greybox** street | Conteúdo provisório |
+| Gate visual | `docs/ART_VERTICAL_SLICE_GATE.md` | Molde aprovado |
+
+## Kit modular
+
+| Item | Caminho | Tag |
+| --- | --- | --- |
+| `EnvironmentKit` | `scripts/environment/environment_kit.gd` | OK |
+| Factory + 20 módulos | `scripts/environment/environment_kit_factory.gd` | OK |
+| Salas exemplo | `scenes/environment/modular/kit_room_*.tscn` | OK |
+| `PropCatalog` | `scripts/environment/prop_catalog.gd` | OK |
+
+## Respawn e pickups
+
+| Item | Caminho | Tag |
+| --- | --- | --- |
+| `RespawnService` | `scripts/player/respawn_service.gd` | OK |
+| `HealthPickup` | `scripts/world/health_pickup.gd` | Infra criada |
 
 ## Combate, inimigos, feedback
 
@@ -143,21 +199,28 @@ Controllers dedicados: input, movimento, ataque, defesa, provocação, Red Brand
 | Auto-load boot | **Off** | `SaveManager.auto_load_on_ready = false` em `game.gd` |
 | `PlayerStateSnapshot` | OK | |
 
-## Testes automatizados (commit `e07ba0e`)
+## Testes automatizados (commit `4babadc` — auditoria 2026-07-13)
 
 | Métrica | Valor |
 | --- | --- |
-| Suítes registradas | **18** |
+| Suítes registradas | **23** |
 | Runner | `scripts/tests/test_runner.gd` |
-| Invocação suítes | Subprocesso `--script` (autoloads **ausentes** no subprocesso) |
-| Gate no commit | **FAIL** — ver KI-005 |
-| Suítes que passam isoladas (sem montar player completo) | 8 — save, regression slice, gunslinger, chain, encounters, visual, feedback, content_registry |
+| Bootstrap | `scenes/tests/test_bootstrap.tscn` (`--main-scene`, autoloads OK) |
+| Gate | **PASS** — 23/23, exit 0, ~51 s |
+| Timeout padrão | 180 s (`player_regression_tests`: 300 s) |
+| Exit timeout | 124 |
+
+Suítes novas vs `e07ba0e`: `player_respawn_tests`, `beta_integration_smoke_tests`, `street_art_toggle_tests`, `modular_kit_tests`, `world_map_graph_tests`.
 
 Comando:
 
-```bash
-godot --headless --path . --script res://scripts/tests/test_runner.gd
+```powershell
+.\tools\test_all.ps1
 ```
+
+Ver `TEST_MATRIX.md`, `STABILIZATION_REPORT.md`, `docs/_audit_runner_output.txt`.
+
+## Testes automatizados legado (commit `e07ba0e` — referência)
 
 ## Build Windows (estado separado)
 
@@ -172,10 +235,11 @@ godot --headless --path . --script res://scripts/tests/test_runner.gd
 ## O que **não** existe ainda
 
 - Cidade completa, Palácio Rubro, Mol-Khar/Arcturus jogáveis completos
-- Arte pixel final Capítulo Zero (pipeline pronto; assets finais pendentes)
-- Mapa/diário UI final (HUD objetivo provisório existe)
+- Arte pixel **final** Capítulo Zero (pipeline PILOT pronto; assets finais pendentes)
+- Mapa/diário UI **final** (overlay grafo provisório existe; tecla **M**)
 - Auto-load policy fechada para beta
-- Gate automatizado 18/18 PASS no commit atual
-- Playthrough manual menu→fim assinado
+- Playthrough manual menu→fim assinado (KI-004)
+- Build Windows QA-approved
+- Demo principal ainda em **greybox** (rua art é cena paralela)
 
-Ver `BETA_DEMO_SCOPE.md`, `KNOWN_ISSUES.md`, `STABILIZATION_REPORT.md`, `TEST_MATRIX.md`.
+Ver `BETA_DEMO_SCOPE.md`, `KNOWN_ISSUES.md`, `STABILIZATION_REPORT.md`, `TEST_MATRIX.md`, `VISUAL_FOUNDATION_BASELINE.md`.

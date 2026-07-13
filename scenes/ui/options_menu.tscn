@@ -213,6 +213,22 @@ value = 1.0
 unique_name_in_owner = true
 text = "Flashes reduzidos"
 
+[node name="ParticlesCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "Partículas reduzidas"
+
+[node name="DistortionCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "Distorção reduzida"
+
+[node name="ContrastCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "Contraste extremo reduzido"
+
+[node name="ChromaticCheck" type="CheckBox" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
+unique_name_in_owner = true
+text = "Desativar aberração cromática"
+
 [node name="TelegraphRow" type="HBoxContainer" parent="OptionsRoot/Panel/VBox/Scroll/Content"]
 [node name="TelegraphLabel" type="Label" parent="OptionsRoot/Panel/VBox/Scroll/Content/TelegraphRow"]
 custom_minimum_size = Vector2(220, 0)

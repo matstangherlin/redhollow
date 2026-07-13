@@ -17,6 +17,7 @@ const COLOR_DEATH := Color(0.42, 0.04, 0.06, 0.85)
 const COLOR_CHECKPOINT := Color(0.72, 0.88, 0.62, 0.85)
 const COLOR_TELEGRAPH_OK := Color(1.0, 0.82, 0.22, 0.55)
 const COLOR_TELEGRAPH_WARN := Color(0.92, 0.18, 0.18, 0.65)
+const COLOR_SWING_TRAIL := Color(0.92, 0.86, 0.72, 0.55)
 
 var _pool: Array[CPUParticles2D] = []
 var _flash_layer: CanvasLayer = null
@@ -30,39 +31,134 @@ func _ready() -> void:
 
 
 func spawn(kind: StringName, global_position: Vector2, strength: float = 1.0) -> void:
-	var scaled := _apply_accessibility_strength(strength)
+	spawn_from_feedback(
+		{
+			"vfx_kind": kind,
+			"flash_strength": strength,
+		},
+		global_position
+	)
+
+
+func spawn_from_feedback(feedback: Dictionary, global_position: Vector2) -> void:
+	var kind: StringName = feedback.get("vfx_kind", &"hit_normal")
+	var strength: float = float(feedback.get("flash_strength", 0.2))
+	var particle_count: int = int(feedback.get("particle_count", -1))
+	var lifetime: float = float(feedback.get("particle_lifetime", 0.18))
+	var color: Color = feedback.get("impact_color", _color_for_kind(kind))
+	var lateral: float = float(feedback.get("lateral_impact_bias", 0.0))
+	var spawn_position := global_position
+	if not is_equal_approx(lateral, 0.0):
+		spawn_position.x += lateral * 10.0
+
+	var scaled := _apply_accessibility_strength(strength, feedback)
 	if scaled <= 0.01:
+		return
+
+	var count := particle_count
+	if count < 0:
+		count = _default_count_for_kind(kind)
+
+	count = _scale_particle_count(count, feedback)
+	if count <= 0:
 		return
 
 	match kind:
 		&"hit_normal":
-			_emit_burst(global_position, COLOR_HIT, 6, 0.18, scaled)
+			_emit_burst(spawn_position, color, count, lifetime, scaled)
 		&"hit_heavy":
-			_emit_burst(global_position, COLOR_HEAVY, 10, 0.24, scaled)
-			_pulse_flash(COLOR_HEAVY, 0.06 * scaled)
+			_emit_burst(spawn_position, color, count, lifetime, scaled)
+			_pulse_flash(feedback.get("flash_color", COLOR_HEAVY), 0.06 * scaled, feedback)
 		&"counter":
-			_emit_burst(global_position, COLOR_COUNTER, 12, 0.22, scaled)
-			_pulse_flash(COLOR_COUNTER, 0.08 * scaled)
+			_emit_burst(spawn_position, color, count, lifetime, scaled)
+			_pulse_flash(feedback.get("flash_color", COLOR_COUNTER), 0.08 * scaled, feedback)
 		&"dodge":
-			_emit_burst(global_position, COLOR_DODGE, 5, 0.14, scaled * 0.7)
+			_emit_burst(spawn_position, COLOR_DODGE, count, lifetime, scaled * 0.7)
 		&"dodge_perfect":
-			_emit_burst(global_position, COLOR_COUNTER, 8, 0.16, scaled)
+			_emit_burst(spawn_position, COLOR_COUNTER, count, lifetime, scaled)
 		&"red_brand":
-			_emit_burst(global_position, COLOR_RED_BRAND, 14, 0.28, scaled)
-			_pulse_flash(COLOR_RED_BRAND, 0.10 * scaled)
+			_emit_burst(spawn_position, color, count, lifetime, scaled)
+			_pulse_flash(feedback.get("flash_color", COLOR_RED_BRAND), 0.10 * scaled, feedback)
+			if bool(feedback.get("shockwave_enabled", false)):
+				_spawn_shockwave(spawn_position, color, scaled, feedback)
 		&"barrier":
-			_emit_burst(global_position, COLOR_BARRIER, 16, 0.30, scaled)
+			_emit_burst(spawn_position, COLOR_BARRIER, count, lifetime, scaled)
 		&"player_hurt":
-			_emit_burst(global_position, COLOR_HURT, 7, 0.16, scaled)
-			_pulse_flash(COLOR_HURT, 0.05 * scaled)
+			_emit_burst(spawn_position, COLOR_HURT, count, lifetime, scaled)
+			_pulse_flash(COLOR_HURT, 0.05 * scaled, feedback)
 		&"death":
-			_emit_burst(global_position, COLOR_DEATH, 18, 0.34, scaled)
+			_emit_burst(spawn_position, COLOR_DEATH, count, lifetime, scaled)
 		&"checkpoint":
-			_emit_burst(global_position, COLOR_CHECKPOINT, 12, 0.26, scaled)
+			_emit_burst(spawn_position, COLOR_CHECKPOINT, count, lifetime, scaled)
 		&"telegraph_counterable":
-			_emit_burst(global_position, COLOR_TELEGRAPH_OK, 4, 0.20, scaled * 0.8)
+			_emit_burst(spawn_position, COLOR_TELEGRAPH_OK, count, lifetime, scaled * 0.8)
 		&"telegraph_not_counterable":
-			_emit_burst(global_position, COLOR_TELEGRAPH_WARN, 5, 0.22, scaled * 0.9)
+			_emit_burst(spawn_position, COLOR_TELEGRAPH_WARN, count, lifetime, scaled * 0.9)
+		&"swing_trail":
+			_spawn_swing_trail(spawn_position, 1, feedback, scaled)
+		_:
+			_emit_burst(spawn_position, color, count, lifetime, scaled)
+
+
+func spawn_swing_trail(global_position: Vector2, facing_direction: int, feedback: Dictionary) -> void:
+	if not bool(feedback.get("swing_trail_enabled", false)):
+		return
+	var scaled := _apply_accessibility_strength(1.0, feedback)
+	_spawn_swing_trail(global_position, facing_direction, feedback, scaled)
+
+
+func get_scaled_strength(strength: float) -> float:
+	return _apply_accessibility_strength(strength, {})
+
+
+func _spawn_swing_trail(
+	global_position: Vector2,
+	facing_direction: int,
+	feedback: Dictionary,
+	strength: float
+) -> void:
+	var particles := _acquire_particles()
+	if particles == null:
+		return
+
+	var count := _scale_particle_count(int(feedback.get("swing_trail_particles", 4)), feedback)
+	if count <= 0:
+		return
+
+	var color: Color = feedback.get("impact_color", COLOR_SWING_TRAIL)
+	particles.global_position = global_position
+	particles.amount = maxi(count, 2)
+	particles.lifetime = 0.12
+	particles.color = color
+	particles.direction = Vector2(float(facing_direction), -0.15).normalized()
+	particles.spread = 36.0
+	particles.initial_velocity_min = 30.0 * strength
+	particles.initial_velocity_max = 90.0 * strength
+	particles.scale_amount_min = 0.8 * strength
+	particles.scale_amount_max = 1.8 * strength
+	particles.restart()
+	particles.emitting = true
+
+
+func _spawn_shockwave(global_position: Vector2, color: Color, strength: float, feedback: Dictionary) -> void:
+	var particles := _acquire_particles()
+	if particles == null:
+		return
+
+	var count := _scale_particle_count(maxi(int(feedback.get("particle_count", 12)) + 4, 8), feedback)
+	particles.global_position = global_position
+	particles.amount = count
+	particles.lifetime = 0.32
+	particles.color = color
+	particles.direction = Vector2(0, -1)
+	particles.spread = 180.0
+	particles.gravity = Vector2(0, 180)
+	particles.initial_velocity_min = 60.0 * strength
+	particles.initial_velocity_max = 160.0 * strength
+	particles.scale_amount_min = 2.0 * strength
+	particles.scale_amount_max = 4.0 * strength
+	particles.restart()
+	particles.emitting = true
 
 
 func _build_pool() -> void:
@@ -118,11 +214,11 @@ func _emit_burst(
 	particles.emitting = true
 
 
-func _pulse_flash(color: Color, alpha: float) -> void:
+func _pulse_flash(color: Color, alpha: float, feedback: Dictionary = {}) -> void:
 	if _flash_rect == null:
 		return
 
-	if FeedbackSettingsAccess.is_reduced_flashes_enabled():
+	if _should_reduce_flashes(feedback):
 		alpha *= 0.35
 
 	_flash_rect.color = Color(color.r, color.g, color.b, clampf(alpha, 0.0, 0.65))
@@ -130,16 +226,53 @@ func _pulse_flash(color: Color, alpha: float) -> void:
 	tween.tween_property(_flash_rect, "color:a", 0.0, 0.10)
 
 
-func get_scaled_strength(strength: float) -> float:
-	return _apply_accessibility_strength(strength)
+func _color_for_kind(kind: StringName) -> Color:
+	match kind:
+		&"hit_heavy":
+			return COLOR_HEAVY
+		&"counter":
+			return COLOR_COUNTER
+		&"red_brand":
+			return COLOR_RED_BRAND
+		&"barrier":
+			return COLOR_BARRIER
+		_:
+			return COLOR_HIT
 
 
-func _apply_accessibility_strength(strength: float) -> float:
+func _default_count_for_kind(kind: StringName) -> int:
+	match kind:
+		&"hit_heavy", &"counter":
+			return 10
+		&"red_brand", &"barrier":
+			return 14
+		&"player_hurt":
+			return 7
+		&"death":
+			return 18
+		_:
+			return 6
+
+
+func _scale_particle_count(count: int, feedback: Dictionary) -> int:
+	var scaled := float(count) * FeedbackSettingsAccess.get_particle_multiplier()
+	if feedback.get("respect_particle_setting", true) == false:
+		scaled = float(count)
+	return maxi(int(roundf(scaled)), 0)
+
+
+func _apply_accessibility_strength(strength: float, feedback: Dictionary) -> float:
 	var scaled := strength
-	if FeedbackSettingsAccess.is_reduced_flashes_enabled():
+	if _should_reduce_flashes(feedback):
 		scaled *= 0.55
 	scaled *= FeedbackSettingsAccess.get_telegraph_contrast_multiplier()
 	return scaled
+
+
+func _should_reduce_flashes(feedback: Dictionary) -> bool:
+	if feedback.has("respect_flash_setting") and not bool(feedback.get("respect_flash_setting", true)):
+		return false
+	return FeedbackSettingsAccess.is_reduced_flashes_enabled()
 
 
 func _acquire_particles() -> CPUParticles2D:

@@ -57,6 +57,32 @@ Medir **tempo até primeiro frame útil** na build release:
 | VFX CPU particles | ≤ 1.5 ms |
 | Resto / margem | ≥ 5 ms |
 
+## Orçamento — Street North-Star (art pilot procedural)
+
+Medição alvo na cena `street_art_test.tscn` / `vertical_slice_street_art.tscn`, Windows 1920×1080 release.
+
+| Métrica | Orçamento | Estimativa atual (procedural) | Como medir |
+| --- | ---: | ---: | --- |
+| FPS médio | ≥ 58 | 58–60 | `StreetPerformanceMonitor` (P) |
+| Frame time | ≤ 16.7 ms | 12–15 ms | Monitor → TIME_PROCESS |
+| Draw calls | ≤ 80 | 55–72 | `RENDER_TOTAL_DRAW_CALLS_IN_FRAME` |
+| Point lights | ≤ 6 | 5 | contagem na cena |
+| GPU particles | ≤ 180 | 174 | 5 emissores (80+36+28+18+12) |
+| Memória estática | ≤ 512 MB | ~180–280 MB | MEMORY_STATIC |
+| 1º golpe hitch | 0 | 0 esperado | assets na cena, sem load runtime |
+
+**Nota:** valores estimados em máquina de desenvolvimento; revalidar em build export release.
+
+### Partículas street (detalhe)
+
+| Emissor | Quantidade |
+| --- | ---: |
+| DustMotes | 80 |
+| DryDebris | 36 |
+| DryLeaves | 28 |
+| Smokerise | 18 |
+| VermiliteMotes | 12 |
+
 ## Ações se fora do budget
 
 1. Reproduzir na build **release**, gravar cena e posição.
@@ -66,5 +92,6 @@ Medir **tempo até primeiro frame útil** na build release:
 
 ## Notas
 
-- Greybox geométrico é leve; dívida futura (arte final, tilemaps) exigirá revisão deste documento.
+- Greybox geométrico é leve; **street north-star procedural** medido acima — arte PNG final exigirá nova rodada.
 - `FeedbackSystem` usa pools fixos (12 SFX 2D, 24 VFX CPU) — dimensionados para beta.
+- Ver também `docs/STREET_NORTH_STAR_DEFINITION.md`.

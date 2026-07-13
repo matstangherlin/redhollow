@@ -80,6 +80,19 @@ Evitar cruz cristã literal não distorcida — usar simbolismo corrupto.
 
 Mol-Khar **nunca** corpo completo na beta — só sombra/voz.
 
+## Estados regionais (iluminação)
+
+Combate e VFX reagem **sobre** o estado regional, não o substituem.
+
+| Estado regional | VFX permitido | Evitar |
+| --- | --- | --- |
+| Normal | poeira, impacto físico, lampiões | glow Vermilite fullscreen |
+| Vermilite próxima | motes, accent PointLight2D | bloom em toda a tela |
+| Ressonância Rubra | vermelho em props/estátuas marcados | dessaturar HUD |
+| Mol-Khar | vignette, silhueta, distorção leve | tela 100% vermelha |
+
+Perfis: `LightingProfile` — ver `RED_HOLLOW_COLOR_PALETTE.md`.
+
 ## Implementação técnica
 
 ```

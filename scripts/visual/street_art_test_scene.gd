@@ -31,6 +31,6 @@ func _update_mode_label() -> void:
 	if _mode_label == null:
 		return
 	_mode_label.text = (
-		"Street Art Test — modo: %s | F alterna greybox/art | A/D mover"
-		% ("ART" if _use_art else "GREYBOX")
+		"Street Art Test — modo: %s | F greybox/art | P perf overlay | A/D mover"
+		% ("ART PILOT" if _use_art else "GREYBOX")
 	)

@@ -4,6 +4,8 @@
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://scripts/combat/hurtbox_component.gd" id="3_hurtbox"]
 [ext_resource type="Script" path="res://scripts/combat/hitbox_component.gd" id="4_hitbox"]
+[ext_resource type="Script" path="res://scripts/visual/enemies/cult_brawler_visual_controller.gd" id="5_visual_controller"]
+[ext_resource type="Resource" path="res://resources/visual/enemies/cult_brawler_pilot_profile.tres" id="6_visual_profile"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(34, 56)
@@ -55,6 +57,22 @@ unique_name_in_owner = true
 visible = false
 color = Color(1, 0.42, 0.12, 0.45)
 polygon = PackedVector2Array(-8, -52, 8, -52, 0, -40)
+
+[node name="SpriteVisual" type="AnimatedSprite2D" parent="Visual"]
+unique_name_in_owner = true
+visible = false
+z_index = 2
+centered = true
+offset = Vector2(0, -28)
+
+[node name="TelegraphGround" type="Marker2D" parent="Visual"]
+unique_name_in_owner = true
+position = Vector2(24, 28)
+
+[node name="CultBrawlerVisualController" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("5_visual_controller")
+profile = ExtResource("6_visual_profile")
 
 [node name="FloorAheadRay" type="RayCast2D" parent="."]
 unique_name_in_owner = true

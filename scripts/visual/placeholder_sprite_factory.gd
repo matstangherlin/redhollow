@@ -13,6 +13,7 @@ static func create_calder_pilot_sprite_frames() -> SpriteFrames:
 
 	_add_from_contract(frames, &"idle", Color(0.76, 0.18, 0.13))
 	_add_from_contract(frames, &"run", Color(0.82, 0.22, 0.16))
+	_add_from_contract(frames, &"jump_start", Color(0.74, 0.24, 0.36))
 	_add_from_contract(frames, &"jump_rise", Color(0.68, 0.28, 0.42))
 	_add_from_contract(frames, &"fall", Color(0.58, 0.24, 0.38))
 	_add_from_contract(frames, &"land", Color(0.72, 0.3, 0.2))
@@ -51,6 +52,8 @@ static func _color_for_clip(anim_id: StringName) -> Color:
 			return Color(0.76, 0.18, 0.13)
 		&"run":
 			return Color(0.82, 0.22, 0.16)
+		&"jump_start":
+			return Color(0.74, 0.24, 0.36)
 		&"jump_rise":
 			return Color(0.68, 0.28, 0.42)
 		&"fall":

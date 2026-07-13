@@ -5,6 +5,8 @@ const PlayerScript := preload("res://scripts/player/player.gd")
 const PlayerScene := preload("res://scenes/player/player.tscn")
 const HitstopScript := preload("res://scripts/core/hitstop_controller.gd")
 const LockManagerScript := preload("res://scripts/core/gameplay_lock_manager.gd")
+const RespawnServiceScript := preload("res://scripts/core/respawn_service.gd")
+const GameServicesScript := preload("res://scripts/core/game_services.gd")
 const CultHook := preload("res://resources/combat/cult_brawler_hook.tres")
 const CalderStraight := preload("res://resources/combat/calder_straight.tres")
 const BodyHook := preload("res://resources/combat/body_hook.tres")
@@ -14,7 +16,7 @@ const BrandBreakerLv2 := preload("res://resources/combat/red_brand_breaker_lv2.t
 
 const GROUND_COLLISION_LAYER := 1
 const FIXTURE_PLAYER_POSITION := Vector2(320, 848)
-const TEST_COUNT := 48
+const TEST_COUNT := 49
 
 
 func _run_suite() -> void:
@@ -48,6 +50,7 @@ func _run_suite() -> void:
 	await _test_counter_late_miss(failures, player, fixture)
 	await _test_counter_not_counterable(failures, player, fixture)
 	await _test_dodge_phases(failures, player, fixture)
+	await _test_air_dodge(failures, player, fixture)
 	await _test_dodge_invulnerability(failures, player, fixture)
 	await _test_dodge_finished_and_cooldown(failures, player, fixture)
 	await _test_taunt_lock(failures, player, fixture)
@@ -103,12 +106,30 @@ func _create_fixture() -> Dictionary:
 	root_node.add_child(lock_manager)
 	lock_manager.bind_hitstop_controller(hitstop)
 
+	var respawn_service: RespawnServiceScript = RespawnServiceScript.new()
+	respawn_service.death_respawn_delay = 9999.0
+	root_node.add_child(respawn_service)
+
+	var services: GameServices = GameServicesScript.new()
+	root_node.add_child(services)
+	services.gameplay_lock_manager = lock_manager
+	services.respawn_service = respawn_service
+
 	var player: CharacterBody2D = PlayerScene.instantiate() as CharacterBody2D
 	player.global_position = FIXTURE_PLAYER_POSITION
 	root_node.add_child(player)
+	services.player = player
+	respawn_service.bind_from_services(services)
 	await TestHelpers.await_physics_frames(get_tree(), 6)
 
-	return {"root": root_node, "player": player, "ground": ground, "hitstop": hitstop, "lock_manager": lock_manager}
+	return {
+		"root": root_node,
+		"player": player,
+		"ground": ground,
+		"hitstop": hitstop,
+		"lock_manager": lock_manager,
+		"respawn_service": respawn_service,
+	}
 
 
 func _await_on_floor(
@@ -145,6 +166,7 @@ func _release(action: String) -> void:
 
 func _reset_player(player: CharacterBody2D, position: Vector2 = FIXTURE_PLAYER_POSITION) -> void:
 	player.call("clear_input_locks")
+	player.call("set_death_vulnerability", false)
 	player.call("interrupt_attack", PlayerScript.PlayerState.IDLE)
 	player.global_position = position
 	player.velocity = Vector2.ZERO
@@ -576,6 +598,22 @@ func _test_dodge_phases(failures: PackedStringArray, player: CharacterBody2D, _f
 		failures.append("Dodge should emit dodge_started.")
 
 
+func _test_air_dodge(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
+	_reset_player(player)
+	await TestHelpers.await_physics_frames(get_tree(), 2)
+
+	player.set("current_state", PlayerScript.PlayerState.JUMP)
+	player.velocity = Vector2(0, -220)
+
+	player.call("_start_ground_dodge")
+	await TestHelpers.await_physics_frames(get_tree(), 2)
+
+	if int(player.get("dodge_phase")) == PlayerScript.DodgePhase.NONE:
+		failures.append("Air dodge should enter dodge phases while jumping.")
+	if int(player.get("current_state")) != PlayerScript.PlayerState.DODGE:
+		failures.append("Air dodge should set player state to DODGE.")
+
+
 func _test_dodge_invulnerability(failures: PackedStringArray, player: CharacterBody2D, _fixture: Dictionary) -> void:
 	_reset_player(player)
 	if not await _await_on_floor(failures, player):
@@ -794,6 +832,7 @@ func _test_death_lock(failures: PackedStringArray, player: CharacterBody2D) -> v
 		failures.append("Death should block interaction.")
 
 	health.call("reset_health")
+	player.call("set_death_vulnerability", false)
 	player.set("current_state", PlayerScript.PlayerState.IDLE)
 
 

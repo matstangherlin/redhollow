@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://bpc5dba7pagmi"]
+
+[ext_resource type="Script" path="res://scripts/visual/lighting/region_visual_comparison_test_scene.gd" id="1_scene"]
+
+[node name="RegionVisualComparisonTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_scene")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.07, 0.09, 1)
+
+[node name="Header" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 120.0
+grow_horizontal = 2
+
+[node name="Title" type="Label" parent="Header"]
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+theme_override_font_sizes/font_size = 20
+text = "Red Hollow — Comparação de iluminação (North Star)"
+
+[node name="Hint" type="Label" parent="Header"]
+theme_override_colors/font_color = Color(0.78, 0.74, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = "[← →] ou [1-4] alterna estados | Normal · Vermilite · Ressonância · Mol-Khar"
+
+[node name="StateLabel" type="Label" parent="Header"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.9, 0.82, 0.68, 1)
+theme_override_font_sizes/font_size = 14
+text = "Estado: normal"
+
+[node name="PaletteLabel" type="Label" parent="Header"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.72, 0.7, 0.66, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "Perfil..."
+
+[node name="PreviewRoot" type="Node2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, 140)

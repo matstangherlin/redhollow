@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://bpno33biqw8v5"]
+
+[ext_resource type="Script" path="res://scripts/visual/underground_art_area.gd" id="1_area_root"]
+[ext_resource type="Script" path="res://scripts/world/area_spawn_point.gd" id="2_spawn"]
+[ext_resource type="Script" path="res://scripts/world/area_exit.gd" id="3_exit"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/checkpoint.tscn" id="4_checkpoint"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/deacon_rusk.tscn" id="5_deacon_rusk"]
+[ext_resource type="PackedScene" path="res://scenes/world/boss_encounter.tscn" id="6_boss_encounter"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/story_prop.tscn" id="7_story_prop"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(1200, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(24, 96)
+
+[node name="VerticalSliceUndergroundArt" type="Node2D"]
+script = ExtResource("1_area_root")
+area_id = &"vs_greybox_underground"
+area_display_name = "Catacumbas (Beta North Star)"
+camera_limits = Rect2(0, 200, 1200, 1000)
+fall_recovery_y = 1280.0
+area_tint = Color(0.22, 0.22, 0.26, 1)
+show_greybox_visuals = false
+show_art_presentation = true
+
+[node name="AreaLabel" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 420.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 1)
+theme_override_font_sizes/font_size = 20
+text = "CATACUMBAS"
+
+[node name="GuideLabel" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 56.0
+offset_right = 640.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(0.62, 0.62, 0.68, 1)
+theme_override_font_sizes/font_size = 13
+text = "Mina, Ordem, ruínas antigas — Deacon Rusk e o despertar."
+
+[node name="BackgroundTint" type="Polygon2D" parent="."]
+color = Color(0.12, 0.12, 0.16, 0.35)
+polygon = PackedVector2Array(0, 0, 1200, 0, 1200, 900, 0, 900)
+
+[node name="Solids" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Solids"]
+position = Vector2(600, 900)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Solids/Ground"]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="GroundVisual" type="Polygon2D" parent="Solids/Ground"]
+color = Color(0.28, 0.28, 0.32, 1)
+polygon = PackedVector2Array(-600, -24, 600, -24, 600, 24, -600, 24)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="DefaultSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(300, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"default"
+
+[node name="FromChurchEntranceSpawn" type="Marker2D" parent="Spawns"]
+position = Vector2(80, 848)
+script = ExtResource("2_spawn")
+spawn_id = &"from_church_entrance"
+
+[node name="WorldObjects" type="Node2D" parent="."]
+
+[node name="UndergroundCheckpoint" parent="WorldObjects" instance=ExtResource("4_checkpoint")]
+position = Vector2(220, 848)
+checkpoint_id = &"vs_underground_checkpoint"
+restore_red_brand = true
+
+[node name="DeaconRusk" parent="WorldObjects" instance=ExtResource("5_deacon_rusk")]
+position = Vector2(780, 848)
+
+[node name="DeaconRuskEncounter" parent="WorldObjects" instance=ExtResource("6_boss_encounter")]
+encounter_id = &"vs_deacon_rusk_encounter"
+completion_flag_id = &"boss_vs_deacon_rusk_defeated"
+blocked_exit_paths = Array[NodePath]([NodePath("../../Exits/ToChurchExit")])
+
+[node name="ColossalStatue" type="Polygon2D" parent="WorldObjects"]
+position = Vector2(980, 700)
+color = Color(0.18, 0.16, 0.2, 0.9)
+polygon = PackedVector2Array(-80, 80, 80, 80, 60, -40, 20, -120, -20, -120, -60, -40)
+
+[node name="StatueEyes" type="Polygon2D" parent="WorldObjects" groups=["chapter_zero_statue_eyes"]]
+modulate = Color(1, 1, 1, 0)
+position = Vector2(960, 660)
+color = Color(0.85, 0.15, 0.1, 0.9)
+polygon = PackedVector2Array(0, 0, 8, 0, 8, 4, 0, 4, 20, 0, 28, 0, 28, 4, 20, 4)
+
+[node name="PartnerDiaryPage" parent="WorldObjects" instance=ExtResource("7_story_prop")]
+position = Vector2(420, 848)
+interaction_id = &"cz_partner_diary"
+prompt_text = "Recolher página"
+dialogue_id = &"cz_partner_diary_page"
+required_flag = &"cz_checkpoint_activated"
+
+[node name="HiddenPassage" type="Polygon2D" parent="WorldObjects" groups=["chapter_zero_hidden_passage"]]
+position = Vector2(1080, 820)
+color = Color(0.55, 0.22, 0.16, 0.55)
+polygon = PackedVector2Array(-40, -40, 40, -40, 40, 40, -40, 40)
+
+[node name="PassageLabel" type="Label" parent="WorldObjects" groups=["chapter_zero_passage_label"]]
+offset_left = 1020.0
+offset_top = 760.0
+offset_right = 1140.0
+offset_bottom = 784.0
+theme_override_colors/font_color = Color(0.72, 0.68, 0.64, 0.85)
+theme_override_font_sizes/font_size = 11
+text = "Passagem selada"
+
+[node name="Exits" type="Node2D" parent="."]
+
+[node name="ToChurchExit" type="Area2D" parent="Exits"]
+position = Vector2(40, 848)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("3_exit")
+exit_id = &"to_church_entrance"
+target_scene = "res://scenes/areas/vertical_slice_church_art.tscn"
+target_spawn_id = &"from_underground"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/ToChurchExit"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="ExitVisual" type="Polygon2D" parent="Exits/ToChurchExit"]
+color = Color(0.72, 0.42, 0.32, 0.55)
+polygon = PackedVector2Array(-12, -48, 12, -48, 12, 48, -12, 48)
+
+[node name="ExitLabel" type="Label" parent="Exits/ToChurchExit"]
+offset_left = -72.0
+offset_top = -72.0
+offset_right = 72.0
+offset_bottom = -48.0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+text = "<- Igreja"

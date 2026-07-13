@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://c6uims7xhcbh5"]
+
+[ext_resource type="Script" path="res://scripts/visual/underground_art_presentation.gd" id="1_presentation"]
+[ext_resource type="Resource" path="res://resources/visual/chapter_zero_underground_profile.tres" id="2_profile"]
+
+[node name="UndergroundArtPresentation" type="Node2D"]
+script = ExtResource("1_presentation")
+profile = ExtResource("2_profile")
+build_on_ready = true

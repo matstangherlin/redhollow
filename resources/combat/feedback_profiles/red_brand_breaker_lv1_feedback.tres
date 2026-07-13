@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CombatFeedbackProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/feedback/combat_feedback_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"red_brand_breaker_lv1_feedback"
+attack_id = &"red_brand_breaker_lv1"
+impact_tier = 3
+attacker_hitstop = 0.06
+target_hitstop = 0.075
+shake_intensity = 13.0
+shake_duration = 0.26
+camera_effect = 1
+zoom_amount = 0.038
+zoom_duration = 0.12
+vfx_kind = &"red_brand"
+particle_count = 16
+particle_lifetime = 0.28
+impact_color = Color(0.92, 0.28, 0.12, 0.95)
+flash_strength = 0.48
+flash_color = Color(0.98, 0.32, 0.14, 1)
+swing_trail_enabled = true
+swing_trail_particles = 8
+swing_trail_on_active = true
+shockwave_enabled = true
+sfx_id = &"red_brand_breaker"
+sfx_volume_scale = 1.0
+pitch_min = 0.82
+pitch_max = 0.9
+reaction_intensity = 1.35
+vibration_intensity = 0.7
+vibration_duration = 0.12

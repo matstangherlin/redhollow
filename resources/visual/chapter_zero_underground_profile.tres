@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnvironmentVisualProfile" load_steps=2 format=3 uid="uid://envprofile_underground_cz"]
+
+[ext_resource type="Script" path="res://scripts/visual/environment_visual_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"chapter_zero_underground"
+area_display_name = "Catacumbas — Art North Star"
+target_area_id = &"vs_greybox_underground"
+logical_resolution = Vector2i(480, 270)
+window_reference_size = Vector2i(1920, 1080)
+pixels_per_unit = 1
+tile_size_px = 16
+texture_filter = 0
+stretch_mode = "canvas_items"
+stretch_aspect = "expand"
+calder_sprite_size = Vector2i(40, 72)
+enemy_scale_notes = "Deacon Rusk boss — arena 60–1140"
+playfield_width_px = 1200.0
+ground_surface_y = 876.0
+camera_limits = Rect2(0, 200, 1200, 1000)
+parallax_scroll_limits = Vector2(0.35, 0)
+max_draw_calls = 85
+max_point_lights = 10
+max_particle_count = 160
+max_texture_atlas_size = 2048
+max_parallax_layers = 5
+max_art_layers = 12

@@ -73,6 +73,18 @@ const SUITES: Array[Dictionary] = [
 		"path": "res://scripts/visual/player_visual_pipeline_tests.gd",
 	},
 	{
+		"name": "calder_asset_validation_tests",
+		"path": "res://scripts/visual/calder_asset_validation_tests.gd",
+	},
+	{
+		"name": "cult_brawler_asset_validation_tests",
+		"path": "res://scripts/visual/enemies/cult_brawler_asset_validation_tests.gd",
+	},
+	{
+		"name": "cult_brawler_visual_tests",
+		"path": "res://scripts/visual/enemies/cult_brawler_visual_tests.gd",
+	},
+	{
 		"name": "feedback_system_tests",
 		"path": "res://scripts/feedback/feedback_system_tests.gd",
 	},
@@ -91,6 +103,22 @@ const SUITES: Array[Dictionary] = [
 	{
 		"name": "street_art_toggle_tests",
 		"path": "res://scripts/visual/street_art_toggle_tests.gd",
+	},
+	{
+		"name": "street_beta_complete_tests",
+		"path": "res://scripts/visual/street_beta_complete_tests.gd",
+	},
+	{
+		"name": "church_beta_complete_tests",
+		"path": "res://scripts/visual/church_beta_complete_tests.gd",
+	},
+	{
+		"name": "underground_beta_complete_tests",
+		"path": "res://scripts/visual/underground_beta_complete_tests.gd",
+	},
+	{
+		"name": "region_visual_tests",
+		"path": "res://scripts/visual/lighting/region_visual_tests.gd",
 	},
 	{
 		"name": "modular_kit_tests",

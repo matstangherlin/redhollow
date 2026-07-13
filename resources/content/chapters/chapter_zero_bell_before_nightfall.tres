@@ -10,7 +10,7 @@ script = ExtResource("2_area")
 area_id = &"vs_greybox_street"
 display_name = "Rua de Red Hollow"
 chapter_id = &"chapter_zero_bell_before_nightfall"
-scene_path = "res://scenes/areas/vertical_slice_street.tscn"
+scene_path = "res://scenes/areas/vertical_slice_street_art.tscn"
 sort_order = 10
 checkpoint_ids = PackedStringArray()
 
@@ -19,7 +19,7 @@ script = ExtResource("2_area")
 area_id = &"vs_greybox_church"
 display_name = "Distrito da Igreja"
 chapter_id = &"chapter_zero_bell_before_nightfall"
-scene_path = "res://scenes/areas/vertical_slice_church.tscn"
+scene_path = "res://scenes/areas/vertical_slice_church_art.tscn"
 sort_order = 20
 checkpoint_ids = PackedStringArray("vs_church_checkpoint")
 
@@ -28,7 +28,7 @@ script = ExtResource("2_area")
 area_id = &"vs_greybox_underground"
 display_name = "Catacumbas"
 chapter_id = &"chapter_zero_bell_before_nightfall"
-scene_path = "res://scenes/areas/vertical_slice_underground.tscn"
+scene_path = "res://scenes/areas/vertical_slice_underground_art.tscn"
 sort_order = 30
 checkpoint_ids = PackedStringArray("vs_underground_checkpoint")
 

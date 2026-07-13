@@ -12,6 +12,7 @@ const RedKnuckle := preload("res://resources/combat/red_knuckle.tres")
 
 func _run_suite() -> void:
 	var suite := TestHelpers.begin_suite(get_tree(), "player_visual_pipeline_tests")
+	suite.allow_warning_contains("missing animation clip")
 	var failures: PackedStringArray = PackedStringArray()
 
 	_test_contract_constants(failures)
@@ -88,11 +89,15 @@ func _teardown_fixture(fixture: Dictionary) -> void:
 
 func _test_contract_constants(failures: PackedStringArray) -> void:
 	if CalderAnimationContract.CANVAS_SIZE != Vector2i(32, 56):
-		failures.append("Calder canvas must remain 32x56.")
+		failures.append("Calder placeholder canvas must remain 32x56.")
+	if CalderAnimationContract.APPROVED_FRAME_SIZE != Vector2i(40, 72):
+		failures.append("Approved production frame size must be 40x72.")
 	if CalderAnimationContract.SPRITE_VISUAL_OFFSET != Vector2(0, -28):
-		failures.append("SpriteVisual offset contract must remain (0, -28).")
-	if CalderAnimationContract.PILOT_ANIMATION_IDS.size() != 10:
-		failures.append("Pilot animation set must contain 10 clips.")
+		failures.append("Placeholder SpriteVisual offset contract must remain (0, -28).")
+	if CalderAnimationContract.APPROVED_SPRITE_VISUAL_OFFSET != Vector2(0, -36):
+		failures.append("Production SpriteVisual offset must be (0, -36) for 40x72 feet alignment.")
+	if CalderAnimationContract.PILOT_ANIMATION_IDS.size() != 11:
+		failures.append("Pilot animation set must contain 11 clips.")
 
 
 func _test_profile_mappings(failures: PackedStringArray) -> void:

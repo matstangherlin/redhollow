@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="VisualScaleProfile" load_steps=2 format=3 uid="uid://scale_profile_40x72"]
+
+[ext_resource type="Script" path="res://scripts/visual/visual_scale_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"scale_40x72"
+display_name = "40 × 72 (+25% largura)"
+frame_size = Vector2i(40, 72)
+pivot = Vector2(20, 72)
+sprite_visual_offset = Vector2(0, -36)
+red_brand_zone_px = Vector2i(14, 14)
+hat_readable_min_px = 6
+coat_hem_extra_px = 6
+enemy_height_brawler = 56
+enemy_height_gunslinger = 54
+enemy_height_deacon = 72
+animation_cost_multiplier = 1.61
+study_notes = "Meio-termo: mais detalhe faroeste sem dominar a tela. Colisão gameplay ainda 32×56."

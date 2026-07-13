@@ -1,18 +1,21 @@
 # Red Hollow — Known Issues
 
-Issues conhecidos após commit de baseline beta **`e07ba0e`** (2026-07-11).  
-Classificação: **P0** bloqueia release beta; **P1** corrigir antes de escalar conteúdo / ship; **P2** manutenção; **P3** cosmético/documentação.
+Issues conhecidos após commit de baseline **`4babadc`** (2026-07-13, auditoria pós–world map / street art / visual PILOT).  
+Classificação: **P0** bloqueia release beta ou produção artística final; **P1** corrigir antes de escalar conteúdo / ship; **P2** manutenção; **P3** cosmético/documentação.
 
-## Gate beta (commit `e07ba0e`)
+## Gate beta (commit `4babadc`)
 
 | Item | Status |
 | --- | --- |
 | Versão alvo | `0.2.0-beta.1` |
-| Commit baseline | `e07ba0ecb8502d7a368017f1764599155e3e87bf` |
+| Commit baseline | `4babadc9a1c16b838aba541f89c17d5c9174f21a` |
 | Main scene | `res://scenes/product/main_menu.tscn` |
-| Test runner | **18 suítes** registradas em `test_runner.gd` |
-| Gate automatizado (`--script` subprocess) | **~8 PASS / ~10 FAIL** — ver KI-005 |
+| Test runner | **23 suítes** em `test_runner.gd` |
+| Bootstrap | `test_bootstrap.tscn` via `--main-scene` (autoloads carregados) |
+| Gate automatizado | **23/23 PASS**, exit 0 (~51 s, 2026-07-13) |
 | Playthrough menu→fim | **Pendente assinatura manual** (KI-004) |
+| Produção artística final | **Bloqueada** — ver G1–G4 em `VISUAL_FOUNDATION_BASELINE.md` |
+| Molde técnico visual | **Liberado** — ver `ART_VERTICAL_SLICE_GATE.md` |
 | Export preset | Criado (`export_presets.cfg`) |
 | Build gerada | Script existe; artefato **não versionado** |
 | Build testada | **Não assinado** |
@@ -20,50 +23,52 @@ Classificação: **P0** bloqueia release beta; **P1** corrigir antes de escalar 
 
 ---
 
-## P0 — Bloqueadores de release beta
-
-### KI-005 — Runner headless falha em subprocessos `--script` (autoloads ausentes)
-
-- **Área:** `test_runner.gd`, suítes que instanciam `player.tscn`, `dialogue_system`, shell
-- **Sintoma:** Com `--headless --path . --script res://…` como entrypoint do subprocesso, Godot **não** carrega autoloads (`SettingsManager`, `GameBootState`, `InputDeviceManager`, `InputSetup`). Scripts de produção que referenciam esses globals falham compilação/runtime no subprocesso.
-- **Impacto:** Gate automatizado **não passa** no commit atual; exit code ≠ 0.
-- **Suítes que tendem a passar** (sem dependência de autoload/player completo): `save_tests`, `vertical_slice_regression_tests`, `vermilite_gunslinger_tests`, `chain_penitent_tests`, `enemy_encounter_tests`, `player_visual_pipeline_tests`, `feedback_system_tests`, `content_registry_tests`.
-- **Suítes que tendem a falhar:** demais 10, incluindo `player_regression_tests`, `dialogue_tests`, `product_shell_tests`, `narrative_chapter_zero_tests`, etc.
-- **Mitigação atual:** Validar gameplay na **build exportada** + checklist manual; não declarar beta shippable só com runner verde.
-- **Direção:** Executar suítes via `test_bootstrap.tscn` (`--main-scene`) com autoloads carregados; meta 18/18 PASS, exit 0.
-
----
-
-## P1 — Corrigir antes de escalar conteúdo / ship beta
-
-### KI-001 — Fluxo morte/respawn parcialmente endereçado (não consolidado)
-
-- **Área:** `player.gd`, `health_component.gd`, locks
-- **Estado no commit:** Existe **auto-respawn** após ~0,65 s (`DEATH_RESPAWN_DELAY`) e tecla **R** para forçar respawn se morto.
-- **Ainda ausente:** serviço unificado (overlay, reset HUD/chefe, fluxo checkpoint automático documentado, cenários morte no boss).
-- **Workaround:** **R**, **F7**, **F9**, **Esc** (panic unlock).
-- **Cobertura auto:** death lock em `player_regression_tests` / `gameplay_lock_tests` — **indisponível no runner `--script` atual**.
-- **Manual pendente:** cenários 13–15 do gate (morte antes/depois checkpoint, morte no boss).
-- **Classificação:** P1 até playtest manual + serviço respawn unificado.
-
-### KI-002 — Spawn de inimigos na arena durante flush de física
-
-- **Área:** `combat_arena_controller.gd` — `_spawn_configured_enemies` em `body_entered`
-- **Sintoma:** Headless emite `Can't change this state while flushing queries` (dezenas de ocorrências **permitidas** em `combat_arena_tests` quando runner executa).
-- **Estado no commit:** Erro **não corrigido** em produção; allowlist documentada.
-- **Risco:** Possível instabilidade de colisão em runtime real; requer validação manual na arena da igreja.
-- **Direção:** `call_deferred` para spawn ou ativação pós-frame.
+## P0 — Bloqueadores
 
 ### KI-004 — Gate manual completo não assinado
 
 - **Área:** QA / `VERTICAL_SLICE_TEST_PLAN.md`
 - **Sintoma:** Checklist (menu → Capítulo Zero → conclusão) + stress tests não executados/assinados neste gate.
-- **Ação:** Playthrough humano obrigatório antes de declarar beta **shippable**.
+- **Impacto:** Não declarar beta **shippable** nem arte final **ready** só com runner verde.
+- **Ação:** Playthrough humano obrigatório.
+
+### KI-ART-G1 — Plataformas invisíveis em modo street art
+
+- **Área:** `vertical_slice_street_art.tscn`, `StreetArtArea`
+- **Sintoma:** `PlatformVisual` em `Solids/` oculto com arte ativa; rota elevada fica invisível.
+- **Gate:** `ART_VERTICAL_SLICE_GATE.md` P0.
+- **Bloqueia:** arte final da rua; **não bloqueia** molde técnico para igreja/catacumbas.
+
+### KI-ART-G2 — Labels debug visíveis em modo art
+
+- **Área:** rua art (`AreaLabel`, `TileHint`, `SecretLabel`, etc.)
+- **Sintoma:** Poluição visual; viola Art Bible para build de gate.
+- **Ação:** Flag `show_debug_labels` ou ocultar em release/gate.
+
+---
+
+## P1 — Corrigir antes de escalar conteúdo / ship beta
+
+### KI-001 — Fluxo morte/respawn parcialmente consolidado
+
+- **Área:** `RespawnService`, `player.gd`, `health_component.gd`
+- **Estado no commit:** `RespawnService` commitado; auto-respawn ~0,65 s; tecla **R**; testes `player_respawn_tests` **6/6 PASS**.
+- **Ainda ausente:** overlay de morte final, reset chefe documentado em todos cenários, playtest manual cenários 13–15.
+- **Workaround:** **R**, **F7**, **F9**, **Esc** (panic unlock).
+- **Classificação:** P1 até playtest manual completo.
+
+### KI-002 — Spawn de inimigos na arena durante flush de física
+
+- **Área:** `combat_arena_controller.gd` — `_spawn_configured_enemies` em `body_entered`
+- **Sintoma:** Headless pode emitir `Can't change this state while flushing queries`.
+- **Estado:** Erro **não corrigido** em produção; allowlist em `combat_arena_tests` (`living_enemy_despawned` integrity test).
+- **Risco:** Possível instabilidade de colisão em runtime real; validação manual na arena da igreja.
+- **Direção:** `call_deferred` para spawn ou ativação pós-frame.
 
 ### KI-006 — Fluxo product shell não validado manualmente
 
-- **Área:** `main_menu.tscn`, boot, opções, pausa, créditos, loading
-- **Sintoma:** Infraestrutura commitada; existência de cena **não prova** fluxo completo (novo jogo, continuar, voltar ao menu, pausa in-game).
+- **Área:** `main_menu.tscn`, boot, opções, pausa, créditos, loading, mapa (**M**)
+- **Sintoma:** Infraestrutura e smoke headless passam; existência de cena **não prova** fluxo completo.
 - **Ação:** Roteiro manual dedicado menu→greybox→menu.
 
 ---
@@ -82,7 +87,6 @@ Classificação: **P0** bloqueia release beta; **P1** corrigir antes de escalar 
 
 ### KI-103 — Controllers ainda usam `_player.call("_is_*")` internamente
 
-- **Arquivos:** `player_*_controller.gd`
 - **Direção:** Expandir API pública tipada.
 
 ### KI-104 — Hitstop via grupo em `hitbox_component` / barreira
@@ -97,6 +101,18 @@ Classificação: **P0** bloqueia release beta; **P1** corrigir antes de escalar 
 
 - Preset + script existem; smoke test e playtest na build exportada **pendentes**.
 
+### KI-107 — Vazamento de objetos no encerramento do runner
+
+- **Sintoma:** Ao fim de `test_runner.gd`: `43 ObjectDB instances were leaked`, `6 resources still in use`.
+- **Impacto:** Não bloqueia gate (exit 0); dívida de teardown em suítes com cenas montadas.
+- **Direção:** `queue_free` / `free` explícito em fixtures; revisar `world_map_graph_tests`.
+
+### KI-108 — Warnings de compilação no processo pai do runner
+
+- **Sintoma:** Processo `test_runner.gd` emite erros `SettingsManager` / `InputDeviceManager` not found ao pré-carregar scripts (sem autoloads no processo pai).
+- **Impacto:** Cosmético — subprocessos via bootstrap passam.
+- **Direção:** Opcional — entrypoint do runner como cena com autoloads.
+
 ---
 
 ## P3 — Baixa prioridade
@@ -109,22 +125,26 @@ Classificação: **P0** bloqueia release beta; **P1** corrigir antes de escalar 
 
 - Não implementado; stress test manual N/A.
 
-### KI-203 — Warnings esperados em suítes de save/diálogo
+### KI-203 — Warnings esperados em suítes de save/diálogo/feedback/visual
 
-- Save corrompido e dialogue id ausente são **injetados** pelos testes (allowlist).
+- Save corrompido, dialogue id ausente, integrity arena, camera target ausente, clip animação ausente — **injetados ou esperados** (allowlist).
 
 ---
 
-## Resolvido / reclassificado (commit `e07ba0e`)
+## Resolvido / reclassificado (auditoria `4babadc`)
 
 | Issue | Estado | Motivo |
 | --- | --- | --- |
-| **KI-003** — Working tree não commitada | **Resolvido** | Baseline `e07ba0e` commitada (product shell, content registry, Cap. Zero, inimigos, feedback) |
-| SaveManager paths internos | Resolvido | `export_save_state` / `PlayerStateSnapshot` |
-| StyleManager HUD rígido | Resolvido | `bind_style_hud()` opcional |
-| AreaTransition rebinding | Resolvido | `GameServices.on_area_loaded` |
-| Arena fail-safe silencioso | Resolvido | `arena_integrity_failed` |
-| Menu/pausa “inexistentes” | **Reclassificado** | Infra commitada; validação manual pendente (KI-006) |
-| 17 suítes (doc desatualizado) | **Corrigido** | Runner registra **18** suítes |
+| **KI-005** — Runner headless FAIL (`--script` sem autoloads) | **Resolvido** | Bootstrap `--main-scene` + **23/23 PASS** (2026-07-13) |
+| **KI-003** — Working tree não commitada | Resolvido (histórico) | Baseline `e07ba0e` commitada |
+| `player_regression_tests` DEATH lock | **Corrigido** (auditoria) | Fixture `RespawnService` + `set_death_vulnerability` |
+| `world_map_graph_tests` transição street→church | **Corrigido** (auditoria) | Flag `cz_met_elias` + timer curto |
+| `street_art_toggle_tests` parse/hang | **Corrigido** (auditoria) | `_parallax(layer_name)` + testes offline |
+| `modular_kit_tests` factory | **Corrigido** (auditoria) | Args `_add_module` alinhados em `environment_kit_factory.gd` |
+| `player_visual_pipeline_tests` warning clip | **Corrigido** (auditoria) | Allowlist `missing animation clip` |
+| 18 suítes (doc desatualizado) | **Corrigido** | Runner registra **23** suítes |
+| Menu/pausa “inexistentes” | Reclassificado | Infra commitada; validação manual pendente (KI-006) |
 
-Ver `STABILIZATION_REPORT.md`, `TEST_MATRIX.md`.
+**Correções de auditoria ainda não commitadas** — ver `git status` (7 scripts modificados).
+
+Ver `STABILIZATION_REPORT.md`, `TEST_MATRIX.md`, `VISUAL_FOUNDATION_BASELINE.md`.

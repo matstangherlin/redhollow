@@ -18,9 +18,9 @@ const ENEMY_SCENES := {
 }
 
 const AREA_SCENES := {
-	"street": "res://scenes/areas/vertical_slice_street.tscn",
-	"church": "res://scenes/areas/vertical_slice_church.tscn",
-	"underground": "res://scenes/areas/vertical_slice_underground.tscn",
+	"street": "res://scenes/areas/vertical_slice_street_art.tscn",
+	"church": "res://scenes/areas/vertical_slice_church_art.tscn",
+	"underground": "res://scenes/areas/vertical_slice_underground_art.tscn",
 }
 
 const ENCOUNTER_PREFABS := {

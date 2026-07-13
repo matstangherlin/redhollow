@@ -29,6 +29,10 @@ enum Section {
 
 @onready var _shake_slider: HSlider = %ShakeSlider
 @onready var _flashes_check: CheckBox = %FlashesCheck
+@onready var _particles_check: CheckBox = %ParticlesCheck
+@onready var _distortion_check: CheckBox = %DistortionCheck
+@onready var _contrast_check: CheckBox = %ContrastCheck
+@onready var _chromatic_check: CheckBox = %ChromaticCheck
 @onready var _telegraph_slider: HSlider = %TelegraphSlider
 @onready var _text_speed_slider: HSlider = %TextSpeedSlider
 @onready var _instant_text_check: CheckBox = %InstantTextCheck
@@ -109,7 +113,17 @@ func _connect_signals() -> void:
 		if slider != null:
 			slider.value_changed.connect(_on_accessibility_slider_changed.bind(String(slider.name)))
 
-	for checkbox in [_flashes_check, _instant_text_check, _vibration_check, _brand_hold_check, _simplified_check]:
+	for checkbox in [
+		_flashes_check,
+		_particles_check,
+		_distortion_check,
+		_contrast_check,
+		_chromatic_check,
+		_instant_text_check,
+		_vibration_check,
+		_brand_hold_check,
+		_simplified_check,
+	]:
 		if checkbox != null:
 			checkbox.toggled.connect(_on_accessibility_toggle_changed.bind(String(checkbox.name)))
 
@@ -169,6 +183,14 @@ func _load_from_settings() -> void:
 
 	if _flashes_check != null:
 		_flashes_check.button_pressed = bool(accessibility.get("reduced_flashes", false))
+	if _particles_check != null:
+		_particles_check.button_pressed = bool(accessibility.get("reduced_particles", false))
+	if _distortion_check != null:
+		_distortion_check.button_pressed = bool(accessibility.get("reduced_distortion", false))
+	if _contrast_check != null:
+		_contrast_check.button_pressed = bool(accessibility.get("reduced_extreme_contrast", false))
+	if _chromatic_check != null:
+		_chromatic_check.button_pressed = bool(accessibility.get("disable_chromatic_aberration", false))
 	if _instant_text_check != null:
 		_instant_text_check.button_pressed = bool(accessibility.get("instant_text", false))
 	if _vibration_check != null:
@@ -264,6 +286,10 @@ func _on_accessibility_toggle_changed(enabled: bool, checkbox_name: String) -> v
 		return
 	var field_map := {
 		"FlashesCheck": "reduced_flashes",
+		"ParticlesCheck": "reduced_particles",
+		"DistortionCheck": "reduced_distortion",
+		"ContrastCheck": "reduced_extreme_contrast",
+		"ChromaticCheck": "disable_chromatic_aberration",
 		"InstantTextCheck": "instant_text",
 		"VibrationCheck": "vibration_enabled",
 		"BrandHoldCheck": "red_brand_hold_mode",

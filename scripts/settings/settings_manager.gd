@@ -169,6 +169,22 @@ func is_reduced_flashes_enabled() -> bool:
 	return bool(get_accessibility().get("reduced_flashes", false))
 
 
+func is_reduced_particles_enabled() -> bool:
+	return bool(get_accessibility().get("reduced_particles", false))
+
+
+func is_reduced_distortion_enabled() -> bool:
+	return bool(get_accessibility().get("reduced_distortion", false))
+
+
+func is_reduced_extreme_contrast_enabled() -> bool:
+	return bool(get_accessibility().get("reduced_extreme_contrast", false))
+
+
+func is_chromatic_aberration_disabled() -> bool:
+	return bool(get_accessibility().get("disable_chromatic_aberration", false))
+
+
 func get_telegraph_contrast_multiplier() -> float:
 	return clampf(float(get_accessibility().get("telegraph_contrast", 1.0)), 0.5, 2.0)
 

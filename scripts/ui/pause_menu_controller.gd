@@ -9,9 +9,13 @@ const MAIN_MENU_SCENE := "res://scenes/product/main_menu.tscn"
 @onready var _root: Control = %PauseRoot
 @onready var _resume_button: Button = %ResumeButton
 @onready var _options_button: Button = %OptionsButton
+@onready var _controls_button: Button = %ControlsButton
 @onready var _main_menu_button: Button = %MainMenuButton
 @onready var _options_menu: OptionsMenu = %OptionsMenu
 @onready var _confirmation_dialog: ConfirmationDialogView = %ConfirmationDialog
+@onready var _controls_panel: Control = %ControlsPanel
+@onready var _controls_reference_label: Label = %ControlsReferenceLabel
+@onready var _controls_back_button: Button = %ControlsBackButton
 
 var _lock_manager: GameplayLockManager = null
 var _pause_token: GameplayLockToken = null
@@ -27,6 +31,8 @@ func _ready() -> void:
 		_resume_button.pressed.connect(_on_resume_pressed)
 	if _options_button != null:
 		_options_button.pressed.connect(_on_options_pressed)
+	if _controls_button != null:
+		_controls_button.pressed.connect(_on_controls_pressed)
 	if _main_menu_button != null:
 		_main_menu_button.pressed.connect(_on_main_menu_pressed)
 	if _options_menu != null:
@@ -34,6 +40,10 @@ func _ready() -> void:
 	if _confirmation_dialog != null:
 		_confirmation_dialog.confirmed.connect(_on_main_menu_confirmed)
 		_confirmation_dialog.cancelled.connect(_on_main_menu_cancelled)
+	if _controls_back_button != null:
+		_controls_back_button.pressed.connect(_on_controls_back_pressed)
+	if _controls_reference_label != null:
+		_controls_reference_label.text = ControlsTutorialOverlay.get_controls_reference()
 
 
 func bind_lock_manager(manager: GameplayLockManager) -> void:
@@ -76,6 +86,7 @@ func open_pause() -> void:
 	visible = true
 	if _root != null:
 		_root.visible = true
+	_set_controls_panel_visible(false)
 	if _resume_button != null:
 		_resume_button.grab_focus()
 
@@ -91,6 +102,7 @@ func close_pause() -> void:
 	visible = false
 	if _root != null:
 		_root.visible = false
+	_set_controls_panel_visible(false)
 	resumed.emit()
 
 
@@ -105,6 +117,28 @@ func _on_resume_pressed() -> void:
 func _on_options_pressed() -> void:
 	if _options_menu != null:
 		_options_menu.show_options()
+
+
+func _on_controls_pressed() -> void:
+	_set_controls_panel_visible(true)
+	if _controls_back_button != null:
+		_controls_back_button.grab_focus()
+
+
+func _on_controls_back_pressed() -> void:
+	_set_controls_panel_visible(false)
+	if _controls_button != null:
+		_controls_button.grab_focus()
+
+
+func _set_controls_panel_visible(is_visible: bool) -> void:
+	if _controls_panel != null:
+		_controls_panel.visible = is_visible
+	if _root == null:
+		return
+	var panel := _root.get_node_or_null("Panel")
+	if panel != null:
+		panel.visible = not is_visible
 
 
 func _on_options_closed() -> void:

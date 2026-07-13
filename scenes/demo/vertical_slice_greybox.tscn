@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://0urvw8i3af5"]
+[gd_scene load_steps=26 format=3 uid="uid://0urvw8i3af5"]
 
 [ext_resource type="Script" path="res://scripts/core/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/core/hitstop_controller.gd" id="2_hitstop"]
@@ -12,7 +12,7 @@
 [ext_resource type="Script" path="res://scripts/world/area_transition_manager.gd" id="9_transition"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="10_player"]
 [ext_resource type="PackedScene" path="res://scenes/core/camera_controller.tscn" id="11_camera"]
-[ext_resource type="PackedScene" path="res://scenes/areas/vertical_slice_street.tscn" id="12_street"]
+[ext_resource type="PackedScene" path="res://scenes/areas/vertical_slice_street_art.tscn" id="12_street"]
 [ext_resource type="Script" path="res://scripts/demo/vertical_slice_controller.gd" id="13_demo"]
 [ext_resource type="Script" path="res://scripts/core/game_services.gd" id="14_services"]
 [ext_resource type="Script" path="res://scripts/product/product_shell.gd" id="15_shell"]
@@ -24,6 +24,8 @@
 [ext_resource type="PackedScene" path="res://scenes/core/feedback_system.tscn" id="21_feedback"]
 [ext_resource type="Script" path="res://scripts/core/respawn_service.gd" id="22_respawn"]
 [ext_resource type="PackedScene" path="res://scenes/ui/world_map_overlay.tscn" id="23_world_map"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_v2.tscn" id="24_hud_v2"]
+[ext_resource type="Script" path="res://scripts/ui/hud_layout_controller.gd" id="25_hud_layout"]
 
 [node name="vertical_slice_greybox" type="Node"]
 script = ExtResource("1_game")
@@ -79,6 +81,12 @@ script = ExtResource("18_narrative")
 
 [node name="ObjectiveHud" parent="." instance=ExtResource("19_objective")]
 
+[node name="HudV2" parent="." instance=ExtResource("24_hud_v2")]
+
+[node name="HudLayoutController" type="Node" parent="."]
+script = ExtResource("25_hud_layout")
+use_hud_v2 = true
+
 [node name="WorldMapOverlay" parent="." instance=ExtResource("23_world_map")]
 
 [node name="DemoHints" type="CanvasLayer" parent="VerticalSliceController"]
@@ -94,7 +102,7 @@ offset_bottom = -10.0
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 0.85)
 theme_override_font_sizes/font_size = 12
-text = "A/D mover | Espaço pular | J atacar | K esquivar | L counter | E interagir | U Red Brand | T provocar | M mapa | Esc pausa | R respawn (se morto) | F8/F9 save/load"
+text = "A/D mover | Espaço pular | K esquivar (chão e ar) | J atacar | L counter | E interagir | U Red Brand | F3 HUD novo | P perf (rua) | Esc pausa | F8/F9 save"
 
 [node name="ProductShell" type="Node" parent="."]
 script = ExtResource("15_shell")

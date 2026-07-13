@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="CombatFeedbackProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/feedback/combat_feedback_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"calder_counter_feedback"
+attack_id = &"calder_counter"
+impact_tier = 4
+attacker_hitstop = 0.055
+target_hitstop = 0.07
+shake_intensity = 6.8
+shake_duration = 0.14
+camera_effect = 1
+zoom_amount = 0.02
+zoom_duration = 0.1
+vfx_kind = &"counter"
+particle_count = 11
+particle_lifetime = 0.2
+impact_color = Color(0.72, 0.92, 1, 0.9)
+flash_strength = 0.42
+flash_color = Color(0.82, 0.96, 1, 1)
+swing_trail_enabled = true
+swing_trail_particles = 5
+swing_trail_on_active = true
+sfx_id = &"counter"
+sfx_volume_scale = 1.0
+pitch_min = 0.95
+pitch_max = 1.02
+reaction_intensity = 1.15
+parry_shake_intensity = 9.0
+parry_shake_duration = 0.12
+parry_flash_strength = 0.35
+parry_sfx_id = &"counter"
+vibration_intensity = 0.5
+vibration_duration = 0.09

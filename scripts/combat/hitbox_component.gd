@@ -2,6 +2,7 @@ extends Area2D
 class_name HitboxComponent
 
 signal hit_landed(target: Node, hurtbox: Area2D, attack_data: Resource)
+signal attack_activated(attack_data: Resource, owner: Node, facing_direction: int)
 
 const HITSTOP_GROUP := "hitstop_controller"
 
@@ -37,6 +38,7 @@ func activate(new_attack_data: Resource, new_owner: Node, new_facing_direction: 
 	if collision_shape != null:
 		collision_shape.disabled = false
 	queue_redraw()
+	attack_activated.emit(attack_data, owning_node, facing_direction)
 
 
 func deactivate() -> void:

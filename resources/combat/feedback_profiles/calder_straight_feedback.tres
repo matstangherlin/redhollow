@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CombatFeedbackProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/feedback/combat_feedback_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"calder_straight_feedback"
+attack_id = &"calder_straight"
+impact_tier = 0
+attacker_hitstop = 0.035
+target_hitstop = 0.045
+shake_intensity = 1.8
+shake_duration = 0.06
+vfx_kind = &"hit_normal"
+particle_count = 4
+particle_lifetime = 0.14
+impact_color = Color(0.95, 0.88, 0.72, 0.8)
+flash_strength = 0.12
+flash_color = Color(1, 0.96, 0.9, 1)
+swing_trail_enabled = true
+swing_trail_particles = 3
+swing_trail_on_active = true
+sfx_id = &"punch"
+sfx_volume_scale = 0.92
+pitch_min = 1.0
+pitch_max = 1.05
+reaction_intensity = 0.85
+vibration_intensity = 0.15
+vibration_duration = 0.04

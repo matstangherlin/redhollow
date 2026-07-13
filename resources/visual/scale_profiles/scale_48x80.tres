@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="VisualScaleProfile" load_steps=2 format=3 uid="uid://scale_profile_48x80"]
+
+[ext_resource type="Script" path="res://scripts/visual/visual_scale_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"scale_48x80"
+display_name = "48 × 80 (+50% largura)"
+frame_size = Vector2i(48, 80)
+pivot = Vector2(24, 80)
+sprite_visual_offset = Vector2(0, -40)
+red_brand_zone_px = Vector2i(16, 16)
+hat_readable_min_px = 7
+coat_hem_extra_px = 8
+enemy_height_brawler = 56
+enemy_height_gunslinger = 54
+enemy_height_deacon = 72
+animation_cost_multiplier = 2.14
+study_notes = "Máximo detalhe por frame; maior risco de poluição em combate e custo de produção."

@@ -18,26 +18,22 @@ static func resolve_hit_feedback(
 	attacker: Node,
 	target: Node
 ) -> Dictionary:
-	var tier := _resolve_tier(attack_data)
-	var tags := _get_tags(attack_data)
-	var sfx := _resolve_impact_sfx(tags, tier)
-	var vfx := _resolve_vfx_kind(tier, tags)
+	var profile := CombatFeedbackProfileLibrary.resolve_for_attack(attack_data)
+	if profile != null:
+		return profile.to_feedback_dict(attacker, target)
 
-	return {
-		"tier": tier,
-		"sfx_id": sfx,
-		"vfx_kind": vfx,
-		"shake_intensity": _shake_for_tier(tier),
-		"shake_duration": _shake_duration_for_tier(tier),
-		"zoom_amount": _zoom_for_tier(tier),
-		"zoom_duration": _zoom_duration_for_tier(tier),
-		"flash_strength": _flash_for_tier(tier),
-		"attacker_is_player": _is_player(attacker),
-		"target_is_player": _is_player(target),
-	}
+	return _resolve_legacy_hit_feedback(attack_data, attacker, target)
+
+
+static func resolve_profile(attack_data: Resource) -> CombatFeedbackProfile:
+	return CombatFeedbackProfileLibrary.resolve_for_attack(attack_data)
 
 
 static func resolve_attack_windup_sfx(attack_data: Resource) -> StringName:
+	var profile := CombatFeedbackProfileLibrary.resolve_for_attack(attack_data)
+	if profile != null and profile.sfx_id != &"":
+		return profile.sfx_id
+
 	var tags := _get_tags(attack_data)
 	if tags.has("kick"):
 		return AudioEventId.KICK
@@ -56,6 +52,33 @@ static func resolve_telegraph_vfx(counterable: bool) -> StringName:
 
 static func tier_rank(tier: ImpactTier) -> int:
 	return int(tier)
+
+
+static func _resolve_legacy_hit_feedback(
+	attack_data: Resource,
+	attacker: Node,
+	target: Node
+) -> Dictionary:
+	var tier := _resolve_tier(attack_data)
+	var tags := _get_tags(attack_data)
+	var sfx := _resolve_impact_sfx(tags, tier)
+	var vfx := _resolve_vfx_kind(tier, tags)
+
+	return {
+		"tier": tier,
+		"sfx_id": sfx,
+		"vfx_kind": vfx,
+		"shake_intensity": _shake_for_tier(tier),
+		"shake_duration": _shake_duration_for_tier(tier),
+		"zoom_amount": _zoom_for_tier(tier),
+		"zoom_duration": _zoom_duration_for_tier(tier),
+		"flash_strength": _flash_for_tier(tier),
+		"particle_count": _default_particle_count(tier),
+		"particle_lifetime": 0.18,
+		"impact_color": Color(0.95, 0.88, 0.72, 0.85),
+		"attacker_is_player": _is_player(attacker),
+		"target_is_player": _is_player(target),
+	}
 
 
 static func _resolve_tier(attack_data: Resource) -> ImpactTier:
@@ -108,9 +131,23 @@ static func _resolve_vfx_kind(tier: ImpactTier, tags: PackedStringArray) -> Stri
 		return &"counter"
 	if tier >= ImpactTier.HEAVY:
 		return &"hit_heavy"
-	if tier == ImpactTier.MEDIUM:
-		return &"hit_normal"
 	return &"hit_normal"
+
+
+static func _default_particle_count(tier: ImpactTier) -> int:
+	match tier:
+		ImpactTier.LIGHT:
+			return 6
+		ImpactTier.MEDIUM:
+			return 8
+		ImpactTier.HEAVY:
+			return 10
+		ImpactTier.BREAKER:
+			return 14
+		ImpactTier.COUNTER:
+			return 12
+		_:
+			return 6
 
 
 static func _shake_for_tier(tier: ImpactTier) -> float:

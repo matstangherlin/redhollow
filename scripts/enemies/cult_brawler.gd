@@ -48,6 +48,7 @@ const DEAD_BODY_COLOR := Color(0.18, 0.16, 0.16, 1.0)
 @onready var body_visual: Polygon2D = %BodyVisual
 @onready var telegraph_visual: Polygon2D = %TelegraphVisual
 @onready var alert_visual: Polygon2D = %AlertVisual
+@onready var visual_controller: CultBrawlerVisualController = %CultBrawlerVisualController
 @onready var hurtbox_component: Area2D = %HurtboxComponent
 @onready var hitbox_component: Area2D = %HitboxComponent
 @onready var health_component: Node = %HealthComponent
@@ -75,6 +76,8 @@ func _ready() -> void:
 	floor_snap_length = floor_snap_distance
 	_initialize_health()
 	_connect_components()
+	if visual_controller != null:
+		visual_controller.setup(self)
 	_set_debug_visible(false)
 	_update_visual()
 
@@ -88,7 +91,7 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	_apply_movement_rules(delta)
 	move_and_slide()
-	_update_visual()
+	_update_visual(delta)
 	_update_debug_label()
 
 
@@ -108,6 +111,8 @@ func reset_enemy() -> void:
 	if health_component != null:
 		health_component.call("reset_health")
 	_enable_hurtbox(true)
+	if visual_controller != null:
+		visual_controller.reset_visual()
 	_update_visual()
 	_update_debug_label()
 
@@ -271,6 +276,8 @@ func _begin_attack() -> void:
 	hitbox_component.call("deactivate")
 	_set_combat_pressure(true)
 	_face_target()
+	if visual_controller != null:
+		visual_controller.notify_attack_telegraph(attack_data)
 
 	if state_time_remaining <= 0.0:
 		_advance_attack_phase()
@@ -345,6 +352,9 @@ func _on_hit_received(attack_data_received: Resource, hitbox: Area2D, attacker: 
 		current_state = BrawlerState.HURT if hitstun_remaining > 0.0 else BrawlerState.IDLE
 		velocity.x = 0.0
 
+	if visual_controller != null:
+		visual_controller.apply_hit_reaction(attack_data_received)
+
 	_update_visual()
 	_update_debug_label()
 
@@ -364,6 +374,8 @@ func _on_died() -> void:
 	_enable_hurtbox(false)
 	CorpseCollisionHelper.disable_body_collision(self)
 	velocity = Vector2.ZERO
+	if visual_controller != null:
+		visual_controller.play_death()
 	_update_visual()
 	HealthDropSpawner.try_spawn_from_defeat(self, HealthDropSpawner.PROFILE_STANDARD)
 	_update_debug_label()
@@ -485,7 +497,13 @@ func _set_debug_visible(is_visible: bool) -> void:
 	_update_debug_label()
 
 
-func _update_visual() -> void:
+func _update_visual(delta: float = 0.0) -> void:
+	if visual_controller != null and visual_controller.refresh(self, delta):
+		return
+	_update_placeholder_visual()
+
+
+func _update_placeholder_visual() -> void:
 	telegraph_visual.visible = current_state == BrawlerState.ATTACK and attack_phase == "startup"
 	alert_visual.visible = current_state == BrawlerState.ALERT
 

@@ -65,9 +65,21 @@ func _present_step(step_index: int, total_steps: int, text: String) -> void:
 
 func _apply_step_visuals(step_index: int) -> void:
 	match step_index:
+		2:
+			for node in get_tree().get_nodes_in_group("chapter_zero_finale_red_brand_glow"):
+				if node is CanvasItem:
+					(node as CanvasItem).modulate = Color(1, 1, 1, 0.85)
 		3:
 			for node in get_tree().get_nodes_in_group("chapter_zero_statue_eyes"):
 				node.modulate = Color(1, 1, 1, 1)
+		4:
+			for node in get_tree().get_nodes_in_group("chapter_zero_finale_mol_shadow"):
+				if node is CanvasItem:
+					(node as CanvasItem).modulate = Color(1, 1, 1, 0.72)
+		6:
+			for node in get_tree().get_nodes_in_group("chapter_zero_finale_arcturus"):
+				if node is CanvasItem:
+					(node as CanvasItem).modulate = Color(1, 1, 1, 0.9)
 		7:
 			for node in get_tree().get_nodes_in_group("chapter_zero_hidden_passage"):
 				if node is Polygon2D:

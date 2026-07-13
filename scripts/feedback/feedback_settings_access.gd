@@ -32,6 +32,49 @@ static func get_telegraph_contrast_multiplier() -> float:
 	return 1.0
 
 
+static func is_reduced_particles_enabled() -> bool:
+	var manager := get_manager()
+	if manager != null and manager.has_method("is_reduced_particles_enabled"):
+		return bool(manager.call("is_reduced_particles_enabled"))
+	return false
+
+
+static func get_particle_multiplier() -> float:
+	if is_reduced_particles_enabled():
+		return 0.4
+	if is_reduced_flashes_enabled():
+		return 0.7
+	return 1.0
+
+
+static func is_reduced_distortion_enabled() -> bool:
+	var manager := get_manager()
+	if manager != null and manager.has_method("is_reduced_distortion_enabled"):
+		return bool(manager.call("is_reduced_distortion_enabled"))
+	return false
+
+
+static func is_reduced_extreme_contrast_enabled() -> bool:
+	var manager := get_manager()
+	if manager != null and manager.has_method("is_reduced_extreme_contrast_enabled"):
+		return bool(manager.call("is_reduced_extreme_contrast_enabled"))
+	return false
+
+
+static func is_chromatic_aberration_disabled() -> bool:
+	var manager := get_manager()
+	if manager != null and manager.has_method("is_chromatic_aberration_disabled"):
+		return bool(manager.call("is_chromatic_aberration_disabled"))
+	return false
+
+
+static func is_vibration_enabled() -> bool:
+	var manager := get_manager()
+	if manager != null and manager.has_method("is_vibration_enabled"):
+		return bool(manager.call("is_vibration_enabled"))
+	return true
+
+
 static func apply_audio() -> void:
 	var manager := get_manager()
 	if manager != null and manager.has_method("apply_audio"):

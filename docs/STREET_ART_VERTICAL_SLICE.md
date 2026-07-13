@@ -1,99 +1,104 @@
 # Street Art Vertical Slice — Capítulo Zero
 
-Documentação da **primeira sala de arte** de Red Hollow: a rua inicial. Esta sala estabelece o padrão técnico e visual para igreja, catacumbas e demais áreas — **sem substituir** o greybox global nem o mapa completo.
+Documentação da **rua north-star** de Red Hollow. Esta sala é o padrão visual, técnico e produtivo para áreas futuras — **sem** substituir o greybox global da demo principal nem expandir igreja/catacumbas.
+
+Ver visão completa: `docs/STREET_NORTH_STAR_DEFINITION.md`.
 
 ## Cenas e recursos
 
 | Artefato | Caminho | Função |
 | --- | --- | --- |
-| Apresentação visual | `scenes/environment/chapter_zero/street_art_presentation.tscn` | 9 camadas de arte (sem colisão) |
-| Área art | `scenes/areas/vertical_slice_street_art.tscn` | Gameplay idêntico ao greybox + arte |
+| Apresentação visual | `scenes/environment/chapter_zero/street_art_presentation.tscn` | 12 camadas de arte (sem colisão) |
+| Factory north-star | `scripts/visual/street_north_star_factory.gd` | Silhuetas procedurais originais |
+| Área art | `scenes/areas/vertical_slice_street_art.tscn` | Gameplay idêntico + arte |
 | Greybox original | `scenes/areas/vertical_slice_street.tscn` | **Inalterado** na demo principal |
 | Perfil visual | `resources/visual/chapter_zero_street_profile.tres` | `EnvironmentVisualProfile` |
-| Teste manual | `scenes/tests/street_art_test.tscn` | Player + câmera + toggle F |
-| Teste headless | `scripts/visual/street_art_toggle_tests.gd` | Contrato de camadas e toggle |
+| Performance | `scripts/visual/street_performance_monitor.gd` | Overlay debug (tecla P) |
+| Teste manual | `scenes/tests/street_art_test.tscn` | Player + câmera + toggle F/P |
+| Teste headless | `scripts/visual/street_art_toggle_tests.gd` | Contrato de camadas |
 
-## Contrato de resolução (confirmado — não alterado silenciosamente)
+## Contrato de resolução
 
 | Parâmetro | Valor | Fonte |
 | --- | --- | --- |
-| Resolução lógica | **480 × 270** | `ART_BIBLE.md`, `CHARACTER_SCALE_GUIDE.md` |
-| Janela referência | **1920 × 1080** | `SettingsData` default |
-| Pixels / unidade | **1 px = 1 unidade** | Gameplay |
+| Resolução lógica | **480 × 270** | `ART_BIBLE.md` |
+| Janela referência | **1920 × 1080** | `SettingsData` |
+| Pixels / unidade | **1** | Gameplay |
 | Tile base | **16 × 16 px** | `ENVIRONMENT_ART_GUIDE.md` |
-| Calder (sprite) | **32 × 56 px** | Colisão protegida |
-| Inimigos (altura sprite) | Brawler 56, Gunslinger 54, Penitent 58 | `CHARACTER_SCALE_GUIDE.md` |
-| Filtro textura | **Nearest** | `project.godot` + import rules |
-| Stretch | **canvas_items + expand** | `project.godot` |
-| Largura da rua | **2400 px** | `camera_limits` da área |
-| Superfície do chão (arte) | **Y = 876** | Alinhada ao greybox (`Ground` y=900, half-height 24) |
-| Parallax máx. horizontal | **≤ 0.45** | `ENVIRONMENT_ART_GUIDE.md` |
+| Calder (produção) | **40 × 72 px** | `VISUAL_SCALE_STUDY.md` |
+| Colisão Calder | **32 × 56 px** | inalterada |
+| Filtro | **Nearest** | import rules |
+| Largura da rua | **2400 px** | `camera_limits` |
+| Superfície chão arte | **Y = 876** | alinhada ao greybox |
+| Parallax máx. | **≤ 0.45** | profile |
 
-## Camadas (ordem back → front)
+## Camadas (12 — back → front)
 
-| # | Nome | Nó | Tecnologia | z_index | Parallax |
-| ---: | --- | --- | --- | ---: | ---: |
-| 1 | Céu | `Layer01_Sky` | Parallax2D + Polygon2D | -120 | 0.05 |
-| 2 | Montanhas distantes | `Layer02_Mountains` | Parallax2D + Polygon2D | -100 | 0.12 |
-| 3 | Silhueta da cidade | `Layer03_CitySilhouette` | Parallax2D + Polygon2D | -80 | 0.22 |
-| 4 | Prédios intermediários | `Layer04_MidBuildings` | Parallax2D + Polygon2D | -40 | 0.38 |
-| — | Modulação pôr do sol | `SunsetModulate` | CanvasModulate | — | — |
-| 5 | Plano jogável (visual) | `Layer05_Playfield` | Node2D + Polygon2D | 0 | 1.0 |
-| 6 | Props | `Layer06_Props` | Node2D + `ArtPlaceholderSlot` | 10 | 1.0 |
-| 7 | Iluminação | `Layer07_Lighting` | DirectionalLight2D + PointLight2D | 20 | — |
-| 8 | Foreground | `Layer08_Foreground` | Parallax2D | 40 | 1.05 |
-| 9 | Partículas atmosféricas | `Layer09_Atmosphere` | GPUParticles2D (poeira) | 50 | 1.0 |
+| # | Nó | z | Parallax |
+| ---: | --- | ---: | ---: |
+| 1 | `Layer01_Sky` | -120 | 0.05 |
+| 2 | `Layer02_FarMountains` | -100 | 0.12 |
+| 3 | `Layer03_DistantTown` | -80 | 0.22 |
+| 4 | `Layer04_MidgroundBuildings` | -40 | 0.38 |
+| — | `SunsetModulate` | — | — |
+| 5 | `Layer05_GameplayGround` | 0 | 1.0 |
+| 6 | `Layer06_GameplayStructures` | 5 | 1.0 |
+| 7 | `Layer07_Props` | 7 | 1.0 |
+| 8 | `Layer08_Interactables` | 12 | 1.0 |
+| 9 | `Layer09_Lighting` | 20 | — |
+| 10 | `Layer10_Atmosphere` | 50 | 1.0 |
+| 11 | `Layer11_Foreground` | 40 | 1.05 |
+| 12 | `Layer12_Debug` | 90 | — |
 
-**Colisão** permanece em `Solids/` (StaticBody2D) — **separada** da arte.
+**Colisão** em `Solids/` — separada da arte.
 
 ## Gameplay preservado
 
-A variante art mantém:
+- Diálogo Elias, pistas, combate, duo, segredo, saída igreja
+- Plataformas elevadas (arte desenhada em `Layer05_GameplayGround`)
+- `area_id = vs_greybox_street`, spawns, save, mapa, objetivo
 
-- `Solids` (chão, plataformas)
-- `Spawns`, `Exits`, `WorldObjects` (Elias, inimigos, props narrativos)
-- `area_id = vs_greybox_street`
-- `camera_limits`, `fall_recovery_y`
+## Alternância visual
 
-## Orçamento de performance (inicial)
+| Tecla | Ação |
+| --- | --- |
+| **F** | GREYBOX ↔ ART PILOT |
+| **P** | overlay performance (modo art) |
 
-| Métrica | Orçamento | Estimativa atual (placeholder) |
+Labels de debug greybox (`AreaLabel`, `GuideLabel`, prompts) **ocultos** em art pilot.
+
+## Orçamento de performance (street art pilot)
+
+| Métrica | Orçamento | Estimativa north-star procedural |
 | --- | ---: | ---: |
-| Draw calls | ≤ 80 | ~45–55 |
-| PointLight2D | ≤ 6 | 3 lanternas |
-| Partículas (GPU) | ≤ 180 | 120 |
-| Atlas / textura máx. | 2048 px | 0 (placeholders vetoriais) |
-| Camadas art | 9 | 9 |
-| Parallax2D | ≤ 5 | 5 |
+| FPS | 60 | 58–60 (GPU integrada média) |
+| Frame time | ≤ 16.7 ms | ~12–15 ms |
+| Draw calls | ≤ 80 | ~55–72 |
+| PointLight2D | ≤ 6 | 5 |
+| Partículas GPU | ≤ 180 | 174 (5 emissores) |
+| Art layers | 12 | 12 |
 
-Medir em build Windows com **Debugger → Monitores** antes de arte final.
+Medir em **release** com `StreetPerformanceMonitor` (P) e Godot Debugger.
 
 ## Como esta sala vira molde
 
-1. **Perfil** — cada área futura recebe um `EnvironmentVisualProfile` (igreja, catacumbas).
-2. **Apresentação** — cena `*_art_presentation.tscn` só com camadas visuais.
-3. **Área art** — script `StreetArtArea` (ou equivalente) troca greybox ↔ arte sem tocar colisão.
-4. **Slots** — `ArtPlaceholderSlot` documenta path e footprint de cada asset final.
-5. **Migração** — quando arte estiver pronta, trocar `vertical_slice_street.tscn` por `vertical_slice_street_art.tscn` no manifesto **ou** ativar `show_art_presentation` na área principal.
+1. `EnvironmentVisualProfile` por área futura.
+2. `*_art_presentation.tscn` + factory ou PNG slots.
+3. `StreetArtArea` (ou equivalente) — toggle sem tocar colisão.
+4. `ArtPlaceholderSlot` invisível para drop-in de PNG.
+5. Migração: trocar cena no manifesto quando arte final passar gate.
 
 ## Testes
 
-### Headless
-
 ```powershell
+# Headless
 $env:RH_TEST_SUITE="res://scripts/visual/street_art_toggle_tests.gd"
-godot --headless --main-scene res://scenes/tests/test_bootstrap.tscn
+godot --headless --path . --main-scene res://scenes/tests/test_bootstrap.tscn
+
+# Manual
+# F6 → scenes/tests/street_art_test.tscn
 ```
-
-### Manual
-
-1. Abrir `scenes/tests/street_art_test.tscn`
-2. F6 — mover com A/D, pular, atacar
-3. **F** alterna greybox ↔ arte
-4. Verificar colisão, Elias, inimigos, saída para igreja
 
 ## Documentos relacionados
 
-- `STREET_ART_MISSING_ASSETS.md` — lista de PNGs finais
-- `STREET_ART_SCREENSHOT_CHECKLIST.md` — capturas para QA arte
-- `ENVIRONMENT_ART_GUIDE.md` — regras gerais de cenário
+`STREET_NORTH_STAR_DEFINITION.md`, `STREET_ART_MISSING_ASSETS.md`, `STREET_ART_SCREENSHOT_CHECKLIST.md`, `PERFORMANCE_BUDGET.md`, `ART_VERTICAL_SLICE_GATE.md`

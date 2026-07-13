@@ -21,7 +21,7 @@ size = Vector2(24, 96)
 [node name="VerticalSliceStreetArt" type="Node2D"]
 script = ExtResource("1_area_root")
 area_id = &"vs_greybox_street"
-area_display_name = "Rua de Red Hollow (Art Slice)"
+area_display_name = "Rua de Red Hollow (Beta North Star)"
 camera_limits = Rect2(0, 200, 2400, 1000)
 fall_recovery_y = 1320.0
 area_tint = Color(0.5, 0.5, 0.54, 1)
@@ -44,7 +44,7 @@ offset_right = 520.0
 offset_bottom = 84.0
 theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 1)
 theme_override_font_sizes/font_size = 13
-text = "Capítulo Zero — Elias, cultistas e uma rota elevada opcional."
+text = "Capítulo Zero — entrada, tutorial, saloon, segredo e saída para igreja."
 
 [node name="Solids" type="Node2D" parent="."]
 
@@ -220,6 +220,18 @@ prompt_text = "Observar"
 dialogue_id = &"cz_calder_street_bark"
 one_shot = false
 
+[node name="TownEntranceSign" parent="WorldObjects" instance=ExtResource("6_story_prop")]
+position = Vector2(100, 848)
+interaction_id = &"cz_street_entrance_sign"
+prompt_text = "Ler placa"
+dialogue_id = &"cz_street_entrance_sign"
+
+[node name="SaloonFacade" parent="WorldObjects" instance=ExtResource("6_story_prop")]
+position = Vector2(300, 848)
+interaction_id = &"cz_saloon_facade"
+prompt_text = "Examinar saloon"
+dialogue_id = &"cz_saloon_facade"
+
 [node name="LockedChurchDoor" type="StaticBody2D" parent="WorldObjects"]
 position = Vector2(2100, 848)
 
@@ -242,7 +254,7 @@ collision_layer = 0
 collision_mask = 1
 script = ExtResource("3_exit")
 exit_id = &"to_church"
-target_scene = "res://scenes/areas/vertical_slice_church.tscn"
+target_scene = "res://scenes/areas/vertical_slice_church_art.tscn"
 target_spawn_id = &"from_street"
 required_flag = &"cz_met_elias"
 

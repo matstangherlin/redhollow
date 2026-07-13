@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CombatFeedbackProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/feedback/combat_feedback_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"body_hook_feedback"
+attack_id = &"body_hook"
+impact_tier = 1
+attacker_hitstop = 0.045
+target_hitstop = 0.055
+shake_intensity = 4.8
+shake_duration = 0.11
+vfx_kind = &"hit_normal"
+particle_count = 7
+particle_lifetime = 0.17
+impact_color = Color(0.96, 0.82, 0.62, 0.85)
+flash_strength = 0.26
+flash_color = Color(1, 0.94, 0.82, 1)
+swing_trail_enabled = true
+swing_trail_particles = 5
+swing_trail_on_active = true
+lateral_impact_bias = 1.0
+sfx_id = &"kick"
+sfx_volume_scale = 0.95
+pitch_min = 0.9
+pitch_max = 0.97
+reaction_intensity = 1.0
+vibration_intensity = 0.28
+vibration_duration = 0.06

@@ -142,6 +142,26 @@ func _face_player_toward(target_position: Vector2) -> void:
 		_player.call("set_facing_direction", direction)
 
 
+func _position_prompt_label() -> void:
+	if _prompt_label == null or current_interactable == null:
+		return
+
+	if _should_anchor_prompt_to_interactable():
+		var anchor := current_interactable.get_interaction_anchor()
+		_prompt_label.global_position = anchor + Vector2(0, -44)
+		_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	elif _player != null:
+		_prompt_label.global_position = _player.global_position + Vector2(0, -80)
+		_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+
+func _should_anchor_prompt_to_interactable() -> bool:
+	for node in get_tree().get_nodes_in_group(HudLayoutController.HUD_LAYOUT_GROUP):
+		if node is HudLayoutController and (node as HudLayoutController).is_using_hud_v2():
+			return true
+	return false
+
+
 func _update_prompt_label() -> void:
 	if _prompt_label == null:
 		return
@@ -152,9 +172,12 @@ func _update_prompt_label() -> void:
 		return
 
 	_prompt_label.visible = true
+	var prompt_text := ""
 	if InputDeviceManager != null:
-		_prompt_label.text = InputDeviceManager.format_interaction_prompt(
+		prompt_text = InputDeviceManager.format_interaction_prompt(
 			current_interactable.get_prompt_text(_player)
 		)
 	else:
-		_prompt_label.text = "[E] %s" % current_interactable.get_prompt_text(_player)
+		prompt_text = "[E] %s" % current_interactable.get_prompt_text(_player)
+	_prompt_label.text = prompt_text
+	_position_prompt_label()

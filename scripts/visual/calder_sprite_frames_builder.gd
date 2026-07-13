@@ -76,7 +76,7 @@ static func _add_clip_with_fallback(frames: SpriteFrames, anim_id: StringName) -
 
 
 static func _try_add_sheet_clip(frames: SpriteFrames, anim_id: StringName) -> bool:
-	var sheet_path := CalderAnimationContract.get_sheet_path(anim_id)
+	var sheet_path := CalderAnimationContract.resolve_sheet_path(anim_id)
 	if sheet_path.is_empty() or not ResourceLoader.exists(sheet_path):
 		return false
 
@@ -88,7 +88,7 @@ static func _try_add_sheet_clip(frames: SpriteFrames, anim_id: StringName) -> bo
 	var frame_count: int = int(spec.get("frames", 1))
 	var frame_duration: float = float(spec.get("frame_duration", 0.1))
 	var loop: bool = bool(spec.get("loop", false))
-	var frame_size := CalderAnimationContract.CANVAS_SIZE
+	var frame_size := CalderAnimationContract.APPROVED_FRAME_SIZE
 
 	frames.add_animation(anim_id)
 	frames.set_animation_loop(anim_id, loop)

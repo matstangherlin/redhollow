@@ -123,7 +123,7 @@ collision_layer = 0
 collision_mask = 1
 script = ExtResource("3_exit")
 exit_id = &"to_church_entrance"
-target_scene = "res://scenes/areas/vertical_slice_church.tscn"
+target_scene = "res://scenes/areas/vertical_slice_church_art.tscn"
 target_spawn_id = &"from_underground"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/ToChurchExit"]

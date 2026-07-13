@@ -170,13 +170,7 @@ func cancel_brand_breaker_charge(next_state: int = PlayerStateTypes.PlayerState.
 
 
 func on_hit_landed(_target: Node, _attack_data: Resource) -> void:
-	if not is_executing_brand_breaker or _red_brand == null or _red_brand.config == null:
-		return
-
-	screen_shake_requested.emit(
-		_red_brand.config.breaker_shake_intensity,
-		_red_brand.config.breaker_shake_duration
-	)
+	pass
 
 
 func _execute_brand_breaker_attack(attack_data: Resource, level: int) -> void:

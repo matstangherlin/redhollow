@@ -5,7 +5,7 @@ const ContentRegistryScript := preload("res://scripts/content/content_registry.g
 const AreaTransitionManagerScript := preload("res://scripts/world/area_transition_manager.gd")
 const PlayerScene := preload("res://scenes/player/player.tscn")
 const StreetScene := preload("res://scenes/areas/vertical_slice_street.tscn")
-const ChurchScene := preload("res://scenes/areas/vertical_slice_church.tscn")
+const ChurchScene := preload("res://scenes/areas/vertical_slice_church_art.tscn")
 
 const BETA_MANIFEST := "res://resources/content/manifests/beta_demo.tres"
 const FULL_MANIFEST := "res://resources/content/manifests/full_game.tres"
@@ -93,6 +93,7 @@ func _test_transition_backtracking(failures: PackedStringArray) -> void:
 	game_root.add_child(player)
 
 	var progression := ProgressionComponent.new()
+	progression.set_narrative_flag(&"cz_met_elias", true)
 	game_root.add_child(progression)
 
 	var map_service := WorldMapService.new()
@@ -102,6 +103,7 @@ func _test_transition_backtracking(failures: PackedStringArray) -> void:
 	manager.world_host_path = NodePath("../WorldHost")
 	manager.player_path = NodePath("../Player")
 	manager.initial_area_scene = StreetScene
+	manager.transition_pause_seconds = 0.01
 	game_root.add_child(manager)
 
 	ContentRegistryScript.activate_from_path(BETA_MANIFEST)
@@ -109,7 +111,7 @@ func _test_transition_backtracking(failures: PackedStringArray) -> void:
 
 	await TestHelpers.await_frames(get_tree(), 2)
 	manager.initialize(game_root)
-	await TestHelpers.await_frames(get_tree(), 2)
+	await get_tree().create_timer(0.05).timeout
 
 	var street := manager.get_current_area()
 	var exit: AreaExit = street.get_node_or_null("Exits/ToChurchExit") as AreaExit
@@ -117,7 +119,7 @@ func _test_transition_backtracking(failures: PackedStringArray) -> void:
 		failures.append("Street exit to church missing for backtracking test.")
 	else:
 		manager.request_transition(exit, player)
-		await TestHelpers.await_frames(get_tree(), 3)
+		await get_tree().create_timer(0.05).timeout
 		if manager.get_current_area_id() != &"vs_greybox_church":
 			failures.append("Transition street -> church failed.")
 
@@ -125,7 +127,7 @@ func _test_transition_backtracking(failures: PackedStringArray) -> void:
 		var return_exit: AreaExit = church.get_node_or_null("Exits/ToStreetExit") as AreaExit
 		if return_exit != null:
 			manager.request_transition(return_exit, player)
-			await TestHelpers.await_frames(get_tree(), 3)
+			await get_tree().create_timer(0.05).timeout
 			if manager.get_current_area_id() != &"vs_greybox_street":
 				failures.append("Backtracking church -> street failed.")
 

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="VisualScaleProfile" load_steps=2 format=3 uid="uid://scale_profile_32x56"]
+
+[ext_resource type="Script" path="res://scripts/visual/visual_scale_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"scale_32x56"
+display_name = "32 × 56 (baseline)"
+frame_size = Vector2i(32, 56)
+pivot = Vector2(16, 56)
+sprite_visual_offset = Vector2(0, -28)
+red_brand_zone_px = Vector2i(12, 12)
+hat_readable_min_px = 4
+coat_hem_extra_px = 4
+enemy_height_brawler = 56
+enemy_height_gunslinger = 54
+enemy_height_deacon = 72
+animation_cost_multiplier = 1.0
+study_notes = "Contrato atual. Chapéu e Red Brand ficam no limite da legibilidade em 1152×648."

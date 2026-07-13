@@ -54,6 +54,7 @@ func bind_player(player: CharacterBody2D) -> void:
 
 	if _player_hitbox != null:
 		_connect_once(_player_hitbox, &"hit_landed", _on_player_hit_landed)
+		_connect_once(_player_hitbox, &"attack_activated", _on_player_attack_activated)
 
 	if _player_hurtbox != null:
 		_connect_once(_player_hurtbox, &"hit_received", _on_player_hit_received)
@@ -127,19 +128,68 @@ func _on_generic_hit_landed(
 
 
 func _play_hit_feedback(feedback: Dictionary, position: Vector2, attack_data: Resource) -> void:
-	var tier: int = int(feedback.get("tier", CombatFeedbackResolver.ImpactTier.LIGHT))
-	var tier_rank := CombatFeedbackResolver.tier_rank(tier as CombatFeedbackResolver.ImpactTier)
-
 	if _audio != null:
 		var sfx_id: StringName = feedback.get("sfx_id", AudioEventId.IMPACT_FLESH)
-		var pitch := 1.0 + float(tier_rank) * 0.04
-		_audio.play_event(sfx_id, position, 1.0, pitch)
+		var volume := float(feedback.get("sfx_volume_scale", 1.0))
+		var pitch := _resolve_pitch(feedback)
+		_audio.play_event(sfx_id, position, volume, pitch)
 
 	if _vfx != null:
-		var vfx_kind: StringName = feedback.get("vfx_kind", &"hit_normal")
-		_vfx.spawn(vfx_kind, position, float(feedback.get("flash_strength", 0.2)))
+		_vfx.spawn_from_feedback(feedback, position)
+		if bool(feedback.get("swing_trail_enabled", false)) and not bool(feedback.get("swing_trail_on_active", true)):
+			var facing := 1
+			if _player != null:
+				facing = int(_player.get("facing_direction"))
+			_vfx.spawn_swing_trail(position, facing, feedback)
 
 	_apply_camera_feedback(feedback)
+	_request_vibration(feedback)
+
+
+func _on_player_attack_activated(attack_data: Resource, owner_node: Node, facing_direction: int) -> void:
+	if _vfx == null or attack_data == null:
+		return
+
+	var feedback := CombatFeedbackResolver.resolve_hit_feedback(attack_data, owner_node, null)
+	if not bool(feedback.get("swing_trail_enabled", false)):
+		return
+	if not bool(feedback.get("swing_trail_on_active", true)):
+		return
+
+	var trail_position: Vector2 = Vector2.ZERO
+	if owner_node is Node2D:
+		trail_position = (owner_node as Node2D).global_position
+		trail_position += Vector2(float(facing_direction) * 28.0, -12.0)
+	_vfx.spawn_swing_trail(trail_position, facing_direction, feedback)
+
+
+func _resolve_pitch(feedback: Dictionary) -> float:
+	if feedback.has("pitch_min") and feedback.has("pitch_max"):
+		var pitch_min := float(feedback.get("pitch_min", 1.0))
+		var pitch_max := float(feedback.get("pitch_max", 1.0))
+		if pitch_max >= pitch_min:
+			return randf_range(pitch_min, pitch_max)
+
+	var tier: int = int(feedback.get("tier", CombatFeedbackResolver.ImpactTier.LIGHT))
+	var tier_rank := CombatFeedbackResolver.tier_rank(tier as CombatFeedbackResolver.ImpactTier)
+	return 1.0 + float(tier_rank) * 0.04
+
+
+func _request_vibration(feedback: Dictionary) -> void:
+	if not FeedbackSettingsAccess.is_vibration_enabled():
+		return
+
+	var intensity := float(feedback.get("vibration_intensity", 0.0))
+	var duration := float(feedback.get("vibration_duration", 0.0))
+	if intensity <= 0.0 or duration <= 0.0:
+		return
+
+	if Engine.has_singleton("JavaClassWrapper"):
+		return
+
+	if Input.has_method("vibrate_handheld"):
+		var duration_ms := int(clampf(duration * 1000.0 * intensity, 8.0, 250.0))
+		Input.vibrate_handheld(duration_ms)
 
 
 func _apply_camera_feedback(feedback: Dictionary) -> void:
@@ -187,6 +237,32 @@ func _on_player_counter_success(_attack_data: Resource, _attacker: Node) -> void
 
 
 func _play_counter_feedback(position: Vector2) -> void:
+	var profile := CombatFeedbackProfileLibrary.get_profile(&"calder_counter")
+	if profile != null:
+		if _audio != null and profile.parry_sfx_id != &"":
+			_audio.play_event(profile.parry_sfx_id, position, 1.0, profile.get_random_pitch())
+		if _vfx != null and profile.parry_flash_strength > 0.0:
+			_vfx.spawn_from_feedback(
+				{
+					"vfx_kind": &"counter",
+					"flash_strength": profile.parry_flash_strength,
+					"flash_color": profile.flash_color,
+					"impact_color": profile.impact_color,
+					"particle_count": 6,
+					"particle_lifetime": 0.16,
+				},
+				position
+			)
+		_apply_camera_feedback(
+			{
+				"shake_intensity": profile.parry_shake_intensity,
+				"shake_duration": profile.parry_shake_duration,
+				"zoom_amount": 0.0,
+				"zoom_duration": 0.0,
+			}
+		)
+		return
+
 	if _audio != null:
 		_audio.play_event(AudioEventId.COUNTER, position, 1.0)
 	if _vfx != null:

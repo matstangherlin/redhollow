@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://rilpw0p4dj88"]
+
+[ext_resource type="Script" path="res://scripts/visual/calder_asset_validation_test_scene.gd" id="1_script"]
+
+[node name="CalderAssetValidationTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.07, 0.08, 1)
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Title" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 900.0
+offset_bottom = 36.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 16
+text = "Calder Asset Validation"
+
+[node name="ReportScroll" type="ScrollContainer" parent="UI"]
+offset_left = 16.0
+offset_top = 44.0
+offset_right = 1120.0
+offset_bottom = 620.0
+
+[node name="ReportLabel" type="Label" parent="UI/ReportScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.86, 0.76, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "Validando..."

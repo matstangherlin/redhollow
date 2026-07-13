@@ -54,43 +54,43 @@ static func _street_modules() -> Array[EnvironmentModuleDef]:
 		EnvironmentLayerCategory.Category.INTERACTION, Vector2i(1, 2), &"", "street_mod_door.png", false,
 		MODULES_BASE + "kit_door.tscn", false, true)
 	_add_module(modules, &"window", "Janela", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 1), &"", "street_mod_window.png",
+		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 1), &"", "street_mod_window.png", false,
 		MODULES_BASE + "kit_window.tscn")
 	_add_module(modules, &"balcony", "Varanda", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.DECORATION, Vector2i(3, 1), &"", "street_mod_balcony.png",
+		EnvironmentLayerCategory.Category.DECORATION, Vector2i(3, 1), &"", "street_mod_balcony.png", false,
 		MODULES_BASE + "kit_balcony.tscn")
 	_add_module(modules, &"lamp_post", "Poste", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 3), &"", "street_mod_lamp_post.png",
+		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 3), &"", "street_mod_lamp_post.png", false,
 		MODULES_BASE + "kit_lamp_post.tscn")
 	_add_module(modules, &"fence", "Cerca", EnvironmentModuleDef.ModuleKind.HYBRID,
 		EnvironmentLayerCategory.Category.COLLISION, Vector2i(2, 1), &"", "street_mod_fence.png", true,
 		MODULES_BASE + "kit_fence.tscn")
 	_add_module(modules, &"barrel", "Barril", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 1), &"", "street_mod_barrel.png",
+		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 1), &"", "street_mod_barrel.png", false,
 		MODULES_BASE + "kit_barrel.tscn", false, false, true)
 	_add_module(modules, &"crate", "Caixa", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 1), &"", "street_mod_crate.png",
+		EnvironmentLayerCategory.Category.DECORATION, Vector2i(1, 1), &"", "street_mod_crate.png", false,
 		MODULES_BASE + "kit_crate.tscn", false, false, true)
 	_add_module(modules, &"wagon", "Carroça", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.DECORATION, Vector2i(3, 2), &"", "street_mod_wagon.png",
+		EnvironmentLayerCategory.Category.DECORATION, Vector2i(3, 2), &"", "street_mod_wagon.png", false,
 		MODULES_BASE + "kit_wagon.tscn")
 	_add_module(modules, &"sign", "Placa", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.DECORATION, Vector2i(2, 1), &"", "street_mod_sign.png",
+		EnvironmentLayerCategory.Category.DECORATION, Vector2i(2, 1), &"", "street_mod_sign.png", false,
 		MODULES_BASE + "kit_sign.tscn")
 	_add_module(modules, &"lantern", "Lampião", EnvironmentModuleDef.ModuleKind.PROP_SCENE,
-		EnvironmentLayerCategory.Category.LIGHTING, Vector2i(1, 2), &"", "street_mod_lantern.png",
+		EnvironmentLayerCategory.Category.LIGHTING, Vector2i(1, 2), &"", "street_mod_lantern.png", false,
 		MODULES_BASE + "kit_lantern.tscn", true)
 	_add_module(modules, &"stairs", "Escada", EnvironmentModuleDef.ModuleKind.HYBRID,
 		EnvironmentLayerCategory.Category.COLLISION, Vector2i(2, 2), &"", "street_mod_stairs.png", true,
 		MODULES_BASE + "kit_stairs.tscn")
 	_add_module(modules, &"blocked_entrance", "Entrada bloqueada", EnvironmentModuleDef.ModuleKind.GAMEPLAY_PREFAB,
-		EnvironmentLayerCategory.Category.GAMEPLAY, Vector2i(2, 3), &"", "street_mod_blocked_entrance.png",
+		EnvironmentLayerCategory.Category.GAMEPLAY, Vector2i(2, 3), &"", "street_mod_blocked_entrance.png", false,
 		"res://scenes/world/narrative_gate.tscn", false, true)
 	_add_module(modules, &"secret_passage", "Passagem secreta", EnvironmentModuleDef.ModuleKind.GAMEPLAY_PREFAB,
-		EnvironmentLayerCategory.Category.GAMEPLAY, Vector2i(2, 2), &"", "street_mod_secret_passage.png",
+		EnvironmentLayerCategory.Category.GAMEPLAY, Vector2i(2, 2), &"", "street_mod_secret_passage.png", false,
 		MODULES_BASE + "kit_secret_passage.tscn", false, true)
 	_add_module(modules, &"vermilite_barrier", "Barreira Vermilite", EnvironmentModuleDef.ModuleKind.GAMEPLAY_PREFAB,
-		EnvironmentLayerCategory.Category.GAMEPLAY, Vector2i(1, 4), &"", "street_mod_vermilite_barrier.png",
+		EnvironmentLayerCategory.Category.GAMEPLAY, Vector2i(1, 4), &"", "street_mod_vermilite_barrier.png", false,
 		"res://scenes/world/red_barrier.tscn", false, false, false, true)
 	return modules
 

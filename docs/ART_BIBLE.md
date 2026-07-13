@@ -11,6 +11,7 @@ Direção visual definitiva para arte final. Complementa `VISUAL_REFERENCE_RULES
 | [ASSET_IMPORT_RULES.md](ASSET_IMPORT_RULES.md) | Import, filtros, compressão, atlas, nomenclatura |
 | [VFX_LANGUAGE.md](VFX_LANGUAGE.md) | Vermilite, Red Brand, telegraphs, estátuas |
 | [ENVIRONMENT_ART_GUIDE.md](ENVIRONMENT_ART_GUIDE.md) | Camadas, parallax, z-index, tiles, Capítulo Zero |
+| [RED_HOLLOW_COLOR_PALETTE.md](RED_HOLLOW_COLOR_PALETTE.md) | Grupos de cor, estados regionais, iluminação |
 | [VISUAL_PRESENTATION_CONTRACT.md](VISUAL_PRESENTATION_CONTRACT.md) | Contrato gameplay vs apresentação |
 
 ## Especificação rápida (canônica)
@@ -52,6 +53,8 @@ A identidade combina:
 - parallax com moderação — gameplay primeiro.
 
 ## Paleta conceitual
+
+Grupos canônicos e valores de referência: **`RED_HOLLOW_COLOR_PALETTE.md`**.
 
 | Função | Cores |
 | --- | --- |
@@ -149,6 +152,19 @@ Duas variantes por região quando necessário:
 | Fundo | Poeira e névoa | Pulsação rubra distante |
 
 Arquitetura técnica: variantes por camada, não duplicação manual de mapa inteiro (ver `ARCHITECTURE.md`).
+
+### Iluminação regional (implementado — North Star)
+
+Estados controlados por `RegionVisualTheme` + `RegionVisualController` na rua art:
+
+| Estado | Leitura |
+| --- | --- |
+| Normal | Faroeste decadente, pôr do sol |
+| Vermilite próxima | Brilho local + motes |
+| Ressonância Rubra | Ambiente dessaturado, vermelho focal |
+| Mol-Khar | Escurecimento, silhueta, vermelho interno contido |
+
+Detalhes e tokens: `RED_HOLLOW_COLOR_PALETTE.md`. Cena de comparação: `scenes/tests/region_visual_comparison_test.tscn`. Debug playtest na rua: tecla **'** (apóstrofo).
 
 ## Estado atual vs beta
 

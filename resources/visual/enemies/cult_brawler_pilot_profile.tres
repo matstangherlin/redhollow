@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EnemyVisualProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/visual/enemies/enemy_visual_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"cult_brawler_pilot"
+enemy_id = &"cult_brawler"
+visual_mode = 1
+use_procedural_pilot_frames = true
+state_animation_map = {
+"alert": "alert",
+"approach": "approach",
+"attack_active": "attack_active",
+"attack_recovery": "attack_recovery",
+"attack_startup": "attack_startup",
+"dead": "death",
+"heavy_hurt": "heavy_hurt",
+"hurt": "hurt",
+"idle": "idle",
+"knocked_back": "knocked_back",
+"patrol": "patrol",
+"stagger": "stagger"
+}
+attack_phase_map = {
+"active": "attack_active",
+"recovery": "attack_recovery",
+"startup": "attack_startup"
+}

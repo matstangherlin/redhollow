@@ -50,7 +50,7 @@ func _test_beta_demo_scope(failures: PackedStringArray) -> void:
 	)
 	_assert_true(
 		failures,
-		registry.can_load_area_scene("res://scenes/areas/vertical_slice_underground.tscn"),
+		registry.can_load_area_scene("res://scenes/areas/vertical_slice_underground_art.tscn"),
 		"underground scene allowed"
 	)
 
@@ -91,7 +91,7 @@ func _test_save_compatibility_policy(failures: PackedStringArray) -> void:
 	var beta = ContentRegistryScript.activate_from_path(BETA_MANIFEST_PATH)
 	var legacy_save := {
 		"content_manifest_id": "",
-		"current_scene": "res://scenes/areas/vertical_slice_church.tscn",
+		"current_scene": "res://scenes/areas/vertical_slice_church_art.tscn",
 	}
 	_assert_true(failures, beta.is_save_compatible_with_manifest(legacy_save), "legacy save works on beta")
 

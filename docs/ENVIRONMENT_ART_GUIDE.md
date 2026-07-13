@@ -30,8 +30,22 @@ Diretrizes para cenários 2D de Red Hollow — Capítulo Zero e expansão futura
 | 5 | Gameplay props | 1.0 | 20 | portas, checkpoints, props |
 | 6 | Near foreground | 1.05 | 40 | detalhes sem colisão |
 | 7 | Atmospheric FX | 1.0 | 50 | poeira, cinzas |
+| 8 | Lighting overlay | — | 85 | vignette, silhueta Mol-Khar (sem colisão) |
 
 **Parallax máximo recomendado:** 0.45 horizontal — evitar nausea e desalinhamento de combate.
+
+## Iluminação por região
+
+| Recurso | Uso |
+| --- | --- |
+| `RedHollowPalette` | Tokens de cor por grupo (faroeste, Ordem, Vermilite, Mol-Khar) |
+| `RegionVisualTheme` | Quatro estados visuais por área |
+| `LightingProfile` | Modulate, luzes 2D, partículas, overlays |
+| `RegionVisualController` | Transições tween; respeita acessibilidade |
+
+**Integrado:** rua North Star (`StreetArtPresentation`). Igreja e catacumbas permanecem greybox até arte dedicada.
+
+Documentação de cores: `RED_HOLLOW_COLOR_PALETTE.md`. Playtest: tecla **'** (apóstrofo) na rua art para ciclar estados; comparação: `region_visual_comparison_test.tscn`.
 
 ## Capítulo Zero — áreas
 
