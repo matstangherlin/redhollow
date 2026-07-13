@@ -102,7 +102,7 @@ func _ensure_performance_monitor() -> void:
 
 func _tag_greybox_visuals() -> void:
 	for node_name in [&"BackgroundTint"]:
-		var node := get_node_or_null(node_name)
+		var node := get_node_or_null(NodePath(String(node_name)))
 		if node is Polygon2D:
 			node.add_to_group(GREYBOX_VISUAL_GROUP)
 

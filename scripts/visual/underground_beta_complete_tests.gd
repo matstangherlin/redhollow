@@ -16,7 +16,7 @@ func _run_suite() -> void:
 
 	_test_progression_zones(failures)
 	_test_presentation_and_finale_hooks(failures)
-	_test_gameplay_preserved(failures)
+	await _test_gameplay_preserved_async(failures)
 	_test_church_continuity(failures)
 	_test_world_graph(failures)
 	_test_scale_continuity(failures)
@@ -64,13 +64,16 @@ func _test_presentation_and_finale_hooks(failures: PackedStringArray) -> void:
 	presentation.free()
 
 
-func _test_gameplay_preserved(failures: PackedStringArray) -> void:
+func _test_gameplay_preserved_async(failures: PackedStringArray) -> void:
 	var packed := load(UNDERGROUND_ART_SCENE) as PackedScene
 	if packed == null:
 		failures.append("Underground art scene must load.")
 		return
 
 	var area: UndergroundArtArea = packed.instantiate() as UndergroundArtArea
+	root.add_child(area)
+	await TestHelpers.await_frames(get_tree(), 3)
+
 	for path in [
 		"WorldObjects/UndergroundCheckpoint",
 		"WorldObjects/DeaconRusk",
@@ -82,7 +85,11 @@ func _test_gameplay_preserved(failures: PackedStringArray) -> void:
 	]:
 		if area.get_node_or_null(path) == null:
 			failures.append("Missing gameplay node: %s." % path)
-	area.free()
+
+	if area.get_art_presentation() == null:
+		failures.append("Underground art presentation must spawn after deferred visual apply.")
+
+	area.queue_free()
 
 
 func _test_church_continuity(failures: PackedStringArray) -> void:
