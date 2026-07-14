@@ -127,6 +127,14 @@ static func _resolve_vfx_kind(tier: ImpactTier, tags: PackedStringArray) -> Stri
 		return &"red_brand"
 	if tags.has("red_brand"):
 		return &"hit_heavy"
+	if tags.has("gun") or tags.has("shot"):
+		return &"gunshot"
+	if tags.has("chain"):
+		return &"chain"
+	if tags.has("vermilite"):
+		return &"vermilite"
+	if tags.has("boss"):
+		return &"boss"
 	if tier == ImpactTier.COUNTER:
 		return &"counter"
 	if tier >= ImpactTier.HEAVY:

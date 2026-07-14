@@ -85,7 +85,8 @@ O projeto **não está vazio**. Existe fundação beta jogável com product shel
 - hitbox/hurtbox e ataques orientados por Resource;
 - estilo, Red Brand, barreira destrutível, feedback combate;
 - diálogo, interação, checkpoint, NarrativeDirector + objetivos Cap. Zero (provisório);
-- save/load **manual** (F8/F9); auto-load **desativado** na sessão greybox;
+- save/load via **menu Continuar** + checkpoint; F8/F9 **somente debug builds**;
+- auto-load **desativado** (`SaveManager.auto_load_on_ready = false`); boot via menu + GameBootState;
 - três áreas e transição; arena; Cult Brawler; Gunslinger; Chain Penitent; Deacon Rusk;
 - ContentRegistry + manifests `beta_demo` / `full_game`;
 - pipeline visual Calder (placeholder/pilot); áudio procedural provisório;
@@ -107,10 +108,11 @@ O projeto **não está vazio**. Existe fundação beta jogável com product shel
 
 ### Salvamento na demo atual
 
-- **F8** salva; **F9** carrega manualmente.
-- **Não há auto-load** ao iniciar sessão greybox (`SaveManager.auto_load_on_ready = false` em `game.gd`).
-- Checkpoint no subterrâneo grava save ao ativar.
-- Menu/boot via `GameBootState` — política continue/auto-load sujeita a D-013.
+- **Fluxo normal:** menu Novo Jogo / Continuar (`docs/BOOT_AND_SAVE_POLICY.md`).
+- **F8** salva; **F9** carrega — **somente em debug builds**.
+- **Não há auto-load** ao iniciar gameplay (`SaveManager.auto_load_on_ready = false`).
+- Checkpoint grava save ao ativar (com backup seguro).
+- Menu/boot via `GameBootState` — D-013 resolvida.
 
 ## Regras de edição
 

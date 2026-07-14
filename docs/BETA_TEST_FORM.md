@@ -1,6 +1,11 @@
 # Red Hollow — Beta Test Form (Capítulo Zero)
 
-Formulário para testers internos da build **0.2.0-beta.1**. Copie e preencha; envie ao responsável de QA.
+Formulário para testers internos. **Somente** builds classificadas como *APROVADA PARA TESTE FECHADO* ou *APROVADA COM RESTRIÇÕES* em `docs/RC1_REPORT.md` (ou relatório RC posterior).
+
+Build alvo atual do packaging: **`0.2.0-beta.rc1`** — *Red Hollow — Chapter Zero Beta RC1*.  
+**Veredito RC1: REPROVADA** — não distribuir a testers externos até P0 fechados.
+
+Copie e preencha; envie ao responsável de QA.
 
 ---
 
@@ -8,8 +13,9 @@ Formulário para testers internos da build **0.2.0-beta.1**. Copie e preencha; e
 
 - **Data:**
 - **Tester:**
-- **Build:** (ex.: `red-hollow-0.2.0-beta.1-release.exe`)
+- **Build:** (ex.: `red-hollow-0.2.0-beta.rc1-release.exe`)
 - **Commit:** (de `build-manifest.json`)
+- **Build number:** (ex.: `20260713.rc1`)
 - **Input principal:** Teclado / Xbox / Outro
 
 ## Hardware
@@ -19,6 +25,25 @@ Formulário para testers internos da build **0.2.0-beta.1**. Copie e preencha; e
 - **RAM:**
 - **Resolução usada:**
 - **VSync / FPS cap:**
+
+## Smoke checklist (build exportada)
+
+| # | Passo | OK | Notas |
+| ---: | --- | --- | --- |
+| 1 | Menu | | |
+| 2 | Novo Jogo | | |
+| 3 | Rua | | |
+| 4 | Igreja | | |
+| 5 | Catacumbas | | |
+| 6 | Boss | | |
+| 7 | Finale | | |
+| 8 | Retorno | | |
+| 9 | Continuar | | |
+| 10 | Opções | | |
+| 11 | Pausa | | |
+| 12 | Gamepad | | |
+| 13 | Save | | |
+| 14 | Load | | |
 
 ## Conclusão geral
 
@@ -42,11 +67,24 @@ Formulário para testers internos da build **0.2.0-beta.1**. Copie e preencha; e
 | Boss Rusk | | |
 | Final / créditos | | |
 
+## Robustez (se testado)
+
+| Cenário | OK | Notas |
+| --- | --- | --- |
+| Alt-Tab | | |
+| Resolução / fullscreen | | |
+| Desconectar controle | | |
+| Save corrompido | | |
+| Settings corrompido | | |
+| Fechar durante save | | |
+| Duas sessões / dois ciclos | | |
+
 ## Performance
 
-- **FPS médio percebido:** Bom / OK / Ruim
-- **Quedas notáveis (onde):**
-- **Travamentos / stutter:**
+- **FPS mínimo / médio percebido:**
+- **Frame time / stutter (onde):**
+- **Memória (se medida):**
+- **Carregamentos lentos:**
 
 ## Acessibilidade testada
 

@@ -4,7 +4,7 @@ const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const ContentRegistryScript := preload("res://scripts/content/content_registry.gd")
 const AreaTransitionManagerScript := preload("res://scripts/world/area_transition_manager.gd")
 const PlayerScene := preload("res://scenes/player/player.tscn")
-const StreetScene := preload("res://scenes/areas/vertical_slice_street.tscn")
+const StreetScene := preload("res://scenes/areas/vertical_slice_street_art.tscn")
 const ChurchScene := preload("res://scenes/areas/vertical_slice_church_art.tscn")
 
 const BETA_MANIFEST := "res://resources/content/manifests/beta_demo.tres"

@@ -6,6 +6,25 @@ const Palette := preload("res://scripts/visual/lighting/red_hollow_palette.gd")
 ## Vertical, ritual-heavy facade variants for the church district.
 
 
+static func pick_variant(seed_key: String, count: int) -> int:
+	if count <= 1:
+		return 0
+	var h := 0
+	for i in range(seed_key.length()):
+		h = (h * 31 + seed_key.unicode_at(i)) & 0x7fffffff
+	return h % count
+
+
+static func door_offset_for_variant(variant: int) -> float:
+	match variant % 3:
+		0:
+			return 0.0
+		1:
+			return -8.0
+		_:
+			return 10.0
+
+
 static func wall_color_for_variant(variant: int) -> Color:
 	match variant % 4:
 		0:

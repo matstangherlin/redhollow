@@ -116,7 +116,7 @@ func _test_room_reuse(failures: PackedStringArray) -> void:
 
 
 func _test_region_stubs(failures: PackedStringArray) -> void:
-	var stubs := RegionVisualTheme.get_future_region_stubs()
+	var stubs := EnvironmentRegionTheme.get_future_region_stubs()
 	if stubs.size() < 8:
 		failures.append("Future region stubs should document at least 8 districts.")
 	if String(stubs[0].get("id", "")) != "centro":

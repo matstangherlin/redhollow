@@ -92,6 +92,10 @@ func bind_objective_hud(hud: Node) -> void:
 		_objective_tracker.objective_changed.connect(hud.update_objective)
 
 
+func get_objective_tracker() -> ObjectiveTracker:
+	return _objective_tracker
+
+
 func set_narrative_flag(flag_id: StringName, value: Variant = true) -> void:
 	if _progression == null:
 		_progression = _find_progression()

@@ -3,17 +3,17 @@ class_name WorldMapView
 
 ## Provisional beta map — rectangles and lines only.
 
-const COLOR_BG := Color(0.08, 0.07, 0.06, 0.92)
-const COLOR_GRID := Color(0.2, 0.18, 0.16, 0.35)
-const COLOR_NODE := Color(0.42, 0.32, 0.24, 1.0)
-const COLOR_NODE_VISITED := Color(0.55, 0.4, 0.28, 1.0)
-const COLOR_CURRENT := Color(0.92, 0.42, 0.18, 1.0)
-const COLOR_OBJECTIVE := Color(0.95, 0.78, 0.22, 1.0)
-const COLOR_CHECKPOINT := Color(0.35, 0.82, 0.95, 1.0)
-const COLOR_BARRIER := Color(0.92, 0.18, 0.12, 1.0)
-const COLOR_EDGE := Color(0.72, 0.62, 0.5, 0.65)
-const COLOR_EDGE_BLOCKED := Color(0.55, 0.22, 0.18, 0.8)
-const COLOR_SECRET := Color(0.78, 0.62, 0.95, 1.0)
+const COLOR_BG := Color(0.07, 0.055, 0.05, 0.94)
+const COLOR_GRID := Color(0.22, 0.18, 0.14, 0.38)
+const COLOR_NODE := Color(0.40, 0.30, 0.22, 1.0)
+const COLOR_NODE_VISITED := Color(0.58, 0.42, 0.28, 1.0)
+const COLOR_CURRENT := Color(0.94, 0.40, 0.16, 1.0)
+const COLOR_OBJECTIVE := Color(0.96, 0.80, 0.24, 1.0)
+const COLOR_CHECKPOINT := Color(0.38, 0.84, 0.90, 1.0)
+const COLOR_BARRIER := Color(0.94, 0.16, 0.12, 1.0)
+const COLOR_EDGE := Color(0.74, 0.64, 0.50, 0.70)
+const COLOR_EDGE_BLOCKED := Color(0.58, 0.22, 0.16, 0.82)
+const COLOR_SECRET := Color(0.80, 0.62, 0.92, 1.0)
 const COLOR_HIDDEN := Color(0.12, 0.1, 0.09, 0.2)
 
 const CELL_SIZE := Vector2(88, 56)

@@ -1,16 +1,16 @@
 extends RefCounted
 class_name HudThemeV2
 
-## Structural provisional theme for HUD V2 — no external fonts.
+## Structural provisional theme for HUD V2 — no external fonts. Presentation polish pass.
 
-const COLOR_BG := Color(0.06, 0.05, 0.05, 0.88)
-const COLOR_BORDER := Color(0.62, 0.16, 0.12, 0.9)
-const COLOR_TEXT := Color(0.94, 0.9, 0.78, 1.0)
-const COLOR_TEXT_MUTED := Color(0.72, 0.68, 0.62, 1.0)
-const COLOR_VERMILITE := Color(0.92, 0.22, 0.38, 1.0)
-const COLOR_STYLE := Color(0.96, 0.78, 0.28, 1.0)
-const COLOR_HEALTH := Color(0.22, 0.72, 0.38, 1.0)
-const COLOR_BRAND := Color(0.92, 0.14, 0.06, 1.0)
+const COLOR_BG := Color(0.055, 0.045, 0.045, 0.90)
+const COLOR_BORDER := Color(0.68, 0.18, 0.12, 0.92)
+const COLOR_TEXT := Color(0.95, 0.90, 0.78, 1.0)
+const COLOR_TEXT_MUTED := Color(0.74, 0.70, 0.62, 1.0)
+const COLOR_VERMILITE := Color(0.94, 0.24, 0.40, 1.0)
+const COLOR_STYLE := Color(0.97, 0.80, 0.30, 1.0)
+const COLOR_HEALTH := Color(0.24, 0.74, 0.40, 1.0)
+const COLOR_BRAND := Color(0.94, 0.12, 0.05, 1.0)
 const SAFE_MARGIN := 12
 
 

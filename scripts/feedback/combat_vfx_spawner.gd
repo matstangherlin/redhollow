@@ -6,18 +6,23 @@ class_name CombatVfxSpawner
 const VFX_SPAWNER_GROUP := "combat_vfx_spawner"
 const POOL_SIZE := 24
 
-const COLOR_HIT := Color(0.95, 0.88, 0.72, 0.85)
-const COLOR_HEAVY := Color(0.98, 0.42, 0.18, 0.9)
-const COLOR_COUNTER := Color(0.72, 0.92, 1.0, 0.88)
-const COLOR_DODGE := Color(0.82, 0.82, 0.86, 0.55)
-const COLOR_RED_BRAND := Color(0.92, 0.28, 0.12, 0.92)
-const COLOR_BARRIER := Color(0.82, 0.18, 0.14, 0.9)
-const COLOR_HURT := Color(0.92, 0.12, 0.12, 0.75)
-const COLOR_DEATH := Color(0.42, 0.04, 0.06, 0.85)
-const COLOR_CHECKPOINT := Color(0.72, 0.88, 0.62, 0.85)
-const COLOR_TELEGRAPH_OK := Color(1.0, 0.82, 0.22, 0.55)
-const COLOR_TELEGRAPH_WARN := Color(0.92, 0.18, 0.18, 0.65)
-const COLOR_SWING_TRAIL := Color(0.92, 0.86, 0.72, 0.55)
+const COLOR_HIT := Color(0.96, 0.90, 0.74, 0.88)
+const COLOR_HEAVY := Color(0.98, 0.40, 0.16, 0.92)
+const COLOR_COUNTER := Color(0.70, 0.94, 1.0, 0.92)
+const COLOR_DODGE := Color(0.84, 0.84, 0.90, 0.55)
+const COLOR_RED_BRAND := Color(0.94, 0.22, 0.08, 0.94)
+const COLOR_BARRIER := Color(0.86, 0.14, 0.12, 0.92)
+const COLOR_HURT := Color(0.94, 0.10, 0.12, 0.78)
+const COLOR_DEATH := Color(0.38, 0.03, 0.05, 0.88)
+const COLOR_CHECKPOINT := Color(0.74, 0.90, 0.58, 0.88)
+const COLOR_TELEGRAPH_OK := Color(1.0, 0.86, 0.18, 0.62)
+const COLOR_TELEGRAPH_WARN := Color(0.96, 0.14, 0.14, 0.72)
+const COLOR_SWING_TRAIL := Color(0.94, 0.88, 0.70, 0.58)
+const COLOR_GUNSHOT := Color(0.95, 0.78, 0.42, 0.90)
+const COLOR_CHAIN := Color(0.72, 0.76, 0.82, 0.88)
+const COLOR_VERMILITE := Color(0.94, 0.28, 0.42, 0.92)
+const COLOR_BOSS := Color(0.82, 0.12, 0.18, 0.90)
+const COLOR_MOL_KHAR := Color(0.42, 0.04, 0.08, 0.85)
 
 var _pool: Array[CPUParticles2D] = []
 var _flash_layer: CanvasLayer = null
@@ -83,6 +88,21 @@ func spawn_from_feedback(feedback: Dictionary, global_position: Vector2) -> void
 				_spawn_shockwave(spawn_position, color, scaled, feedback)
 		&"barrier":
 			_emit_burst(spawn_position, COLOR_BARRIER, count, lifetime, scaled)
+			_pulse_flash(COLOR_BARRIER, 0.05 * scaled, feedback)
+		&"gunshot":
+			_emit_burst(spawn_position, COLOR_GUNSHOT, count, lifetime * 0.85, scaled)
+			_pulse_flash(COLOR_GUNSHOT, 0.045 * scaled, feedback)
+		&"chain":
+			_emit_burst(spawn_position, COLOR_CHAIN, count, lifetime, scaled * 0.9)
+		&"vermilite":
+			_emit_burst(spawn_position, COLOR_VERMILITE, count, lifetime, scaled)
+			_pulse_flash(COLOR_VERMILITE, 0.06 * scaled, feedback)
+		&"boss":
+			_emit_burst(spawn_position, COLOR_BOSS, count, lifetime * 1.15, scaled)
+			_pulse_flash(COLOR_BOSS, 0.08 * scaled, feedback)
+		&"mol_khar":
+			_emit_burst(spawn_position, COLOR_MOL_KHAR, count, lifetime * 1.25, scaled * 0.85)
+			_pulse_flash(COLOR_MOL_KHAR, 0.07 * scaled, feedback)
 		&"player_hurt":
 			_emit_burst(spawn_position, COLOR_HURT, count, lifetime, scaled)
 			_pulse_flash(COLOR_HURT, 0.05 * scaled, feedback)
@@ -90,10 +110,11 @@ func spawn_from_feedback(feedback: Dictionary, global_position: Vector2) -> void
 			_emit_burst(spawn_position, COLOR_DEATH, count, lifetime, scaled)
 		&"checkpoint":
 			_emit_burst(spawn_position, COLOR_CHECKPOINT, count, lifetime, scaled)
+			_spawn_shockwave(spawn_position, COLOR_CHECKPOINT, scaled * 0.55, feedback)
 		&"telegraph_counterable":
-			_emit_burst(spawn_position, COLOR_TELEGRAPH_OK, count, lifetime, scaled * 0.8)
+			_emit_telegraph(spawn_position, COLOR_TELEGRAPH_OK, count, lifetime, scaled * 0.85, true)
 		&"telegraph_not_counterable":
-			_emit_burst(spawn_position, COLOR_TELEGRAPH_WARN, count, lifetime, scaled * 0.9)
+			_emit_telegraph(spawn_position, COLOR_TELEGRAPH_WARN, count, lifetime, scaled * 0.95, false)
 		&"swing_trail":
 			_spawn_swing_trail(spawn_position, 1, feedback, scaled)
 		_:
@@ -208,8 +229,43 @@ func _emit_burst(
 	particles.amount = maxi(amount, 2)
 	particles.lifetime = lifetime
 	particles.color = color
+	particles.direction = Vector2(0, -1)
+	particles.spread = 180.0
+	particles.gravity = Vector2(0, 420)
+	particles.initial_velocity_min = 40.0 * strength
+	particles.initial_velocity_max = 120.0 * strength
 	particles.scale_amount_min = 1.0 * strength
 	particles.scale_amount_max = 2.5 * strength
+	particles.restart()
+	particles.emitting = true
+
+
+func _emit_telegraph(
+	global_position: Vector2,
+	color: Color,
+	amount: int,
+	lifetime: float,
+	strength: float,
+	counterable: bool
+) -> void:
+	var contrast := FeedbackSettingsAccess.get_telegraph_contrast_multiplier()
+	var particles := _acquire_particles()
+	if particles == null:
+		return
+
+	var tint := color
+	tint.a = clampf(color.a * contrast, 0.2, 1.0)
+	particles.global_position = global_position
+	particles.amount = maxi(int(roundf(float(amount) * contrast)), 3)
+	particles.lifetime = lifetime * (1.15 if counterable else 1.0)
+	particles.color = tint
+	particles.direction = Vector2(0, -1)
+	particles.spread = 150.0 if counterable else 120.0
+	particles.gravity = Vector2(0, 120)
+	particles.initial_velocity_min = 20.0 * strength * contrast
+	particles.initial_velocity_max = 70.0 * strength * contrast
+	particles.scale_amount_min = 1.2 * strength * contrast
+	particles.scale_amount_max = 2.8 * strength * contrast
 	particles.restart()
 	particles.emitting = true
 
@@ -236,20 +292,38 @@ func _color_for_kind(kind: StringName) -> Color:
 			return COLOR_RED_BRAND
 		&"barrier":
 			return COLOR_BARRIER
+		&"gunshot":
+			return COLOR_GUNSHOT
+		&"chain":
+			return COLOR_CHAIN
+		&"vermilite":
+			return COLOR_VERMILITE
+		&"boss":
+			return COLOR_BOSS
+		&"mol_khar":
+			return COLOR_MOL_KHAR
 		_:
 			return COLOR_HIT
 
 
 func _default_count_for_kind(kind: StringName) -> int:
 	match kind:
-		&"hit_heavy", &"counter":
+		&"hit_heavy", &"counter", &"boss":
 			return 10
-		&"red_brand", &"barrier":
+		&"red_brand", &"barrier", &"vermilite":
 			return 14
+		&"gunshot":
+			return 8
+		&"chain":
+			return 9
+		&"mol_khar":
+			return 16
 		&"player_hurt":
 			return 7
 		&"death":
 			return 18
+		&"telegraph_counterable", &"telegraph_not_counterable":
+			return 5
 		_:
 			return 6
 
@@ -265,7 +339,6 @@ func _apply_accessibility_strength(strength: float, feedback: Dictionary) -> flo
 	var scaled := strength
 	if _should_reduce_flashes(feedback):
 		scaled *= 0.55
-	scaled *= FeedbackSettingsAccess.get_telegraph_contrast_multiplier()
 	return scaled
 
 

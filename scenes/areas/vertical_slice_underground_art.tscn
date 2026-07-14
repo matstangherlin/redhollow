@@ -17,12 +17,13 @@ size = Vector2(24, 96)
 [node name="VerticalSliceUndergroundArt" type="Node2D"]
 script = ExtResource("1_area_root")
 area_id = &"vs_greybox_underground"
-area_display_name = "Catacumbas (Beta North Star)"
+area_display_name = "Catacumbas (Beta Final Mold)"
 camera_limits = Rect2(0, 200, 1200, 1000)
 fall_recovery_y = 1280.0
 area_tint = Color(0.22, 0.22, 0.26, 1)
 show_greybox_visuals = false
 show_art_presentation = true
+enable_final_sample = true
 
 [node name="AreaLabel" type="Label" parent="."]
 offset_left = 24.0
@@ -40,7 +41,7 @@ offset_right = 640.0
 offset_bottom = 84.0
 theme_override_colors/font_color = Color(0.62, 0.62, 0.68, 1)
 theme_override_font_sizes/font_size = 13
-text = "Mina, Ordem, ruínas antigas — Deacon Rusk e o despertar."
+text = "Checkpoint, pista — depois o Executor."
 
 [node name="BackgroundTint" type="Polygon2D" parent="."]
 color = Color(0.12, 0.12, 0.16, 0.35)

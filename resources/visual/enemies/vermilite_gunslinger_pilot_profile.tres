@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EnemyVisualProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/visual/enemies/enemy_visual_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"vermilite_gunslinger_pilot"
+enemy_id = &"vermilite_gunslinger"
+visual_mode = 1
+use_procedural_pilot_frames = true
+state_animation_map = {
+"alert": "aim",
+"dead": "death",
+"hurt": "hurt",
+"idle": "idle",
+"knocked_back": "hurt",
+"patrol": "reposition",
+"reload": "reload",
+"reposition": "reposition",
+"recovery": "recoil",
+"shoot": "fire"
+}
+attack_phase_map = {
+"active": "fire",
+"recovery": "recoil",
+"startup": "aim"
+}

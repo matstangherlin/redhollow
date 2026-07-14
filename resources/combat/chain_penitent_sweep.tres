@@ -6,10 +6,10 @@
 script = ExtResource("1_attack_data")
 attack_id = &"chain_penitent_sweep"
 display_name = "Chain Sweep"
-damage = 6.0
-startup_time = 0.72
+damage = 5.0
+startup_time = 0.78
 active_time = 0.16
-recovery_time = 0.55
+recovery_time = 0.58
 hitbox_size = Vector2(72, 32)
 hitbox_offset = Vector2(38, 0)
 hitstun_time = 0.28

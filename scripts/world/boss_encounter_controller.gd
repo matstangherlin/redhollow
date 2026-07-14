@@ -6,10 +6,15 @@ signal boss_defeated(boss_id: StringName)
 signal encounter_completed(encounter_id: StringName)
 signal boss_hud_bound(boss_id: StringName)
 signal encounter_message_shown(message: String)
+signal encounter_state_changed(previous_state: int, new_state: int)
 
 enum EncounterState {
 	INACTIVE,
+	ACTIVATION_REQUESTED,
+	CLOSING_GATES,
+	SPAWNING,
 	ACTIVE,
+	RESETTING,
 	COMPLETED,
 }
 
@@ -40,7 +45,10 @@ var _status_timer: SceneTreeTimer = null
 var _style_manager: StyleManager = null
 var _progression: ProgressionComponent = null
 var _boss_health_hud: BossHealthHud = null
-var _encounter_scheduled: bool = false
+var _lifecycle_generation: int = 0
+var _completion_committed: bool = false
+var _area_unloading: bool = false
+var _activation_requires_exit: bool = false
 
 
 func _ready() -> void:
@@ -53,12 +61,15 @@ func _ready() -> void:
 
 	_set_state(EncounterState.INACTIVE)
 	if _activation_zone != null:
-		_activation_zone.monitoring = false
-		_activation_zone.body_entered.connect(_on_activation_body_entered)
+		_activation_zone.set_deferred("monitoring", false)
+		if not _activation_zone.body_entered.is_connected(_on_activation_body_entered):
+			_activation_zone.body_entered.connect(_on_activation_body_entered)
+		if not _activation_zone.body_exited.is_connected(_on_activation_body_exited):
+			_activation_zone.body_exited.connect(_on_activation_body_exited)
 
 
 func arm_activation_monitoring() -> void:
-	if state != EncounterState.INACTIVE:
+	if state != EncounterState.INACTIVE or _area_unloading:
 		return
 	if _activation_zone == null:
 		return
@@ -73,34 +84,51 @@ func bind_encounter_services(
 	_style_manager = style_manager
 	_progression = progression
 	_boss_health_hud = boss_health_hud
+	if state == EncounterState.INACTIVE and _is_marked_complete_in_progression():
+		_apply_completed_state()
+
+
+func request_activation(body: Node) -> bool:
+	if state != EncounterState.INACTIVE or _area_unloading or _activation_requires_exit:
+		return false
+	if body == null or not body.is_in_group(PLAYER_GROUP):
+		return false
+
+	_lifecycle_generation += 1
+	var generation := _lifecycle_generation
+	_completion_committed = false
+	_set_state(EncounterState.ACTIVATION_REQUESTED)
+	_disable_activation_zone()
+	call_deferred("_await_activation_boundary", generation)
+	return true
 
 
 func is_blocking_exits() -> bool:
-	return state == EncounterState.ACTIVE
+	return state in [EncounterState.CLOSING_GATES, EncounterState.SPAWNING, EncounterState.ACTIVE]
 
 
 func on_area_unloading() -> void:
-	_encounter_scheduled = false
-	if state == EncounterState.ACTIVE:
-		_set_gates_closed(false)
-		_set_exits_blocked(false)
+	if _area_unloading:
+		return
+	_area_unloading = true
+	_lifecycle_generation += 1
+	_disable_activation_zone()
+	_set_state(EncounterState.RESETTING)
+	_unbind_boss_hud()
+	_clear_boss_projectiles()
+	_reset_boss_to_dormant()
 
 
 func reset_active_encounter_for_player_death() -> void:
-	if state != EncounterState.ACTIVE:
+	if state not in [
+		EncounterState.ACTIVATION_REQUESTED,
+		EncounterState.CLOSING_GATES,
+		EncounterState.SPAWNING,
+		EncounterState.ACTIVE,
+	]:
 		return
-
-	if _boss_health_hud != null:
-		_boss_health_hud.unbind_boss()
-	else:
-		for node in get_tree().get_nodes_in_group(BOSS_HUD_GROUP):
-			if node is BossHealthHud:
-				(node as BossHealthHud).unbind_boss()
-				break
-
-	if _boss != null and _boss.has_method("reset_for_player_death"):
-		_boss.call("reset_for_player_death")
-		_bind_boss_hud()
+	_activation_requires_exit = true
+	_request_reset()
 
 
 func _resolve_nodes() -> void:
@@ -122,33 +150,109 @@ func _resolve_nodes() -> void:
 
 
 func _on_activation_body_entered(body: Node) -> void:
-	if state != EncounterState.INACTIVE:
-		return
-	if _encounter_scheduled:
-		return
-	if not body.is_in_group(PLAYER_GROUP):
-		return
-	_encounter_scheduled = true
-	call_deferred("_start_encounter")
+	# Physics callbacks only register a lifecycle request.
+	request_activation(body)
 
 
-func _start_encounter() -> void:
-	_encounter_scheduled = false
-	if state != EncounterState.INACTIVE:
+func _on_activation_body_exited(body: Node) -> void:
+	if body != null and body.is_in_group(PLAYER_GROUP):
+		_activation_requires_exit = false
+
+
+func _await_activation_boundary(generation: int) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.physics_frame
+	if not _matches_lifecycle(generation, EncounterState.ACTIVATION_REQUESTED):
+		return
+	call_deferred("_begin_closing_gates", generation)
+
+
+func _begin_closing_gates(generation: int) -> void:
+	if not _matches_lifecycle(generation, EncounterState.ACTIVATION_REQUESTED):
+		return
+	_set_state(EncounterState.CLOSING_GATES)
+	call_deferred("_await_start_boundary", generation)
+
+
+func _await_start_boundary(generation: int) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.physics_frame
+	if not _matches_lifecycle(generation, EncounterState.CLOSING_GATES):
+		return
+	call_deferred("_start_encounter", generation)
+
+
+func _start_encounter(generation: int) -> void:
+	if not _matches_lifecycle(generation, EncounterState.CLOSING_GATES):
+		return
+
+	_set_state(EncounterState.SPAWNING)
+	_reset_boss_to_dormant()
+	if _boss == null:
+		push_warning("BossEncounter '%s' has no boss. Releasing the encounter." % String(encounter_id))
+		_request_reset()
 		return
 
 	_set_state(EncounterState.ACTIVE)
-	_set_gates_closed(true)
-	_set_exits_blocked(true)
 	_bind_boss_hud()
-	if _boss != null:
-		_boss.activate_boss()
+	_boss.activate_boss()
 	_show_status_message("Deacon Rusk")
 	encounter_started.emit(encounter_id)
 	_start_intro_dialogue()
 
-	if _boss != null and not _boss.boss_defeated.is_connected(_on_boss_defeated):
+	if not _boss.boss_defeated.is_connected(_on_boss_defeated):
 		_boss.boss_defeated.connect(_on_boss_defeated, CONNECT_ONE_SHOT)
+
+
+func _request_reset() -> void:
+	if state in [EncounterState.INACTIVE, EncounterState.RESETTING, EncounterState.COMPLETED]:
+		return
+	_lifecycle_generation += 1
+	var generation := _lifecycle_generation
+	_disable_activation_zone()
+	_set_state(EncounterState.RESETTING)
+	_unbind_boss_hud()
+	call_deferred("_await_reset_boundary", generation)
+
+
+func _await_reset_boundary(generation: int) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.physics_frame
+	if not _matches_lifecycle(generation, EncounterState.RESETTING):
+		return
+	call_deferred("_perform_reset", generation)
+
+
+func _perform_reset(generation: int) -> void:
+	if not _matches_lifecycle(generation, EncounterState.RESETTING):
+		return
+	_clear_boss_projectiles()
+	_reset_boss_to_dormant()
+	call_deferred("_await_reset_finalize_boundary", generation)
+
+
+func _await_reset_finalize_boundary(generation: int) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.physics_frame
+	if not _matches_lifecycle(generation, EncounterState.RESETTING):
+		return
+	call_deferred("_finalize_reset", generation)
+
+
+func _finalize_reset(generation: int) -> void:
+	if not _matches_lifecycle(generation, EncounterState.RESETTING):
+		return
+	_completion_committed = false
+	_set_state(EncounterState.INACTIVE)
+	arm_activation_monitoring()
 
 
 func _on_boss_defeated(boss_id: StringName) -> void:
@@ -158,9 +262,12 @@ func _on_boss_defeated(boss_id: StringName) -> void:
 
 
 func _complete_encounter(boss_id: StringName) -> void:
+	if state != EncounterState.ACTIVE or _completion_committed:
+		return
+	_completion_committed = true
+	_clear_boss_projectiles()
+	_unbind_boss_hud()
 	_set_state(EncounterState.COMPLETED)
-	_set_gates_closed(false)
-	_set_exits_blocked(false)
 	_disable_activation_zone()
 	_mark_complete_in_progression()
 	_grant_style_completion_bonus()
@@ -181,9 +288,10 @@ func _start_intro_dialogue() -> void:
 
 
 func _apply_completed_state() -> void:
+	_lifecycle_generation += 1
+	_completion_committed = true
+	_unbind_boss_hud()
 	_set_state(EncounterState.COMPLETED)
-	_set_gates_closed(false)
-	_set_exits_blocked(false)
 	_disable_activation_zone()
 	if _boss != null:
 		_boss.mark_encounter_cleared()
@@ -205,11 +313,57 @@ func _bind_boss_hud() -> void:
 			return
 
 
+func _unbind_boss_hud() -> void:
+	if _boss_health_hud != null:
+		_boss_health_hud.unbind_boss()
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group(BOSS_HUD_GROUP):
+		if node is BossHealthHud:
+			(node as BossHealthHud).unbind_boss()
+			return
+
+
+func _reset_boss_to_dormant() -> void:
+	if _boss != null and _boss.has_method("reset_for_player_death"):
+		_boss.call("reset_for_player_death")
+
+
+func _clear_boss_projectiles() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group("physical_projectile"):
+		if not (node is PhysicalProjectile):
+			continue
+		var projectile := node as PhysicalProjectile
+		if projectile.owner_node == _boss:
+			projectile.queue_free()
+
+
 func _set_state(new_state: EncounterState) -> void:
+	var previous_state := state
 	state = new_state
-	if new_state == EncounterState.INACTIVE:
-		_set_gates_closed(false)
-		_set_exits_blocked(false)
+	match new_state:
+		EncounterState.CLOSING_GATES, EncounterState.SPAWNING, EncounterState.ACTIVE:
+			_set_gates_closed(true)
+			_set_exits_blocked(true)
+		EncounterState.INACTIVE, EncounterState.ACTIVATION_REQUESTED, EncounterState.RESETTING, EncounterState.COMPLETED:
+			_set_gates_closed(false)
+			_set_exits_blocked(false)
+	if previous_state != new_state:
+		encounter_state_changed.emit(previous_state, new_state)
+
+
+func _matches_lifecycle(generation: int, expected_state: EncounterState) -> bool:
+	return (
+		is_inside_tree()
+		and not _area_unloading
+		and generation == _lifecycle_generation
+		and state == expected_state
+	)
 
 
 func _set_gates_closed(closed: bool) -> void:

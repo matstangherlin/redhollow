@@ -4,7 +4,7 @@ class_name StyleHudV2
 ## Reorganized StyleHud layout — same bindings, compact vitals, combat-aware style cluster.
 
 const COMBAT_FADE_SECONDS := 5.0
-const EXPLORATION_STYLE_ALPHA := 0.0
+const EXPLORATION_STYLE_ALPHA := 0.42
 
 @onready var _style_cluster: Control = %StyleCluster
 @onready var _vitals_cluster: Control = %VitalsCluster
@@ -89,8 +89,17 @@ func _apply_style_cluster_visibility() -> void:
 		return
 
 	var in_combat := _combat_pulse_timer > 0.0
+	var ranked := false
 	if _style_manager != null and String(_style_manager.style_rank) != "DUST":
+		ranked = true
 		in_combat = true
 
-	_style_cluster.visible = in_combat
-	_style_cluster.modulate.a = 1.0 if _combat_pulse_timer > 0.0 else 0.72
+	if in_combat:
+		_style_cluster.visible = true
+		_style_cluster.modulate.a = 1.0 if _combat_pulse_timer > 0.0 else 0.85
+	elif ranked:
+		_style_cluster.visible = true
+		_style_cluster.modulate.a = EXPLORATION_STYLE_ALPHA
+	else:
+		_style_cluster.visible = false
+		_style_cluster.modulate.a = 0.0

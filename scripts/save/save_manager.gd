@@ -24,7 +24,8 @@ const SAVE_DIR := "user://saves"
 const DEFAULT_SCENE_PATH := "res://scenes/demo/vertical_slice_greybox.tscn"
 
 @export var slot_id: String = DEFAULT_SLOT_ID
-@export var auto_load_on_ready: bool = true
+## Product shell owns New Game / Continue. Gameplay must never auto-load.
+@export var auto_load_on_ready: bool = false
 
 var _game_root: Node = null
 var _arena: Node = null
@@ -37,6 +38,7 @@ var _pending_load: bool = false
 var _transition_manager: AreaTransitionManager = null
 var _services: GameServices = null
 var _last_debug_message: String = ""
+var _last_load_failure_reason: String = ""
 
 
 func _ready() -> void:
@@ -50,6 +52,9 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not are_debug_save_hotkeys_enabled():
+		return
+
 	if event.is_action_pressed("debug_save"):
 		if save_game():
 			_set_debug_message("Save written to %s" % get_slot_save_path())
@@ -61,6 +66,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_set_debug_message("Save loaded from %s" % get_slot_save_path())
 		else:
 			_set_debug_message("Load failed. See debug output.")
+
+
+static func are_debug_save_hotkeys_enabled() -> bool:
+	return OS.is_debug_build()
 
 
 func bind_game(
@@ -97,8 +106,10 @@ func rebind_current_area(area: Node = null) -> void:
 	_connect_checkpoints()
 
 
-func create_new_save() -> Dictionary:
+func create_new_save(persist_to_disk: bool = false) -> Dictionary:
 	_current_save = _capture_game_state()
+	if persist_to_disk and _scene_ready:
+		_write_save_file(_current_save)
 	save_created.emit(slot_id)
 	return _current_save.duplicate(true)
 
@@ -114,6 +125,7 @@ func save_game() -> bool:
 
 
 func load_game() -> bool:
+	_last_load_failure_reason = ""
 	if not _scene_ready:
 		_pending_load = true
 		return false
@@ -123,35 +135,40 @@ func load_game() -> bool:
 		loaded = _read_save_file(get_slot_backup_path())
 
 	if loaded.is_empty():
-		push_warning("No valid save file found for slot '%s'. Starting fresh game state." % slot_id)
-		create_new_save()
-		save_failed.emit(slot_id, "missing_or_invalid_save")
+		_last_load_failure_reason = "missing_or_invalid_save"
+		push_warning("No valid save file found for slot '%s'." % slot_id)
+		save_failed.emit(slot_id, _last_load_failure_reason)
 		return false
 
 	var validation := validate_save(loaded)
 	if not validation.get("valid", false):
-		push_warning("Save validation failed: %s" % String(validation.get("reason", "unknown")))
-		save_failed.emit(slot_id, String(validation.get("reason", "invalid_save")))
+		_last_load_failure_reason = String(validation.get("reason", "invalid_save"))
+		push_warning("Save validation failed: %s" % _last_load_failure_reason)
+		save_failed.emit(slot_id, _last_load_failure_reason)
 		return false
 
 	if not validation.get("compatible", true):
+		_last_load_failure_reason = "version_incompatible"
 		var warning := "Save version %s is outdated or incompatible with current version %s." % [
 			str(validation.get("save_version", "?")),
 			str(SaveData.CURRENT_SAVE_VERSION),
 		]
 		push_warning(warning)
 		save_validation_warning.emit(warning)
+		save_failed.emit(slot_id, _last_load_failure_reason)
 		_set_debug_message(warning)
+		return false
 
 	var registry := ContentRegistry.get_active()
 	if registry != null and not registry.is_save_compatible_with_manifest(loaded):
+		_last_load_failure_reason = "manifest_incompatible"
 		var manifest_warning := (
 			"Save profile/manifest incompatible with active build (%s)."
 			% String(registry.get_manifest_id())
 		)
 		push_warning(manifest_warning)
 		save_validation_warning.emit(manifest_warning)
-		save_failed.emit(slot_id, "manifest_incompatible")
+		save_failed.emit(slot_id, _last_load_failure_reason)
 		return false
 
 	_current_save = loaded
@@ -162,6 +179,36 @@ func load_game() -> bool:
 
 func validate_save(data: Variant) -> Dictionary:
 	return SaveData.validate(data)
+
+
+func get_last_load_failure_reason() -> String:
+	return _last_load_failure_reason
+
+
+func archive_and_clear_slot() -> bool:
+	_ensure_save_directory()
+	var archived := false
+	var archive_path := get_slot_archive_path()
+	var source_path := ""
+	if FileAccess.file_exists(get_slot_save_path()):
+		var primary := _read_save_file(get_slot_save_path())
+		if not primary.is_empty():
+			source_path = get_slot_save_path()
+		elif FileAccess.file_exists(get_slot_backup_path()):
+			source_path = get_slot_backup_path()
+		else:
+			# Keep a copy of corrupt primary for support; do not touch .bak contents.
+			source_path = get_slot_save_path()
+	elif FileAccess.file_exists(get_slot_backup_path()):
+		source_path = get_slot_backup_path()
+
+	if not source_path.is_empty():
+		archived = DirAccess.copy_absolute(source_path, archive_path) == OK
+		if not archived:
+			push_warning("Failed to archive save before New Game: %s" % source_path)
+
+	var deleted := delete_save()
+	return archived or deleted
 
 
 func delete_save() -> bool:
@@ -179,40 +226,114 @@ func has_save() -> bool:
 	return FileAccess.file_exists(get_slot_save_path()) or FileAccess.file_exists(get_slot_backup_path())
 
 
-static func inspect_slot(slot: String = DEFAULT_SLOT_ID) -> Dictionary:
+static func inspect_slot(
+	slot: String = DEFAULT_SLOT_ID,
+	manifest_path: String = ContentManifest.PATH_BETA_DEMO
+) -> Dictionary:
 	var save_path := "%s/%s.save.json" % [SAVE_DIR, slot]
 	var backup_path := "%s/%s.save.bak" % [SAVE_DIR, slot]
-	var path := save_path if FileAccess.file_exists(save_path) else backup_path
-	if not FileAccess.file_exists(path):
-		return {"status": "none", "message": ""}
 
+	if FileAccess.file_exists(save_path):
+		var primary := _inspect_file_path(save_path, manifest_path, false)
+		if String(primary.get("status", "")) == "valid":
+			return primary
+		if FileAccess.file_exists(backup_path):
+			var backup := _inspect_file_path(backup_path, manifest_path, true)
+			if String(backup.get("status", "")) == "valid":
+				backup["message"] = "Progresso encontrado (restaurável via backup)."
+				return backup
+		return primary
+
+	if FileAccess.file_exists(backup_path):
+		return _inspect_file_path(backup_path, manifest_path, true)
+
+	return {"status": "none", "message": "", "source": "none"}
+
+
+static func _inspect_file_path(path: String, manifest_path: String, used_backup: bool) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		return {"status": "corrupted", "message": "Save corrompido — use Novo Jogo."}
+		return {
+			"status": "corrupted",
+			"message": "Não foi possível ler o save. Inicie um Novo Jogo.",
+			"source": "backup" if used_backup else "primary",
+		}
 
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
-	if parsed == null:
-		return {"status": "corrupted", "message": "Save corrompido — use Novo Jogo."}
+	if parsed == null or typeof(parsed) != TYPE_DICTIONARY:
+		return {
+			"status": "corrupted",
+			"message": "Save corrompido. O jogo não foi encerrado — inicie um Novo Jogo.",
+			"source": "backup" if used_backup else "primary",
+		}
 
+	return _inspect_parsed_payload(parsed as Dictionary, manifest_path, used_backup)
+
+
+static func _inspect_parsed_payload(
+	parsed: Dictionary,
+	manifest_path: String,
+	used_backup: bool
+) -> Dictionary:
 	var validation := SaveData.validate(parsed)
 	if not validation.get("valid", false):
 		return {
 			"status": "corrupted",
-			"message": "Save inválido (%s)." % String(validation.get("reason", "unknown")),
+			"message": "Save inválido (%s). Inicie um Novo Jogo." % String(validation.get("reason", "unknown")),
+			"source": "backup" if used_backup else "primary",
 		}
 
 	if not validation.get("compatible", true):
 		return {
 			"status": "incompatible",
-			"message": "Save incompatível com esta versão — use Novo Jogo.",
+			"message": "Save incompatível com esta versão. Inicie um Novo Jogo.",
+			"source": "backup" if used_backup else "primary",
 		}
 
-	return {"status": "valid", "message": "Progresso encontrado."}
+	var registry := ContentRegistry.get_active()
+	var owned_registry := false
+	if registry == null and not manifest_path.is_empty() and ResourceLoader.exists(manifest_path):
+		registry = ContentRegistry.activate_from_path(manifest_path)
+		owned_registry = registry != null
+
+	if registry != null:
+		if not registry.is_save_compatible_with_manifest(parsed):
+			if owned_registry:
+				ContentRegistry.clear_active()
+			return {
+				"status": "incompatible",
+				"message": "Save incompatível com o conteúdo desta build. Inicie um Novo Jogo.",
+				"source": "backup" if used_backup else "primary",
+			}
+		var area_path := String(parsed.get("current_scene", ""))
+		if not area_path.is_empty() and not registry.can_load_area_scene(area_path):
+			if owned_registry:
+				ContentRegistry.clear_active()
+			return {
+				"status": "incompatible",
+				"message": "Área salva indisponível nesta build. Inicie um Novo Jogo.",
+				"source": "backup" if used_backup else "primary",
+			}
+
+	if owned_registry:
+		ContentRegistry.clear_active()
+
+	return {
+		"status": "valid",
+		"message": "Progresso encontrado.",
+		"source": "backup" if used_backup else "primary",
+	}
 
 
 func create_backup() -> bool:
 	if not FileAccess.file_exists(get_slot_save_path()):
+		return false
+
+	# Never overwrite a good backup with a corrupt primary.
+	var primary := _read_save_file(get_slot_save_path())
+	if primary.is_empty():
+		push_warning("Skipped backup — primary save is invalid for slot '%s'." % slot_id)
 		return false
 
 	_ensure_save_directory()
@@ -233,6 +354,10 @@ func get_slot_temp_path() -> String:
 
 func get_slot_backup_path() -> String:
 	return "%s/%s.save.bak" % [SAVE_DIR, slot_id]
+
+
+func get_slot_archive_path() -> String:
+	return "%s/%s.save.archive.json" % [SAVE_DIR, slot_id]
 
 
 func get_resolved_save_directory() -> String:
@@ -407,8 +532,15 @@ func _write_save_file(save_data: Dictionary) -> bool:
 	temp_file.close()
 
 	if FileAccess.file_exists(final_path):
-		if not create_backup():
-			push_warning("Failed to create save backup before writing slot '%s'." % slot_id)
+		var existing_primary := _read_save_file(final_path)
+		if not existing_primary.is_empty():
+			if not create_backup():
+				push_warning("Failed to create save backup before writing slot '%s'." % slot_id)
+		else:
+			push_warning(
+				"Primary save invalid for slot '%s' — keeping existing backup untouched."
+				% slot_id
+			)
 
 	if FileAccess.file_exists(final_path):
 		var remove_error := DirAccess.remove_absolute(final_path)

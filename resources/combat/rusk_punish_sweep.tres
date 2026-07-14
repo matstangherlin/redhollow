@@ -6,10 +6,10 @@
 script = ExtResource("1_attack_data")
 attack_id = &"rusk_punish_sweep"
 display_name = "Rusk Punish Sweep"
-damage = 9.0
-startup_time = 0.78
+damage = 8.0
+startup_time = 0.82
 active_time = 0.14
-recovery_time = 0.48
+recovery_time = 0.50
 hitbox_size = Vector2(58, 30)
 hitbox_offset = Vector2(40, 4)
 hitstun_time = 0.32

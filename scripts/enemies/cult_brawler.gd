@@ -29,11 +29,11 @@ const RECOVERY_BODY_COLOR := Color(0.44, 0.14, 0.16, 1.0)
 const HURT_BODY_COLOR := Color(1.0, 0.64, 0.28, 1.0)
 const DEAD_BODY_COLOR := Color(0.18, 0.16, 0.16, 1.0)
 
-@export var max_health: float = 14.0
+@export var max_health: float = 12.0
 @export var move_speed: float = 120.0
-@export var detection_range: float = 220.0
+@export var detection_range: float = 200.0
 @export var attack_range: float = 72.0
-@export var attack_cooldown: float = 1.35
+@export var attack_cooldown: float = 1.55
 @export var patrol_distance: float = 160.0
 @export var alert_duration: float = 0.35
 @export var knockback_state_duration: float = 0.12

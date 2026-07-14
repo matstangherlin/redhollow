@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://cn8finalsample1"]
+
+[ext_resource type="Script" path="res://scripts/visual/street_final_sample_test_scene.gd" id="1_test"]
+[ext_resource type="PackedScene" path="res://scenes/areas/vertical_slice_street_art.tscn" id="3_art"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
+[ext_resource type="PackedScene" path="res://scenes/core/camera_controller.tscn" id="5_camera"]
+
+[node name="StreetFinalSampleTest" type="Node2D"]
+script = ExtResource("1_test")
+
+[node name="ArtStreet" parent="." instance=ExtResource("3_art")]
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+position = Vector2(120, 848)
+fall_recovery_y = 1320.0
+
+[node name="CameraController" parent="." instance=ExtResource("5_camera")]
+target_path = NodePath("../Player")
+area_limits = Rect2(100, 200, 800, 1000)
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 90
+
+[node name="ModeLabel" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 980.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "Final Sample"

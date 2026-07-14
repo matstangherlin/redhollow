@@ -66,7 +66,10 @@ func _initialize_runtime_systems() -> void:
 			"[Game] Save directory: %s | Slot path: %s"
 			% [save_manager.get_resolved_save_directory(), save_manager.get_resolved_slot_save_path()]
 		)
-		print("[Game] Product shell active. F8 save / F9 load / Pause: Esc or Start.")
+		if SaveManager.are_debug_save_hotkeys_enabled():
+			print("[Game] Product shell active. Debug: F8 save / F9 load. Pause: Esc or Start.")
+		else:
+			print("[Game] Product shell active. Pause: Esc or Start. (Debug save hotkeys disabled in release.)")
 
 	_bind_narrative_systems()
 

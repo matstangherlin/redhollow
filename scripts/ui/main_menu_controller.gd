@@ -14,15 +14,28 @@ const GAME_SCENE := "res://scenes/demo/vertical_slice_greybox.tscn"
 @onready var _confirmation_dialog: ConfirmationDialogView = %ConfirmationDialog
 @onready var _loading_screen: LoadingScreen = %LoadingScreen
 
-var _pending_new_game: bool = false
+enum ConfirmIntent {
+	NONE,
+	NEW_GAME_OVERWRITE,
+	NEW_GAME_AFTER_CORRUPT,
+}
+
+var _confirm_intent: ConfirmIntent = ConfirmIntent.NONE
 
 
 func _ready() -> void:
 	if GameBootState != null:
 		GameBootState.set_active_manifest_path(ContentManifest.PATH_BETA_DEMO)
 	UiThemeHelper.style_title_label(get_node_or_null("%TitleLabel") as Label)
+	UiThemeHelper.style_body_label(_status_label)
+	for button in [_new_game_button, _continue_button, _options_button, _credits_button, _quit_button]:
+		UiThemeHelper.style_menu_button(button)
+	var dim := get_node_or_null("Background") as ColorRect
+	if dim != null:
+		dim.color = Color(0.045, 0.035, 0.05, 1.0)
 	_connect_buttons()
 	_refresh_continue_state()
+	_start_menu_music()
 	if _options_menu != null:
 		_options_menu.closed.connect(_on_submenu_closed)
 	if _credits_screen != null:
@@ -32,6 +45,16 @@ func _ready() -> void:
 		_confirmation_dialog.cancelled.connect(_on_confirmation_cancelled)
 	if _new_game_button != null:
 		_new_game_button.grab_focus()
+
+
+func _start_menu_music() -> void:
+	var existing := get_tree().get_first_node_in_group(MusicController.MUSIC_CONTROLLER_GROUP)
+	var music: MusicController = existing as MusicController
+	if music == null:
+		music = MusicController.new()
+		music.name = "MenuMusicController"
+		add_child(music)
+	music.play_slot(MusicSlotId.MENU)
 
 
 func _connect_buttons() -> void:
@@ -49,7 +72,8 @@ func _connect_buttons() -> void:
 
 func _refresh_continue_state() -> void:
 	var inspection := _inspect_save_slot()
-	var enabled := String(inspection.get("status", "none")) == "valid"
+	var status := String(inspection.get("status", "none"))
+	var enabled := status == "valid"
 	if _continue_button != null:
 		_continue_button.disabled = not enabled
 	if _status_label != null:
@@ -57,32 +81,50 @@ func _refresh_continue_state() -> void:
 
 
 func _inspect_save_slot() -> Dictionary:
-	return SaveManager.inspect_slot()
+	return SaveManager.inspect_slot(
+		SaveManager.DEFAULT_SLOT_ID,
+		ContentManifest.PATH_BETA_DEMO
+	)
 
 
 func _on_new_game_pressed() -> void:
 	var inspection := _inspect_save_slot()
-	if String(inspection.get("status", "none")) == "valid":
-		_pending_new_game = true
+	var status := String(inspection.get("status", "none"))
+	if status == "none":
+		_start_new_game()
+		return
+
+	if status == "corrupted":
+		_confirm_intent = ConfirmIntent.NEW_GAME_AFTER_CORRUPT
 		if _confirmation_dialog != null:
 			_confirmation_dialog.present(
-				"Iniciar novo jogo?",
-				"Isso substituirá o progresso salvo atual. Deseja continuar?",
+				"Save corrompido",
+				"O progresso salvo não pôde ser lido. O backup existente não será sobrescrito agora. Deseja iniciar um Novo Jogo? O save anterior será arquivado.",
 				"Novo Jogo",
 				"Cancelar"
 			)
 		return
-	_start_new_game()
+
+	_confirm_intent = ConfirmIntent.NEW_GAME_OVERWRITE
+	if _confirmation_dialog != null:
+		_confirmation_dialog.present(
+			"Iniciar novo jogo?",
+			"Isso arquivará e substituirá o progresso salvo atual. Deseja continuar?",
+			"Novo Jogo",
+			"Cancelar"
+		)
 
 
 func _on_continue_pressed() -> void:
 	var inspection := _inspect_save_slot()
 	var status := String(inspection.get("status", "none"))
 	if status == "corrupted":
-		_set_status("Save corrompido. Inicie um novo jogo.")
+		_set_status(String(inspection.get("message", "Save corrompido. Inicie um Novo Jogo.")))
+		_offer_new_game_after_problem()
 		return
 	if status == "incompatible":
-		_set_status("Save incompatível com esta versão.")
+		_set_status(String(inspection.get("message", "Save incompatível com esta versão.")))
+		_offer_new_game_after_problem()
 		return
 	if status != "valid":
 		return
@@ -90,6 +132,17 @@ func _on_continue_pressed() -> void:
 	if GameBootState != null:
 		GameBootState.set_continue_game()
 	_start_game_scene()
+
+
+func _offer_new_game_after_problem() -> void:
+	_confirm_intent = ConfirmIntent.NEW_GAME_AFTER_CORRUPT
+	if _confirmation_dialog != null:
+		_confirmation_dialog.present(
+			"Não foi possível continuar",
+			"O save não pode ser carregado. Deseja iniciar um Novo Jogo? O arquivo anterior será arquivado com segurança.",
+			"Novo Jogo",
+			"Cancelar"
+		)
 
 
 func _on_options_pressed() -> void:
@@ -112,13 +165,14 @@ func _on_submenu_closed() -> void:
 
 
 func _on_confirmation_confirmed() -> void:
-	if _pending_new_game:
-		_pending_new_game = false
-		_start_new_game()
+	if _confirm_intent == ConfirmIntent.NONE:
+		return
+	_confirm_intent = ConfirmIntent.NONE
+	_start_new_game()
 
 
 func _on_confirmation_cancelled() -> void:
-	_pending_new_game = false
+	_confirm_intent = ConfirmIntent.NONE
 
 
 func _start_new_game() -> void:

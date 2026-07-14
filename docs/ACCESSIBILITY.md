@@ -6,45 +6,44 @@ Opções de acessibilidade persistidas em `user://settings.json` (seção `acces
 
 | Campo | Tipo | Default | Efeito atual |
 | --- | --- | --- | --- |
-| `screen_shake_intensity` | float 0–1 | 1.0 | Multiplica intensidade em `CameraController.request_shake()` |
-| `reduced_flashes` | bool | false | Reservado — reduz flashes futuros (combate/VFX) |
-| `telegraph_contrast` | float 0.5–2 | 1.0 | Reservado — telegraphs de inimigos |
-| `text_speed` | float 0.25–3 | 1.0 | Reservado — velocidade de typewriter |
-| `instant_text` | bool | false | Reservado — diálogo instantâneo |
-| `subtitle_size` | float 0.75–2 | 1.0 | Reservado — escala de legendas |
-| `vibration_enabled` | bool | true | Reservado — háptico gamepad |
+| `screen_shake_intensity` | float 0–1 | 1.0 | Multiplica intensidade em `CameraController.request_shake()` — **0 elimina shake** |
+| `reduced_flashes` | bool | false | Reduz flashes fullscreen e intensidade de VFX (`CombatVfxSpawner`) |
+| `reduced_particles` | bool | false | Multiplicador ~0.4 no spawn de partículas |
+| `telegraph_contrast` | float 0.5–2 | 1.0 | Escala amount/alpha de telegraphs |
+| `text_speed` | float 0.25–3 | 1.0 | Velocidade do typewriter em `DialogueBox` |
+| `instant_text` | bool | false | Mostra linha de diálogo completa imediatamente |
+| `subtitle_size` | float 0.75–2 | 1.0 | Escala fonte do corpo/speaker do diálogo |
+| `vibration_enabled` | bool | true | `Input.start_joy_vibration` + `vibrate_handheld` |
 | `red_brand_hold_mode` | bool | true | **Ativo** — `true` = segurar U/RT; `false` = alternar |
-| `simplified_commands` | bool | false | **Preparação futura** — UI desabilitada |
+| `simplified_commands` | bool | false | Preparação futura — UI desabilitada |
+| `reduced_distortion` / `reduced_extreme_contrast` / `disable_chromatic_aberration` | bool | false | Aplicados em `RegionVisualController` |
+
+## Diálogo / legendas
+
+- Typewriter honra `text_speed` e `instant_text`.
+- Primeiro [E] com typewriter em andamento → completa a linha; segundo avança.
+- `subtitle_size` escala o texto do dialogue box (legenda de combate narrativo).
+- Prompts de avanço seguem `InputDeviceManager` (teclado/gamepad).
 
 ## Red Brand — hold vs toggle
 
-Implementado em `PlayerRedBrandController`:
+Implementado em `PlayerRedBrandController`.
 
-- **Segurar (default):** soltar U/RT libera o breaker.
-- **Alternar:** segundo pressionamento libera a carga.
+## Volume
 
-Alterável em Opções → Acessibilidade.
+Sliders Master / Music / SFX / Voice / UI / Ambience em Opções → buses em `default_bus_layout.tres`.
 
-## Screen shake
+## Escala UI
 
-`SettingsManager.get_screen_shake_multiplier()` aplicado na câmera. Valor `0` elimina shake.
+`video.ui_scale` → `Window.content_scale_factor` (0.75–2.0).
 
-## UI
+## Teste manual (apresentação)
 
-Menu Opções → seção **Acessibilidade** (scroll junto com vídeo/áudio).
+1. Shake 0% — combate sem tremor.
+2. Flashes/partículas reduzidos — VFX mais suaves.
+3. Instant text + subtitle size — diálogo.
+4. Vibração off — gamepad sem rumble.
+5. Music slider — beds de menu/área audíveis.
+6. Prompts — trocar teclado/gamepad no diálogo.
 
-## Roadmap beta
-
-- Wire `reduced_flashes` a VFX Vermilite
-- Wire `telegraph_contrast` a telegraphs de Deacon/Cult Brawler
-- Wire `text_speed` / `instant_text` a `DialogueBox`
-- Wire `subtitle_size` a HUD de diálogo
-- Wire `vibration_enabled` a `Input.start_joy_vibration`
-
-## Teste manual
-
-1. Opções → Screen shake 0% — combate não deve tremer câmera.
-2. Red Brand toggle — desmarcar “Segurar”; pressionar U duas vezes para carregar/liberar.
-3. Reiniciar jogo — settings persistem.
-
-Ver `SETTINGS_FORMAT.md` para schema JSON.
+Ver `SETTINGS_FORMAT.md` e `docs/BETA_PRESENTATION_PASS.md`.

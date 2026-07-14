@@ -34,9 +34,12 @@ vertical_slice_greybox.tscn
 
 ## Menu principal
 
-- **Novo Jogo:** confirma se existir save válido; chama reset via `VerticalSliceController.return_to_start()`.
-- **Continuar:** habilitado só com save válido; trata corrompido/incompatível na UI.
+- **Novo Jogo:** confirma se houver qualquer progresso; arquiva slot (`archive_and_clear_slot`); reset via `return_to_start(true)` e grava save inicial.
+- **Continuar:** habilitado só com `inspect_slot` → `valid` (versão + manifesto + área); falha devolve ao menu sem apagar o slot.
+- Save corrompido: mensagem amigável + oferta de Novo Jogo (backup preservado no write).
 - **Opções / Créditos / Sair:** overlays sobre o menu.
+
+Política completa: `docs/BOOT_AND_SAVE_POLICY.md`.
 
 ## Pausa
 
@@ -52,8 +55,11 @@ vertical_slice_greybox.tscn
 | --- | --- |
 | `user://settings.json` | Vídeo, áudio, acessibilidade |
 | `user://saves/slot_01.save.json` | Progresso da campanha |
+| `user://saves/slot_01.save.bak` | Backup de write |
+| `user://saves/slot_01.save.archive.json` | Cópia pré–Novo Jogo |
 
-Settings **não** são mesclados ao save de campanha (schema separado).
+Settings **não** são mesclados ao save de campanha (schema separado).  
+`auto_load_on_ready = false` — boot só via GameBootState (D-013 resolvida).
 
 ## Autoloads (`project.godot`)
 

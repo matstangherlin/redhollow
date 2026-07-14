@@ -2,21 +2,25 @@ extends Node
 
 const INTERACTABLE_GROUP := "interactable"
 const DIALOGUE_CONTROLLER_GROUP := "dialogue_controller"
+const PROMPT_HOST_GROUP := "interaction_prompt_host"
 
 @export var scan_interval: float = 0.05
+@export var prompt_vertical_offset: float = -44.0
 
 @onready var _player: CharacterBody2D = get_parent().get_parent() as CharacterBody2D
-@onready var _prompt_label: Label = get_node_or_null("%InteractionPromptLabel")
 
 var current_interactable: Interactable = null
 var current_interaction_id: StringName = &""
 var current_interaction_distance: float = -1.0
 var current_interaction_priority: int = 0
 var _scan_time_remaining: float = 0.0
+var _prompt_label: Label = null
+var _uses_canvas_prompt: bool = false
 
 
 func _ready() -> void:
 	_scan_time_remaining = 0.0
+	_prompt_label = _resolve_prompt_label()
 	_refresh_focused_interactable()
 	if InputDeviceManager != null:
 		InputDeviceManager.device_changed.connect(_on_input_device_changed)
@@ -24,8 +28,6 @@ func _ready() -> void:
 
 func _on_input_device_changed(_device_kind: int) -> void:
 	_update_prompt_label()
-	if current_interactable != null:
-		current_interactable.set_focused(true)
 
 
 func _physics_process(delta: float) -> void:
@@ -61,7 +63,9 @@ func _refresh_focused_interactable() -> void:
 	var best := _find_best_interactable()
 	if best == current_interactable:
 		if current_interactable != null:
-			current_interaction_distance = _player.global_position.distance_to(current_interactable.get_interaction_anchor())
+			current_interaction_distance = _player.global_position.distance_to(
+				current_interactable.get_interaction_anchor()
+			)
 		return
 
 	if current_interactable != null:
@@ -72,7 +76,9 @@ func _refresh_focused_interactable() -> void:
 		current_interactable.set_focused(true)
 		current_interaction_id = current_interactable.interaction_id
 		current_interaction_priority = current_interactable.priority
-		current_interaction_distance = _player.global_position.distance_to(current_interactable.get_interaction_anchor())
+		current_interaction_distance = _player.global_position.distance_to(
+			current_interactable.get_interaction_anchor()
+		)
 	else:
 		current_interaction_id = &""
 		current_interaction_priority = 0
@@ -86,6 +92,7 @@ func _find_best_interactable() -> Interactable:
 	var best: Interactable = null
 	var best_priority := -2147483648
 	var best_distance := INF
+	var best_tie_key := ""
 
 	for node in get_tree().get_nodes_in_group(INTERACTABLE_GROUP):
 		var interactable := node as Interactable
@@ -96,15 +103,27 @@ func _find_best_interactable() -> Interactable:
 		if distance > interactable.interaction_range:
 			continue
 
+		var tie_key := "%s:%d" % [String(interactable.interaction_id), interactable.get_instance_id()]
 		if interactable.priority > best_priority:
 			best = interactable
 			best_priority = interactable.priority
 			best_distance = distance
+			best_tie_key = tie_key
 			continue
 
-		if interactable.priority == best_priority and distance < best_distance:
+		if interactable.priority < best_priority:
+			continue
+
+		if distance < best_distance - 0.001:
 			best = interactable
 			best_distance = distance
+			best_tie_key = tie_key
+			continue
+
+		if absf(distance - best_distance) <= 0.001 and tie_key < best_tie_key:
+			best = interactable
+			best_distance = distance
+			best_tie_key = tie_key
 
 	return best
 
@@ -142,13 +161,31 @@ func _face_player_toward(target_position: Vector2) -> void:
 		_player.call("set_facing_direction", direction)
 
 
+func _resolve_prompt_label() -> Label:
+	if is_inside_tree():
+		for node in get_tree().get_nodes_in_group(PROMPT_HOST_GROUP):
+			if node is Label:
+				_uses_canvas_prompt = true
+				return node as Label
+	_uses_canvas_prompt = false
+	return get_node_or_null("%InteractionPromptLabel") as Label
+
+
 func _position_prompt_label() -> void:
 	if _prompt_label == null or current_interactable == null:
 		return
 
+	var anchor := current_interactable.get_interaction_anchor() + Vector2(0.0, prompt_vertical_offset)
+	if _uses_canvas_prompt:
+		var screen := get_viewport().get_canvas_transform() * anchor
+		_prompt_label.reset_size()
+		var size := _prompt_label.get_combined_minimum_size()
+		_prompt_label.position = screen - Vector2(size.x * 0.5, size.y)
+		_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		return
+
 	if _should_anchor_prompt_to_interactable():
-		var anchor := current_interactable.get_interaction_anchor()
-		_prompt_label.global_position = anchor + Vector2(0, -44)
+		_prompt_label.global_position = anchor
 		_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	elif _player != null:
 		_prompt_label.global_position = _player.global_position + Vector2(0, -80)
@@ -163,8 +200,16 @@ func _should_anchor_prompt_to_interactable() -> bool:
 
 
 func _update_prompt_label() -> void:
+	if _prompt_label == null or not is_instance_valid(_prompt_label):
+		_prompt_label = _resolve_prompt_label()
 	if _prompt_label == null:
 		return
+
+	# Keep the world-space player label off when canvas host owns the prompt.
+	var world_label := get_node_or_null("%InteractionPromptLabel") as Label
+	if _uses_canvas_prompt and world_label != null and world_label != _prompt_label:
+		world_label.visible = false
+		world_label.text = ""
 
 	if current_interactable == null or not _can_player_interact():
 		_prompt_label.visible = false

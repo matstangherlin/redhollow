@@ -1,22 +1,24 @@
 # Red Hollow — Beta Release Checklist
 
-Checklist para declarar build **local beta** pronta para testers internos.
+Checklist para declarar build **local / closed-test** pronta.
 
-**Build alvo:** `0.2.0-beta.1` — Capítulo Zero (*O Sino Antes do Anoitecer*)
+**Build alvo:** `0.2.0-beta.rc1` — *Red Hollow — Chapter Zero Beta RC1*  
+**Última avaliação:** **REPROVADA** — gate verde, playthrough/smoke ainda abertos (`docs/RC1_REPORT.md`)
 
 ## A. Automação (obrigatório)
 
-- [ ] `godot --headless --path . --script res://scripts/tests/test_runner.gd` executado
-- [ ] Resultado registrado no `build-manifest.json`
-- [ ] **17/17 suítes PASS** (ou desvio documentado com owner)
-- [ ] **0 unexpected issues** (allowed issues OK se documentadas)
-- [ ] Export debug + release gerados em `builds/windows/`
+- [x] `godot --headless --path . --script res://scripts/tests/test_runner.gd` executado
+- [ ] Resultado registrado no `build-manifest.json` — packaging antigo ainda marca FAIL; reexportar
+- [x] **Todas as suítes PASS** — **43/43** (`docs/_rc1_gate_fix_out.txt`)
+- [x] **0 unexpected issues**
+- [x] Export debug + release em `builds/windows/` (reexport pós-fix pendente)
+- [x] Portable ZIP gerado
 
 ## B. Fluxo completo (manual — obrigatório)
 
 | # | Fluxo | Teclado | Gamepad | OK |
 | --- | --- | --- | --- | --- |
-| 1 | Boot → menu principal | | | |
+| 1 | Boot → menu principal | | | **não assinado** |
 | 2 | Novo jogo | | | |
 | 3 | Continuar (com save válido) | | | |
 | 4 | Pausa (Esc / Start) | | | |
@@ -35,47 +37,46 @@ Checklist para declarar build **local beta** pronta para testers internos.
 
 | Cenário | Esperado | OK |
 | --- | --- | --- |
-| Save inexistente | Continuar desabilitado; Novo Jogo OK | |
-| Save corrompido | Menu avisa; Novo Jogo OK | |
-| Settings corrompido | Defaults; jogo inicia | |
-| Fechar durante save | Próximo load íntegro ou backup | |
-| Perder foco / Alt+Tab | Retoma sem softlock | |
-| Desconectar controle | Teclado funcional; prompts atualizam | |
-| Mudar resolução | Sem UI quebrada permanente | |
-| Sair pelo menu | Volta ao main menu | |
-| Sair pelo sistema | Processo encerra limpo | |
+| Save inexistente | Continuar desabilitado; Novo Jogo OK | não assinado |
+| Save corrompido | Menu avisa; Novo Jogo OK | headless only |
+| Settings corrompido | Defaults; jogo inicia | headless only |
+| Fechar durante save | Próximo load íntegro ou backup | não assinado |
+| Perder foco / Alt+Tab | Retoma sem softlock | não assinado |
+| Desconectar controle | Teclado funcional; prompts atualizam | não assinado |
+| Mudar resolução / fullscreen | Sem UI quebrada permanente | não assinado |
+| Duas sessões / dois ciclos | Estável | não assinado |
+| Sair pelo menu / sistema | Limpo | não assinado |
 
 ## D. Performance (config referência)
 
-Ver `PERFORMANCE_BUDGET.md`. Medir na **build release**, não só editor.
+Ver `PERFORMANCE_BUDGET.md`. Medir na **build release**.
 
-- [ ] 60 FPS médio na config referência
+- [ ] 60 FPS médio na config referência — **não medido RC1**
 - [ ] Frame time p95 ≤ 20 ms em combate normal
 - [ ] Boss Rusk sem queda grave sustentada
 
-## E. Critérios de bloqueio (não aprovar release se)
+## E. Critérios de bloqueio (não aprovar se)
 
-- [ ] Qualquer **P0** aberto
+- [x] Qualquer **P0** aberto → **KI-004 + smoke/perf** → **bloqueia** (KI-005 fechado)
 - [ ] Perda de save confirmada
 - [ ] Softlock reproduzível
 - [ ] Crash reproduzível
-- [ ] Fluxo impossível (progressão bloqueada)
-- [ ] Input persistente quebrado (teclado **e** gamepad)
-- [ ] Queda grave de FPS (&lt; 45 sustained) na config referência
+- [ ] Fluxo impossível
+- [ ] Input persistente quebrado
+- [ ] Queda grave de FPS (&lt; 45 sustained)
 
-## F. Issues conhecidos aceitos para beta local (P1 documentados)
+## F. Issues conhecidos aceitos (somente se ≤ P1)
 
-- [ ] KI-001 morte/respawn parcial — workaround documentado
-- [ ] KI-004 gate manual assinado neste checklist
-- [ ] Testes headless com autoload — validação na build exportada
+Não aplicável enquanto P0 abertos. Ver `RC1_KNOWN_LIMITATIONS.md`.
 
 ## Assinatura
 
 | Campo | Valor |
 | --- | --- |
-| Build | |
-| Commit | |
-| Tester | |
-| Data | |
-| Aprovada para testers internos? | Sim / Não |
-| Release marcada QA-approved? | Sim / Não |
+| Build | `0.2.0-beta.rc1` / `red-hollow-0.2.0-beta.rc1-release.exe` |
+| Commit | `4f20f76` (+ tree suja no packaging) |
+| Tester | automação RC1 packaging |
+| Data | 2026-07-13 (local) / 2026-07-14 UTC |
+| Aprovada para testers internos? | **Não** |
+| Classificação | **REPROVADA** |
+| Release marcada QA-approved? | **Não** (`qa_release_approved: false`) |

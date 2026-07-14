@@ -14,6 +14,8 @@ const PROJECTILE_GROUP := "physical_projectile"
 
 @onready var _hitbox: HitboxComponent = %HitboxComponent
 @onready var _visual: Polygon2D = %Visual
+@onready var _tip: Polygon2D = get_node_or_null("%VermiliteTip") as Polygon2D
+@onready var _trail: Polygon2D = get_node_or_null("%Trail") as Polygon2D
 
 var direction: int = 1
 var owner_node: Node = null
@@ -35,8 +37,13 @@ func launch(from_owner: Node, travel_direction: int, data: Resource) -> void:
 	_launched = true
 	_time_alive = 0.0
 
+	var facing := float(direction)
 	if _visual != null:
-		_visual.scale.x = float(direction)
+		_visual.scale.x = facing
+	if _tip != null:
+		_tip.scale.x = facing
+	if _trail != null:
+		_trail.scale.x = facing
 
 	if _hitbox != null and attack_data != null:
 		_hitbox.clear_hit_targets()
@@ -49,6 +56,12 @@ func _physics_process(delta: float) -> void:
 
 	global_position.x += float(direction) * speed * delta
 	_time_alive += delta
+
+	if _trail != null:
+		var pulse := 0.42 + 0.22 * absf(sin(_time_alive * 18.0))
+		_trail.color = Color(0.58, 0.48, 0.34, pulse)
+	if _tip != null:
+		_tip.color = Color(0.98, 0.34, 0.14, 0.95 + 0.05 * sin(_time_alive * 24.0))
 
 	if _time_alive >= lifetime:
 		_expire()

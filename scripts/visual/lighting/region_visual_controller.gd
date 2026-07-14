@@ -67,7 +67,7 @@ func transition_to_state(state: CorruptionVisualState.State, duration: float = -
 	_current_state = state
 	_kill_transition()
 
-	var blend_duration := duration if duration > 0.0 else theme.transition_duration
+	var blend_duration: float = duration if duration > 0.0 else float(theme.transition_duration)
 	transition_started.emit(from_state, state)
 
 	if blend_duration <= 0.01:
@@ -126,7 +126,7 @@ func _on_settings_changed() -> void:
 func _resolve_profile(state: CorruptionVisualState.State) -> LightingProfile:
 	if theme == null:
 		return null
-	var base := theme.get_lighting_profile(state)
+	var base: LightingProfile = theme.get_lighting_profile(state) as LightingProfile
 	if base == null:
 		return null
 	return base.apply_accessibility(_get_accessibility_scale())

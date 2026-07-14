@@ -78,6 +78,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and not event.is_echo():
 		if _ignore_advance_until_release:
 			return
+		if _dialogue_box != null and _dialogue_box.has_method("is_typewriter_finished"):
+			if not bool(_dialogue_box.call("is_typewriter_finished")):
+				if _dialogue_box.has_method("skip_typewriter"):
+					_dialogue_box.call("skip_typewriter")
+				get_viewport().set_input_as_handled()
+				return
 		_advance_or_close()
 		get_viewport().set_input_as_handled()
 

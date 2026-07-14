@@ -129,7 +129,7 @@ offset_right = 1380.0
 offset_bottom = 824.0
 theme_override_colors/font_color = Color(0.72, 0.68, 0.64, 0.9)
 theme_override_font_sizes/font_size = 11
-text = "Esquiva [K] — counter [L] após telegraph"
+text = "Observe o telegraph — esquiva ou counter"
 
 [node name="GunslingerOptional" parent="WorldObjects" groups=["chapter_zero_gunslinger"] instance=ExtResource("7_gunslinger")]
 position = Vector2(860, 760)
@@ -142,7 +142,7 @@ offset_right = 980.0
 offset_bottom = 724.0
 theme_override_colors/font_color = Color(0.85, 0.55, 0.28, 0.95)
 theme_override_font_sizes/font_size = 11
-text = "Rota opcional — pistoleiro Vermilite"
+text = "Altitude — projétil físico"
 
 [node name="DuoGate" parent="WorldObjects" instance=ExtResource("8_gate")]
 position = Vector2(1520, 848)
@@ -164,7 +164,7 @@ offset_right = 2060.0
 offset_bottom = 824.0
 theme_override_colors/font_color = Color(0.82, 0.72, 0.64, 0.9)
 theme_override_font_sizes/font_size = 11
-text = "Dois cultistas — mantenha distância do pistoleiro"
+text = "Dois alvos — foque o mais próximo"
 
 [node name="MarkedCartridge" parent="WorldObjects" instance=ExtResource("6_story_prop")]
 position = Vector2(560, 760)

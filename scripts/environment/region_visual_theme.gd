@@ -1,7 +1,9 @@
 extends Resource
-class_name RegionVisualTheme
+class_name EnvironmentRegionTheme
 
-## Visual inheritance for future districts without duplicating entire kits.
+## Kit inheritance stubs for future districts (palette/atlas), not lighting themes.
+## Lighting/corruption states live in scripts/visual/lighting/region_visual_theme.gd
+## (class_name RegionVisualTheme) — do not share the same global class name.
 
 @export var theme_id: StringName = &"chapter_zero_street"
 @export var display_name: String = "Rua — Capítulo Zero"

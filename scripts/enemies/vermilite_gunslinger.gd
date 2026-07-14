@@ -30,14 +30,14 @@ const RELOAD_COLOR := Color(0.52, 0.38, 0.22, 1.0)
 const HURT_COLOR := Color(1.0, 0.64, 0.28, 1.0)
 const DEAD_COLOR := Color(0.18, 0.16, 0.16, 1.0)
 
-@export var max_health: float = 12.0
+@export var max_health: float = 11.0
 @export var move_speed: float = 110.0
-@export var detection_range: float = 340.0
+@export var detection_range: float = 320.0
 @export var preferred_range_min: float = 180.0
 @export var preferred_range_max: float = 300.0
 @export var close_range: float = 68.0
-@export var attack_cooldown: float = 1.5
-@export var reload_duration: float = 1.15
+@export var attack_cooldown: float = 1.65
+@export var reload_duration: float = 1.35
 @export var patrol_distance: float = 140.0
 @export var shot_attack: Resource = preload("res://resources/combat/gunslinger_shot.tres")
 @export var whip_attack: Resource = preload("res://resources/combat/gunslinger_whip.tres")
@@ -52,6 +52,7 @@ const DEAD_COLOR := Color(0.18, 0.16, 0.16, 1.0)
 @onready var body_visual: Polygon2D = %BodyVisual
 @onready var aim_visual: Polygon2D = %AimVisual
 @onready var alert_visual: Polygon2D = %AlertVisual
+@onready var visual_controller: VermiliteGunslingerVisualController = %VermiliteGunslingerVisualController
 @onready var hurtbox_component: Area2D = %HurtboxComponent
 @onready var hitbox_component: Area2D = %HitboxComponent
 @onready var health_component: Node = %HealthComponent
@@ -81,6 +82,8 @@ func _ready() -> void:
 	hurtbox_component.connect("hit_received", Callable(self, "_on_hit_received"))
 	health_component.connect("damaged", Callable(self, "_on_damaged"))
 	health_component.connect("died", Callable(self, "_on_died"))
+	if visual_controller != null:
+		visual_controller.setup(self)
 	_update_visual()
 
 
@@ -92,7 +95,7 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	_apply_movement_rules(delta)
 	move_and_slide()
-	_update_visual()
+	_update_visual(delta)
 
 
 func reset_enemy() -> void:
@@ -108,6 +111,13 @@ func reset_enemy() -> void:
 	hitbox_component.call("deactivate")
 	health_component.call("reset_health")
 	_enable_hurtbox(true)
+	set_deferred("collision_layer", 2)
+	set_deferred("collision_mask", 1)
+	var body_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if body_shape != null:
+		body_shape.set_deferred("disabled", false)
+	if visual_controller != null:
+		visual_controller.reset_visual()
 	_update_visual()
 
 
@@ -238,6 +248,8 @@ func _begin_shot() -> void:
 	state_time_remaining = maxf(float(shot_attack.get("startup_time")), 0.0)
 	hitbox_component.call("deactivate")
 	_set_combat_pressure(true)
+	if visual_controller != null:
+		visual_controller.notify_attack_telegraph(shot_attack)
 	if state_time_remaining <= 0.0:
 		_advance_attack_phase()
 
@@ -251,6 +263,8 @@ func _begin_whip() -> void:
 	state_time_remaining = maxf(float(whip_attack.get("startup_time")), 0.0)
 	hitbox_component.call("deactivate")
 	_set_combat_pressure(true)
+	if visual_controller != null:
+		visual_controller.notify_attack_telegraph(whip_attack)
 	if state_time_remaining <= 0.0:
 		_advance_attack_phase()
 
@@ -337,6 +351,8 @@ func _on_hit_received(attack_data_received: Resource, hitbox: Area2D, attacker: 
 		state_time_remaining = knockback_state_duration
 	else:
 		current_state = GunslingerState.HURT
+	if visual_controller != null:
+		visual_controller.apply_hit_reaction(attack_data_received)
 	_update_visual()
 
 
@@ -351,6 +367,8 @@ func _on_died() -> void:
 	_enable_hurtbox(false)
 	CorpseCollisionHelper.disable_body_collision(self)
 	velocity = Vector2.ZERO
+	if visual_controller != null:
+		visual_controller.play_death()
 	_update_visual()
 	HealthDropSpawner.try_spawn_from_defeat(self, HealthDropSpawner.PROFILE_ELITE)
 
@@ -431,9 +449,21 @@ func _set_combat_pressure(is_active: bool) -> void:
 	combat_pressure_changed.emit(is_active)
 
 
-func _update_visual() -> void:
+func _update_visual(delta: float = 0.0) -> void:
+	if visual_controller != null and visual_controller.refresh(self, delta):
+		if debug_label.visible:
+			debug_label.text = "gunslinger hp: %.1f state: %s dist: %.0f" % [
+				float(health_component.get("current_health")),
+				_get_state_name(current_state),
+				_get_target_distance(),
+			]
+		return
+	_update_placeholder_visual()
+
+
+func _update_placeholder_visual() -> void:
 	alert_visual.visible = current_state == GunslingerState.ALERT
-	aim_visual.visible = current_state in [GunslingerState.AIM, GunslingerState.SHOOT]
+	aim_visual.visible = current_state in [GunslingerState.AIM, GunslingerState.SHOOT, GunslingerState.WHIP]
 
 	match current_state:
 		GunslingerState.DEAD:
@@ -450,8 +480,38 @@ func _update_visual() -> void:
 			visual.rotation = 0.0
 
 	if debug_label.visible:
-		debug_label.text = "gunslinger hp: %.1f state: %d dist: %.0f" % [
+		debug_label.text = "gunslinger hp: %.1f state: %s dist: %.0f" % [
 			float(health_component.get("current_health")),
-			current_state,
+			_get_state_name(current_state),
 			_get_target_distance(),
 		]
+
+
+func _get_state_name(state: int) -> String:
+	match state:
+		GunslingerState.IDLE:
+			return "idle"
+		GunslingerState.PATROL:
+			return "patrol"
+		GunslingerState.ALERT:
+			return "alert"
+		GunslingerState.REPOSITION:
+			return "reposition"
+		GunslingerState.AIM:
+			return "aim"
+		GunslingerState.SHOOT:
+			return "shoot"
+		GunslingerState.RELOAD:
+			return "reload"
+		GunslingerState.WHIP:
+			return "whip"
+		GunslingerState.RECOVERY:
+			return "recovery"
+		GunslingerState.HURT:
+			return "hurt"
+		GunslingerState.KNOCKED_BACK:
+			return "knocked_back"
+		GunslingerState.DEAD:
+			return "dead"
+		_:
+			return "idle"

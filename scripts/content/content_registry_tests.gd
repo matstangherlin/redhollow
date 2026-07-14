@@ -45,7 +45,7 @@ func _test_beta_demo_scope(failures: PackedStringArray) -> void:
 	_assert_false(failures, registry.is_chapter_available(&"act1_silas_crow"), "act I not playable in beta")
 	_assert_true(
 		failures,
-		registry.can_load_area_scene("res://scenes/areas/vertical_slice_street.tscn"),
+		registry.can_load_area_scene("res://scenes/areas/vertical_slice_street_art.tscn"),
 		"street scene allowed"
 	)
 	_assert_true(
@@ -100,7 +100,7 @@ func _test_save_compatibility_policy(failures: PackedStringArray) -> void:
 
 	var beta_tagged_save := {
 		"content_manifest_id": "beta_demo",
-		"current_scene": "res://scenes/areas/vertical_slice_street.tscn",
+		"current_scene": "res://scenes/areas/vertical_slice_street_art.tscn",
 	}
 	_assert_false(
 		failures,

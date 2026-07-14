@@ -1,6 +1,8 @@
 extends Node
 class_name RespawnService
 
+signal respawn_completed(player: CharacterBody2D)
+
 const SERVICE_GROUP := "respawn_service"
 
 const DEFAULT_DEATH_RESPAWN_DELAY := 0.65
@@ -90,6 +92,7 @@ func _run_death_respawn_sequence(player: CharacterBody2D) -> void:
 	player.call("release_death_lock_after_respawn")
 	player.call("reset_combat_after_respawn")
 	_respawn_pending = false
+	respawn_completed.emit(player)
 
 
 func _prepare_encounters_for_respawn() -> void:

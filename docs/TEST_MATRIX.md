@@ -1,156 +1,173 @@
 # Red Hollow — Test Matrix
 
-Matriz de testes manuais e headless. Roteiro: [VERTICAL_SLICE_TEST_PLAN.md](VERTICAL_SLICE_TEST_PLAN.md). Runner: [HEADLESS_TESTING.md](HEADLESS_TESTING.md). Gate: [STABILIZATION_REPORT.md](STABILIZATION_REPORT.md).
+Matriz auditada para o baseline `4f20f76e5f505f36eacdb9866d7d7e33404c15f3` (`main`, 2026-07-13).
 
-**Baseline commit (auditoria):** `4babadc9a1c16b838aba541f89c17d5c9174f21a` (`4babadc`)
+Runner: `scripts/tests/test_runner.gd`
+Bootstrap de suítes: `res://scenes/tests/test_bootstrap.tscn`
+Godot: 4.7
 
-## Legenda
-
-| Resultado | Significado |
-| --- | --- |
-| **Pass** | Comportamento correto |
-| **Fail** | Comportamento incorreto |
-| **Blocked** | Erro impede teste |
-| **Pending** | Não executado neste gate |
-| **N/A** | Não aplicável |
-
----
-
-## Gate automatizado (auditoria `4babadc`, 2026-07-13)
-
-### Resumo
+## Resultado geral
 
 | Métrica | Resultado |
 | --- | --- |
-| Suítes registradas | **23** |
-| Comando | `godot --headless --path . --script res://scripts/tests/test_runner.gd` |
-| Invocação suítes | Bootstrap `--main-scene` + `-- res://…suite.gd` |
-| Timeout padrão | 180 s (`player_regression_tests`: 300 s) |
-| Exit timeout | 124 |
-| Gate | **PASS** (exit code 0) |
-| PASS | **23 / 23** |
-| FAIL | **0** |
-| Tempo total | ~51 s |
-| Unexpected issues | 0 |
-| Allowed issues | 13 |
+| Entradas contadas diretamente em `SUITES` | **30** |
+| PASS | **19** |
+| FAIL | **10** |
+| TIMEOUT | **1** |
+| Unexpected issues parsed | **23** |
+| Allowed issues parsed | **13** |
+| Gate | **FAIL** |
+| Exit do runner completo | Não retornou; travou em `region_visual_tests` |
+| Exit externo do timeout | 124 |
+| Duração runner completo | >300 s antes de interrupção controlada |
+| Physics flush errors | **0** |
 
-### Suítes (23)
+O wrapper `.\tools\test_all.ps1` foi bloqueado pela Execution Policy local. A auditoria usou a invocação portável documentada com o Godot 4.7.
 
-| # | Suíte | Script | Resultado | Asserts |
-| --- | --- | --- | --- | --- |
-| 1 | vertical_slice_verification | `scripts/demo/vertical_slice_verification.gd` | **PASS** | 7 |
-| 2 | dialogue_tests | `scripts/dialogue/dialogue_tests.gd` | **PASS** | 3 |
-| 3 | save_tests | `scripts/save/save_tests.gd` | **PASS** | 5 |
-| 4 | area_transition_tests | `scripts/world/area_transition_tests.gd` | **PASS** | 6 |
-| 5 | combat_arena_tests | `scripts/world/combat_arena_tests.gd` | **PASS** | 15 |
-| 6 | cult_brawler_tests | `scripts/enemies/cult_brawler_tests.gd` | **PASS** | 4 |
-| 7 | deacon_rusk_tests | `scripts/enemies/deacon_rusk_tests.gd` | **PASS** | 7 |
-| 8 | gameplay_lock_tests | `scripts/core/gameplay_lock_tests.gd` | **PASS** | 10 |
-| 9 | player_regression_tests | `scripts/player/player_regression_tests.gd` | **PASS** | 48 |
-| 10 | vertical_slice_regression_tests | `scripts/demo/vertical_slice_regression_tests.gd` | **PASS** | 14 |
-| 11 | product_shell_tests | `scripts/product/product_shell_tests.gd` | **PASS** | 10 |
-| 12 | narrative_chapter_zero_tests | `scripts/narrative/narrative_chapter_zero_tests.gd` | **PASS** | 6 |
-| 13 | vermilite_gunslinger_tests | `scripts/enemies/vermilite_gunslinger_tests.gd` | **PASS** | 4 |
-| 14 | chain_penitent_tests | `scripts/enemies/chain_penitent_tests.gd` | **PASS** | 3 |
-| 15 | enemy_encounter_tests | `scripts/demo/enemy_encounter_tests.gd` | **PASS** | 4 |
-| 16 | player_visual_pipeline_tests | `scripts/visual/player_visual_pipeline_tests.gd` | **PASS** | 8 |
-| 17 | feedback_system_tests | `scripts/feedback/feedback_system_tests.gd` | **PASS** | 6 |
-| 18 | player_respawn_tests | `scripts/player/player_respawn_tests.gd` | **PASS** | 6 |
-| 19 | content_registry_tests | `scripts/content/content_registry_tests.gd` | **PASS** | 18 |
-| 20 | beta_integration_smoke_tests | `scripts/demo/beta_integration_smoke_tests.gd` | **PASS** | 22 |
-| 21 | street_art_toggle_tests | `scripts/visual/street_art_toggle_tests.gd` | **PASS** | 4 |
-| 22 | modular_kit_tests | `scripts/environment/modular_kit_tests.gd` | **PASS** | 7 |
-| 23 | world_map_graph_tests | `scripts/world/world_map_graph_tests.gd` | **PASS** | 10 |
+## As 30 suítes
 
-**Suítes novas vs `e07ba0e`:** 18–23 (respawn, smoke beta, street art, modular kit, world map).
+| # | Suíte | Asserts | Unexpected | Allowed | Estado |
+| ---: | --- | ---: | ---: | ---: | --- |
+| 1 | `vertical_slice_verification` | 5/7 | 4 | 0 | **FAIL** |
+| 2 | `dialogue_tests` | 3/3 | 0 | 2 | PASS |
+| 3 | `save_tests` | 5/5 | 0 | 7 | PASS |
+| 4 | `area_transition_tests` | 6/6 | 0 | 0 | PASS |
+| 5 | `combat_arena_tests` | 22/22 | 0 | 1 | PASS |
+| 6 | `cult_brawler_tests` | 4/4 | 0 | 0 | PASS |
+| 7 | `deacon_rusk_tests` | 7/7 | 0 | 0 | PASS |
+| 8 | `gameplay_lock_tests` | 10/10 | 0 | 0 | PASS |
+| 9 | `player_regression_tests` | 49/49 | 0 | 0 | PASS |
+| 10 | `vertical_slice_regression_tests` | 12/14 | 4 | 0 | **FAIL** |
+| 11 | `product_shell_tests` | 10/10 | 0 | 1 | PASS |
+| 12 | `narrative_chapter_zero_tests` | 6/6 | 4 | 0 | **FAIL** |
+| 13 | `vermilite_gunslinger_tests` | 4/4 | 0 | 0 | PASS |
+| 14 | `chain_penitent_tests` | 3/3 | 0 | 0 | PASS |
+| 15 | `enemy_encounter_tests` | 6/6 | 0 | 0 | PASS |
+| 16 | `player_visual_pipeline_tests` | 8/8 | 0 | 1 | PASS |
+| 17 | `calder_asset_validation_tests` | 6/6 | 0 | 0 | PASS |
+| 18 | `cult_brawler_asset_validation_tests` | 6/6 | 0 | 0 | PASS |
+| 19 | `cult_brawler_visual_tests` | 6/6 | 0 | 0 | PASS |
+| 20 | `feedback_system_tests` | 10/10 | 0 | 1 | PASS |
+| 21 | `player_respawn_tests` | 8/8 | 0 | 0 | PASS |
+| 22 | `content_registry_tests` | 17/18 | 0 | 0 | **FAIL** |
+| 23 | `beta_integration_smoke_tests` | 22/22 | 4 | 0 | **FAIL** |
+| 24 | `street_art_toggle_tests` | 4/5 | 1 | 0 | **FAIL** |
+| 25 | `street_beta_complete_tests` | 5/5 | 2 | 0 | **FAIL** |
+| 26 | `church_beta_complete_tests` | 5/6 | 1 | 0 | **FAIL** |
+| 27 | `underground_beta_complete_tests` | 5/6 | 2 | 0 | **FAIL** |
+| 28 | `region_visual_tests` | não iniciou | parse/bootstrap | 0 | **TIMEOUT 60 s** |
+| 29 | `modular_kit_tests` | 7/7 | 0 | 0 | PASS isolado |
+| 30 | `world_map_graph_tests` | 9/10 | 1 | 0 | **FAIL** |
 
-### Comandos
+## Falhas detalhadas
 
-```powershell
-.\tools\test_all.ps1
-```
+### `vertical_slice_verification`
 
-```bash
-godot --headless --path . --script res://scripts/tests/test_runner.gd
-```
+- exit 1;
+- 2 asserções ainda exigem `vertical_slice_church.tscn`;
+- a integração atual aponta para `vertical_slice_church_art.tscn`.
 
-Suíte isolada:
+### `vertical_slice_regression_tests`
 
-```powershell
-& "C:\Path\To\Godot_v4.7-stable_win64.exe" --headless --path . `
-  --main-scene res://scenes/tests/test_bootstrap.tscn -- res://scripts/world/world_map_graph_tests.gd
-```
+- exit 1;
+- retorno igreja→rua e catacumbas→igreja ainda esperam cenas greybox;
+- a suíte crítica foi executada separadamente e reproduziu a falha.
 
-### Warnings / errors permitidos (allowlist)
+### `content_registry_tests`
 
-| Suíte | Tipo | Motivo |
+- exit 1;
+- falha `street scene allowed`;
+- manifest/registry/teste precisam concordar com a rua North Star canônica.
+
+### `world_map_graph_tests`
+
+- exit 1;
+- `Area not available in this build`;
+- `Transition street -> church failed`;
+- 1 warning inesperado;
+- teardown reportou 43 objetos e 6 resources ainda ativos.
+
+### Pipeline visual / `region_visual_tests`
+
+- `region_visual_controller.gd` falha ao inferir os tipos de `blend_duration` e `base`;
+- `region_visual_tests.gd` falha ao inferir `profile`;
+- o bootstrap não instancia uma suíte válida e permanece aberto;
+- timeout isolado controlado em 60 s, exit externo 124;
+- as falhas se propagam às apresentações art e explicam as suítes visuais/narrativas vermelhas;
+- `modular_kit_tests` passou isoladamente 7/7 em 0,22 s.
+
+## Suítes críticas exigidas
+
+| Suíte | Exit | Tempo de parede | Resultado |
+| --- | ---: | ---: | --- |
+| `area_transition_tests` | 0 | 0,51 s | PASS |
+| `combat_arena_tests` | 0 | 13,11 s | PASS 22/22 |
+| `player_respawn_tests` | 0 | 2,27 s | PASS 8/8 |
+| `vertical_slice_regression_tests` | 1 | 1,65 s | **FAIL** |
+| `street_beta_complete_tests` | 1 | 0,49 s | **FAIL visual** |
+| `church_beta_complete_tests` | 1 | 0,49 s | **FAIL visual** |
+| `underground_beta_complete_tests` | 1 | 0,38 s | **FAIL visual** |
+| `beta_integration_smoke_tests` | 1 | 2,05 s | **FAIL visual** |
+| `player_visual_pipeline_tests` | 0 | 0,15 s | PASS |
+| `calder_asset_validation_tests` | 0 | 0,03 s | PASS |
+| `cult_brawler_visual_tests` | 0 | 0,28 s | PASS |
+| `region_visual_tests` | 124 externo | 60 s | **TIMEOUT após parse** |
+| `world_map_graph_tests` | 1 | 0,25 s | **FAIL + leaks** |
+
+**Resumo atual:** 6 PASS, 6 FAIL, 1 TIMEOUT. O subconjunto de arena (`combat_arena`, `player_respawn`, `enemy_encounter`, `deacon_rusk`) passou integralmente.
+
+## Catacumbas — regressão de crash
+
+| Caso | Automação | Estado |
 | --- | --- | --- |
-| `dialogue_tests` | WARNING | `missing_dialogue_id` injetado |
-| `save_tests` | ERROR/WARNING | JSON corrompido / backup recovery injetado |
-| `product_shell_tests` | ERROR | JSON corrompido em `inspect_slot` |
-| `combat_arena_tests` | ERROR | `living_enemy_despawned` (integrity test) |
-| `feedback_system_tests` | WARNING | `CameraController target was not found` |
-| `player_visual_pipeline_tests` | WARNING | `missing animation clip` (fallback test) |
+| Cena carrega | carga direta + suíte dedicada | PASS |
+| `UndergroundArtArea` entra na árvore | `underground_beta_complete_tests` | PASS |
+| Apresentação deferred aparece | espera 3 frames + `get_art_presentation()` | PASS |
+| Checkpoint | node contract | PASS |
+| Deacon Rusk + encounter | node contract | PASS |
+| Exit para igreja art | target contract | PASS |
+| Hooks do finale | presentation contract | PASS |
+| Sem NodePath/crash | carga direta, exit 0 | PASS |
+| Negative control sem apresentação | sonda temporária, exit 1 esperado | PASS |
 
-### Warnings P2 (não falham gate)
+## Warnings e erros permitidos
 
-| Origem | Motivo |
+| Suíte | Quantidade | Motivo |
+| --- | ---: | --- |
+| `dialogue_tests` | 2 | diálogo ausente injetado |
+| `save_tests` | 7 | corrupção/backup de save injetados |
+| `combat_arena_tests` | 1 | despawn de inimigo no teste de integridade |
+| `product_shell_tests` | 1 | slot corrompido injetado |
+| `player_visual_pipeline_tests` | 1 | fallback de animação ausente |
+| `feedback_system_tests` | 1 | câmera sem target no fixture |
+
+Novas mensagens não devem ser adicionadas à allowlist sem causa e asserção explícitas.
+
+## Matriz manual
+
+| Fluxo | Estado |
 | --- | --- |
-| Fim do `test_runner.gd` | ObjectDB leaks / resources in use (KI-107) |
-| Processo pai do runner | Compile errors autoloads (KI-108) — cosmético |
+| Boot → menu → novo jogo | Pending |
+| Opções, créditos, pausa | Pending |
+| Rua North Star completa | Pending |
+| Igreja North Star + arena | Pending — automação 22/22; playtest visual interrompido por entrada local |
+| Catacumbas + checkpoint + Rusk | Pending — boss/respawn 8/8; apresentação art bloqueada por KI-115 |
+| Finale de 8 passos | Pending |
+| Mapa e backtracking | Pending |
+| Morte antes/depois do checkpoint e no boss | Pending |
+| F8/F9 + reboot | Pending |
+| Gamepad | Pending |
+| Performance 60 FPS / frame time / draw calls | Pending |
+| Build Windows de `4f20f76` | Pending |
+| Retorno ao menu após conclusão | Pending |
 
----
+## Critério para próximo gate
 
-## Manual — product shell + Capítulo Zero
+O gate só pode ser marcado PASS quando:
 
-| # | Passo | Auto | Gate manual |
-| --- | --- | --- | --- |
-| 0 | Boot → main menu | product_shell PASS | **Pending** |
-| 0b | Opções / créditos / novo jogo / continuar | smoke beta parcial | **Pending** |
-| 1 | Rua — Elias, estátua, medalhão, brawler | narrative + regression PASS | **Pending** |
-| 2 | Objetivo HUD | narrative PASS | **Pending** |
-| 3 | Igreja — arena, documento, Vermilite | combat_arena PASS | **Pending** |
-| 4 | Barreira → catacumbas | area_transition PASS | **Pending** |
-| 5 | Checkpoint → diário parceiro | narrative flags | **Pending** |
-| 6 | Deacon Rusk — `cz_deacon_intro` | deacon_rusk PASS | **Pending** |
-| 7 | Finale 8 passos | smoke beta parcial | **Pending** |
-| 8 | Conclusão beta / overlay | completion controller | **Pending** |
-| 9 | Pausa in-game | — | **Pending** |
-| 10 | Mapa mundo (**M**) + descoberta | world_map_graph PASS | **Pending** |
-| 11 | Greybox ↔ street art toggle | street_art_toggle PASS | **Pending** |
-| 13 | Morte pré-checkpoint | player_respawn PASS | **Pending** |
-| 14 | Morte pós-checkpoint | player_respawn PASS | **Pending** |
-| 15 | Morte no boss | — | **Pending** |
-| 16–20 | Save/load/reboot | save_tests PASS | **Pending** |
-
-### Build Windows
-
-| Etapa | Auto | Manual |
-| --- | --- | --- |
-| Export preset existe | N/A | Verificado no repo |
-| `build_windows.ps1` | N/A | **Pending** execução |
-| Smoke na `.exe` | N/A | **Pending** |
-| QA-approved build | N/A | **Não** |
-
----
-
-## Estado dos sistemas (commit `4babadc`)
-
-| Sistema | Estado | Notas |
-| --- | --- | --- |
-| Main scene menu | Integração concluída | `main_menu.tscn` |
-| Gameplay greybox | Integração concluída | Via boot; rua art paralela |
-| Autoloads product | OK | Bootstrap carrega no runner |
-| World map + descoberta | Integração concluída | Overlay provisório |
-| RespawnService | Integração concluída | 6 testes |
-| Street art molde | Integração concluída | 4 testes |
-| Kit modular | Integração concluída | 7 testes |
-| 23 suítes runner | **PASS** | Exit 0 |
-| Auto-load boot | **Desativado** | `auto_load_on_ready = false` |
-| Pixel art / mapa / diário final | Planejado beta | Overlay grafo provisório |
-
----
-
-## Documentos relacionados
-
-`VERTICAL_SLICE_TEST_PLAN.md`, `BETA_DEMO_SCOPE.md`, `TECH_DEBT.md`, `KNOWN_ISSUES.md`, `STABILIZATION_REPORT.md`, `VISUAL_FOUNDATION_BASELINE.md`, `HEADLESS_TESTING.md`
+1. todas as 30 suítes encerram;
+2. PASS 30/30;
+3. unexpected issues = 0;
+4. nenhum timeout;
+5. exit code final = 0;
+6. playthrough e build forem validados separadamente.

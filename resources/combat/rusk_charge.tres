@@ -6,10 +6,10 @@
 script = ExtResource("1_attack_data")
 attack_id = &"rusk_charge"
 display_name = "Rusk Charge"
-damage = 8.0
-startup_time = 0.62
+damage = 7.0
+startup_time = 0.72
 active_time = 0.18
-recovery_time = 0.42
+recovery_time = 0.46
 hitbox_size = Vector2(52, 34)
 hitbox_offset = Vector2(44, -2)
 hitstun_time = 0.28

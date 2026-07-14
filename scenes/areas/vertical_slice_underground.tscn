@@ -38,7 +38,7 @@ offset_right = 560.0
 offset_bottom = 84.0
 theme_override_colors/font_color = Color(0.62, 0.62, 0.68, 1)
 theme_override_font_sizes/font_size = 13
-text = "Checkpoint, pista do parceiro e Deacon Rusk."
+text = "Checkpoint primeiro — depois Rusk."
 
 [node name="BackgroundTint" type="Polygon2D" parent="."]
 color = Color(0.12, 0.12, 0.16, 0.35)

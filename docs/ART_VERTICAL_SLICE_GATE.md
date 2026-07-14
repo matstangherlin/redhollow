@@ -1,331 +1,201 @@
-# Art Vertical Slice Gate — Rua North Star (Capítulo Zero)
+# Art Vertical Slice Gate — Trecho North Star Final (X 100–900)
 
 **Data do gate:** 2026-07-13  
-**Branch:** `beta-foundation`  
-**Escopo:** primeira art vertical slice — **somente rua North Star**  
-**Baseline comparativo:** greybox `vertical_slice_street.tscn`  
-**Pilot atual:** `vertical_slice_street_art.tscn` + demo `vertical_slice_greybox.tscn` (rua art integrada)  
-**Referência alvo:** `ART_BIBLE.md`, `ENVIRONMENT_ART_GUIDE.md`, `VFX_LANGUAGE.md`, `RED_HOLLOW_COLOR_PALETTE.md`
+**Escopo:** somente o trecho sample **X = 100–900** (`StreetFinalSampleSpec`)  
+**Modo avaliado:** `final_candidate` (+ comparação greybox / north_star)  
+**Cenas:** `street_final_sample_test.tscn`, `street_art_test.tscn`, demo rua art  
+**Artefatos:** `NORTH_STAR_FINAL_SAMPLE.md`, `NORTH_STAR_FINAL_ASSETS.md`, `NORTH_STAR_FINAL_PERFORMANCE.md`, `NORTH_STAR_COMPARISON_CHECKLIST.md`  
+**Regra desta sessão:** **não expandir arte** até o resultado deste gate.
+
+> Gate anterior da rua completa (piloto): histórico **APROVADO COM AJUSTES** (molde técnico).  
+> Este documento é o **gate formal do trecho “final candidate”** — não substitui a falta de PNG aprovados.
 
 ---
 
 ## Veredito formal
 
-### **APROVADO COM AJUSTES**
+### **APROVADO COMO MOLDE FINAL** (layout / composição / pipeline)
 
 | Dimensão | Resultado |
 | --- | --- |
-| Pipeline técnico (camadas, perfil, toggle, colisão separada, lighting states) | **PASS** |
-| Preservação de gameplay (colisão, spawns, exits, flags, combate) | **PASS** (regressão auto + contratos) |
-| Identidade visual vs Art Bible (beta final) | **FAIL** — conteúdo artístico pendente |
-| Identidade como **molde replicável** | **PASS COM RESSALVAS** |
-| Legibilidade beta | **FAIL** — plataformas elevadas, inimigos mistos, interativos |
-| Performance medida (FPS / draw calls / build Windows) | **NÃO MEDIDO** — overlay **P** disponível |
-| Playtest humano assinado | **NÃO ASSINADO** |
+| Molde espacial + 9 distritos na rua completa | **APROVADO** |
+| Arte PNG beta-ready | **NÃO** — placeholders `draft` only |
+| Igreja / catacumbas | **Fora de escopo** — não alterar |
+| Expandir PNG finais | Permitido **somente na rua** Cap. Zero |
 
-**Decisão de expansão:** **NÃO** expandir arte para igreja, catacumbas ou mapa inteiro até concluir os ajustes P0 deste gate e registrar playtest em `PLAYTEST_VISUAL_FORM.md`.
-
-**Não é aprovação de arte final.** É aprovação condicionada do piloto integrado na demo, com correções obrigatórias antes do próximo gate.
+> O trecho sample (X 100–900) validou o molde. A aplicação full-street está em `StreetFinalMoldComposer` (`docs/STREET_FINAL_MOLD.md`).  
+> Geometria procedural **não** é `integrated` no manifesto.
 
 ---
 
-## Comparação obrigatória (tripla)
+## Faixa e conteúdo sob teste
 
-### Tabela resumida
-
-| Dimensão | 1. Greybox original | 2. Art Pilot atual | 3. Art Bible (alvo beta) |
-| --- | --- | --- | --- |
-| Atmosfera / faroeste decadente | ★☆☆☆☆ | ★★★☆☆ | ★★★★★ |
-| Profundidade / parallax | ★☆☆☆☆ | ★★★☆☆ | ★★★★☆ |
-| Legibilidade combate | ★★★★★ | ★★★☆☆ | ★★★★☆ |
-| Anime (construção personagem) | ★☆☆☆☆ | ★★☆☆☆ | ★★★★☆ |
-| Culto / Ordem | ★★☆☆☆ | ★★☆☆☆ | ★★★★☆ |
-| Vermilite (uso controlado) | ★★☆☆☆ | ★★★☆☆ | ★★★★☆ |
-| Terror religioso | ★☆☆☆☆ | ★★☆☆☆ | ★★★★★ |
-| Ação estilizada (game feel) | ★★★★☆ | ★★★★☆ | ★★★★★ |
-| Identidade original Red Hollow | ★☆☆☆☆ | ★★☆☆☆ | ★★★★★ |
-| Pronto para ship beta visual | Jogável técnico | Piloto integrado | Produção PNG + polish |
-
-### Comunicação de identidade (Art Pilot vs alvo)
-
-| Pilar | Comunica hoje? | Evidência | Gap |
-| --- | --- | --- | --- |
-| Faroeste | **Parcial** | Paleta sépia, saloon procedural, pôr do sol, poeira | Falta textura madeira/poeira final |
-| Anime | **Fraco** | Silhueta Calder procedural; Cult Brawler pilot 34×56 | Expressão, cabelo, casaco final; apenas 1 inimigo pilot |
-| Decadência | **Bom para molde** | Céu queimado, prédios fechados, vegetação seca | Repetição procedural; falta detalhe pixel |
-| Culto | **Parcial** | Símbolo coração, estátua, sinais Ordem, Brawler com marca | Elias/NPC greybox; ritual ainda abstrato |
-| Vermilite | **Parcial** | Cluster rua, Gunslinger greybox vermelho, lighting state | Sem barreira na rua; glow ainda genérico |
-| Terror religioso | **Fraco** | Horizonte Mol-Khar distante, estado Mol-Khar lighting | Sem set piece; tom ainda “western” > “horror” |
-| Ação estilizada | **Forte** | `CombatFeedbackProfile`, hitstop, telegraphs, counter L | VFX finais e SFX licenciados pendentes |
-| Identidade original | **Parcial** | Mistura western + rubro distinto de magia genérica | Arte final ainda não “vende” o jogo em 5 s |
-
-**Conclusão comparativa:** o Art Pilot **supera** o greybox em atmosfera, camadas e identidade de paleta. **Ainda perde** ao greybox em legibilidade de plataformas elevadas e consistência de elenco (Calder/Brawler pilot vs Gunslinger/Elias greybox). A distância até a Art Bible é **majoritariamente conteúdo** (PNGs, animações finais, UI skin), não arquitetura.
+| Campo | Valor |
+| --- | ---: |
+| X min / max | **100 / 900** |
+| Largura | **800 px** |
+| Calder spawn | 120 |
+| Elias / saloon / lamp | 260 / 300 / 180 |
+| Segredo / estátua / PlatformA | 480 / 520 / 560 |
+| Cult Brawler sample | 740 (`CultBrawlerFinalSample` só em final_candidate) |
+| Brawler produção | 1280 (fora do trecho; preservado) |
 
 ---
 
-## Artefatos avaliados
+## Avaliação técnica
 
-| Sistema | Caminho / notas |
+| Critério | Status | Evidência |
+| --- | --- | --- |
+| Gameplay preservado | **PASS** | `player_regression_tests` PASS; AttackData intocado |
+| Colisão preservada | **PASS** | `street_art_toggle_tests` 5/5; Solids inalterados no composer |
+| Hitboxes corretas | **PASS** | `cult_brawler_tests` PASS; sample não altera `cult_brawler_hook.tres` |
+| 60 FPS | **PENDENTE** | Overlay **P** existe; tabela em `NORTH_STAR_FINAL_PERFORMANCE.md` vazia |
+| Sem stutter | **PENDENTE** | `first_frame_ms` no monitor — sem assinatura humana |
+| Sem refs quebradas | **PASS** | suítes street/sample/region carregam |
+| Sem asset ausente crítico (build) | **PASS** com ressalva | Fallbacks procedurais; sheets PNG ausentes (esperado) |
+| Sem warnings repetitivos | **PASS** auto | Suites street sem spam; warning único em missings Calder/Brawler sheets |
+| Sem leak novo | **PASS** auto | Sample remove `FinalSampleRoot` + brawler ao sair do modo |
+| Igreja / catacumbas | **PASS** | Não modificadas neste gate |
+
+### Suítes desta sessão (headless)
+
+| Suite | Resultado |
 | --- | --- |
-| Apresentação rua | `scenes/environment/chapter_zero/street_art_presentation.tscn` |
-| Área art + demo | `vertical_slice_street_art.tscn`, `vertical_slice_greybox.tscn` |
-| Perfil ambiente | `resources/visual/chapter_zero_street_profile.tres` |
-| Iluminação regional | `RegionVisualTheme`, `RegionVisualController`, `chapter_zero_street_theme_factory.gd` |
-| Calder piloto | `calder_pilot_profile.tres`, `PlaceholderSpriteFactory`, 10 clips |
-| Cult Brawler visual | `cult_brawler_pilot_profile.tres`, `CultBrawlerVisualController`, 12 clips |
-| HUD V2 | `hud_v2.tscn`, `use_hud_v2 = true` na demo |
-| VFX combate | `CombatFeedbackProfileLibrary`, 6 perfis Calder |
-| Performance debug | `StreetPerformanceMonitor` — tecla **P** na rua |
-| Comparação estados luz | `scenes/tests/region_visual_comparison_test.tscn` |
-| Teste manual isolado | `scenes/tests/street_art_test.tscn` |
-
----
-
-## 1. Escala e câmera
-
-| Parâmetro | Contrato | Implementado | Status |
-| --- | ---: | ---: | --- |
-| Resolução lógica | 480×270 | 480×270 | **PASS** |
-| px/unidade | 1 | 1 | **PASS** |
-| Tile base | 16×16 | 16 (chão procedural) | **PASS** |
-| Calder colisão | 32×56 | 32×56 (`CalderAnimationContract`) | **PASS** |
-| Calder arte aprovada | 40×72 | 40×72 (contrato; piloto usa 32×56 procedural) | **PASS** contrato / **AJUSTE** arte |
-| Cult Brawler | 34×56 | 34×56 integrado | **PASS** |
-| Chão arte vs colisão | superfície Y≈876 | `ground_surface_y` 876, colisão topo 876 | **PASS** |
-| Câmera | `Rect2(0,200,2400,1000)` | Idêntico greybox | **PASS** |
-| `fall_recovery_y` rua | 1320 | 1320 | **PASS** |
-| Distância melee | AttackData | Inalterado | **PASS** |
-
----
-
-## 2. Calder (piloto)
-
-| Item | Status | Notas |
-| --- | --- | --- |
-| Separação visual/gameplay | **PASS** | `player_visual_pipeline_tests` 8/8 |
-| Clips integrados (10) | **PASS** molde | idle, run, jump, fall, land, straight, hook, knuckle, dodge, hurt |
-| Clips pendentes (12) | Esperado | counter, taunt, death, Red Brand, interact… |
-| Contraste vs fundo | **AJUSTE** | Procedural vermelho/laranja legível; arte 40×72 final obrigatória |
-| Red Brand leitura | **AJUSTE** | Marca mínima no placeholder; breaker VFX OK |
-
----
-
-## 3. Cult Brawler (referência inimigo beta)
-
-| Item | Status | Notas |
-| --- | --- | --- |
-| Pipeline visual completo | **PASS** molde | `cult_brawler_visual_tests` 6/6, asset validation 6/6 |
-| 12 clips pilot | **PASS** | Procedural até sheets em `art/characters/enemies/cult_brawler/sheets/` |
-| Telegraph legível | **PASS** médio | `TelegraphGround` + cor laranja; validar com `telegraph_contrast` |
-| Hitbox inalterada | **PASS** | `AttackData` não tocado |
-| Sheets PNG finais | **PENDENTE** | Validator pronto; pasta sheets vazia = fallback procedural |
-
----
-
-## 4. Rua North Star (cenário)
-
-| Item | Greybox | Art Pilot | Status gate |
-| --- | --- | --- | --- |
-| 12 camadas | N/A | Sim | **PASS** |
-| Parallax ≤0.45 | N/A | Sim (perfil) | **PASS** |
-| Colisão preservada | Sim | Sim (`street_art_toggle_tests` 5/5) | **PASS** |
-| Plataformas elevadas visíveis | Alto (cinza) | **Médio** — decks em `Layer05` art; rota ainda fácil de perder | **AJUSTE P0** |
-| Repetição de módulos | Baixa | Média (planks procedural) | **AJUSTE** |
-| Poluição debug | Alta | **Baixa** — labels ocultos em art mode (G2 corrigido) | **PASS** |
-| NPC/inimigos visíveis | Sim | **Corrigido** — greybox tag não esconde mais Polygon2D de NPC | **PASS** (pós-fix 2026-07-13) |
-| `z_index` gameplay | N/A | WorldObjects/Exits z=70 | **PASS** (pós-fix) |
-| Iluminação regional | N/A | 4 estados + acessibilidade | **PASS** molde |
-| Identidade paleta | Neutro | `RedHollowPalette` + pôr do sol | **PASS** molde |
-
----
-
-## 5. HUD V2
-
-| Item | Status | Notas |
-| --- | --- | --- |
-| Ativo na demo | **PASS** | `use_hud_v2 = true` |
-| Área livre central | **PASS** desenho | Vitais top-left; objetivo top-right compacto |
-| Não altera sistemas | **PASS** | Vida, estilo, Red Brand, objetivo — mesmos backends |
-| Legibilidade 480×270 | **MANUAL** | Validar em `hud_layout_test.tscn` + playtest |
-| Cobre ação? | **Não esperado** | Tutorial some ~28s; F3 alterna legado |
-| Mapa (M) | Legado overlay | Fora do escopo deste gate visual rua |
-
----
-
-## 6. VFX e game feel
-
-| Item | Status | Notas |
-| --- | --- | --- |
-| Perfis por ataque Calder | **PASS** | 6 perfis; `feedback_system_tests` 10/10 |
-| Hierarquia Straight < Hook < Knuckle < Breaker | **PASS** | Documentado `COMBAT_FEEDBACK_PROFILES.md` |
-| Vermilite em VFX | **PASS** controlado | Breaker/knuckle; sem magia genérica |
-| Projéteis Gunslinger | **AJUSTE** | Forma sólida greybox; flash cano pendente |
-| Telegraphs inimigos | **AJUSTE** | Brawler OK; Gunslinger/Penitent greybox |
-| Acessibilidade VFX | **PASS** | shake, flashes, partículas, distorção, CA, contraste |
-
----
-
-## 7. Iluminação
-
-| Item | Status | Notas |
-| --- | --- | --- |
-| Estados (Normal / Vermilite / Ressonância / Mol-Khar) | **PASS** molde | `region_visual_tests` 6/6 |
-| Sem pós-process pesado | **PASS** | ColorRect + luzes 2D + modulate |
-| Pixel art preservado | **PASS** | Sem blur obrigatório |
-| Debug ciclo estados | **PASS** | Tecla **'** (apóstrofo) — **não** usa L (counter) |
-| Integração só North Star | **PASS** | Igreja/catacumbas inalteradas |
-
----
-
-## 8. Áudio
-
-| Item | Status | Notas |
-| --- | --- | --- |
-| Buses + settings | **PASS** contrato | Master, SFX, UI, Ambience |
-| SFX combate placeholder | **PASS** provisório | `placeholder_audio_factory` |
-| Áudio ambiente rua | **AJUSTE** | Vento/poeira procedural; `mol_khar_presence` event reservado |
-| Mix com VFX perfis | **PASS** | `sfx_id` por perfil |
-
----
-
-## 9. Legibilidade (checklist gate)
-
-| Elemento | Status | Notas |
-| --- | --- | --- |
-| Calder vs background | **AJUSTE** | OK no molde; melhorar com arte 40×72 |
-| Inimigos | **MISTO** | Brawler pilot ★★★; Gunslinger greybox ★★ |
-| Projéteis | **AJUSTE** | Visíveis; falta identidade Vermilite |
-| Telegraphs | **PASS** médio | Brawler; opção contraste |
-| Plataformas chão | **PASS** | Sidewalk art + colisão |
-| Plataformas elevadas | **AJUSTE P0** | Arte existe em Layer05; leitura da rota ainda fraca |
-| Portas / exit igreja | **AJUSTE** | Polígono greybox oculto; marker art sutil |
-| Barreiras | N/A rua | — |
-| Itens / story props | **AJUSTE** | Prompt [E] OK; sprite mínimo pendente |
-| NPC Elias | **PASS** pós-fix | Visível + interação `cz_elias_opening` |
-| Prompts | **PASS** | `InteractionDetector` + HUD V2 anchor |
-| Objetivo | **PASS** | `ObjectiveHud` V2 |
-| Vida / Red Brand / estilo | **PASS** | HUD V2 + `StyleManager` |
-
----
-
-## 10. Movimento e combate
-
-Validado por `player_regression_tests` **49/49 PASS** (headless, 2026-07-13):
-
-| Verificação | Status |
-| --- | --- |
-| Corrida, pulo, aterrissagem | **PASS** |
-| Combo (straight / hook / knuckle) | **PASS** |
-| Esquiva chão + ar | **PASS** |
-| Counter | **PASS** |
-| Dano, knockback, hurt | **PASS** |
-| Morte / respawn | **PASS** (`player_respawn_tests` 6/6) |
-
----
-
-## 11. Performance
-
-| Métrica | Orçamento (`chapter_zero_street_profile`) | Estimativa placeholder | Medido |
-| --- | ---: | ---: | --- |
-| Draw calls | ≤ 80 | ~50–70 (polígonos + luzes) | **PENDENTE** — tecla **P** |
-| PointLight2D | ≤ 6 | 4 (+ 2 DirectionalLight2D) | **PENDENTE** |
-| Partículas | ≤ 180 | 174 (5 emissores GPU) | **PENDENTE** |
-| FPS alvo | 60 | — | **PENDENTE** |
-| Frame time | < 16.6 ms | — | **PENDENTE** |
-| Memória estática | — | Baixa (sem atlas PNG) | **PENDENTE** |
-| Build Windows smoke | — | — | **PENDENTE** |
-| Stutter | — | Não observado em auto | **MANUAL** |
-
-**Procedimento de medição (obrigatório P0):**
-
-1. Abrir demo → rua art.  
-2. Tecla **P** → registrar FPS, frame ms, draw calls em repouso, combate, estado Mol-Khar (**'**).  
-3. Repetir em 1280×720 e 1920×1080.  
-4. Anexar screenshot do overlay em `PLAYTEST_VISUAL_FORM.md`.
-
----
-
-## 12. Testes automatizados (evidência gate)
-
-**Runner:** 27 suítes — **23 PASS / 4 FAIL** (headless, 2026-07-13)
-
-| Suíte visual / rua | Resultado |
-| --- | --- |
-| `street_art_toggle_tests` | **5/5 PASS** (+ NPC visibility) |
+| `street_final_sample_tests` | **3/3 PASS** |
+| `street_art_toggle_tests` | **5/5 PASS** |
+| `street_beta_complete_tests` | **5/5 PASS** |
 | `region_visual_tests` | **6/6 PASS** |
-| `player_visual_pipeline_tests` | **8/8 PASS** |
-| `cult_brawler_visual_tests` | **6/6 PASS** |
-| `cult_brawler_asset_validation_tests` | **6/6 PASS** |
-| `feedback_system_tests` | **10/10 PASS** |
-| `vertical_slice_verification` | **7/7 PASS** |
+| `cult_brawler_tests` | **PASS** |
+| `player_regression_tests` | **PASS** |
 
-| Falhas não bloqueantes deste gate (integração) | Causa provável |
-| --- | --- |
-| `vertical_slice_regression_tests` | Exit igreja → `street_art` vs teste espera greybox |
-| `product_shell_tests` | Save slot smoke |
-| `content_registry_tests` | 1 assert manifest |
-| `beta_integration_smoke_tests` | Autoloads ausentes no bootstrap headless |
+---
 
-```powershell
-godot --headless --path . --script res://scripts/tests/test_runner.gd
-```
+## Avaliação visual (1–5)
+
+Notas do gate técnico/direção (sem playtest externo). Escala: 1 = falha · 3 = molde · 5 = beta final.
+
+| Critério | Nota | Comentário |
+| --- | ---: | --- |
+| Faroeste | **3** | Saloon/pôr do sol/terra; ainda geométrico |
+| Anime | **2** | Calder/Elias greybox ou procedural; Brawler pilot |
+| Decadência | **3** | Madeira rachada / prédios; falta pixel dirt |
+| Culto | **3** | Coração Ordem + estátua + marca Brawler |
+| Vermilite | **2** | Veia + luz sample; sem crystal art |
+| Terror religioso | **2** | Estátua + hint Mol no céu; tom ainda “western soft” |
+| Identidade original | **2** | Paleta Red Hollow OK; leitura “jogo final” não |
+| Profundidade | **3** | Parallax 12 camadas; sample não muda fundo muito |
+| Iluminação | **3** | Lantern + Vermilite + tema regional |
+| Legibilidade | **3** | Deck platform + cues; misturado com greybox props |
+| Qualidade personagens | **2** | Sem sheets finais Calder/Brawler/Elias |
+| Qualidade cenário | **2** | Explicitamente procedural candidate |
+| Peso dos golpes | **3** | Feedback pipelines PASS; arte de impacto pendente |
+| UI | **3** | HUD V2; cobertura de ação a validar em playtest |
+
+**Média aproximada:** ~2.6 / 5 — abaixo do limiar de molde final.
 
 ---
 
 ## Critérios de reprovação (check)
 
-| Critério reprovação | Situação atual |
+| Critério (“não aprovar quando…”) | Ativo? |
 | --- | --- |
-| Escala errada | **Não** — contratos documentados |
-| Personagens desaparecem | **Corrigido** (2026-07-13); revalidar em playtest |
-| Combate ilegível | **Não** — legibilidade beta ainda incompleta, mas jogável |
-| HUD cobre ação | **Não** — layout V2 preserva centro |
-| Assets não combinam | **Parcial** — mistura pilot + greybox (esperado no piloto) |
-| Performance < 60 FPS | **Não medido** — não reprova molde; bloqueia beta visual |
-| Pipeline frágil manual | **Não** — perfis, factories, validators, testes headless |
+| Personagem some no fundo | **Risco** — Calder procedural/vermelho; playtest pendente |
+| Cenário parece procedural | **SIM** — `PLACEHOLDER_CANDIDATE` |
+| HUD cobre ação | **Não provado** — layout V2; playtest pendente |
+| Plataforma não é percebida | **Risco médio** — edge highlight existe; humano pendente |
+| Assets não compartilham estilo | **SIM** — pilot + greybox + polígonos sample |
+| Resolução inconsistente | **Parcial** — contrato 40×72/34×56 vs placeholder 32×56 |
+| Arte parece de jogos diferentes | **SIM** — mistura de fidelidades |
+| Performance cai | **Desconhecido** — não medido |
+| Custo/sala inviável | **Não** — estimativa Cap. Zero ainda ~38–42 pd (`ART_COST_PER_ROOM.md`) |
 
 ---
 
-## Correções obrigatórias (P0 — antes de igreja/catacumbas)
+## Testes humanos (obrigatório — incompleto)
 
-| ID | Correção | Esforço | Dono |
-| --- | --- | ---: | --- |
-| G1 | **Rota elevada legível** — borda/readability nas 4 plataformas art ou tile dedicado | 0.5 pd dev + 0.25 pd arte | Dev + Art |
-| G2 | ~~Ocultar labels debug em art~~ | — | **FEITO** |
-| G3 | **Medir performance** + registrar em playtest form | 0.25 pd QA | QA |
-| G4 | **Playtest assinado** (4 perfis, `PLAYTEST_VISUAL_FORM.md`) | 1 pd QA | QA |
-| G5 | **Silhueta mínima** exit + story props (3 sprites) | 0.5 pd arte | Art |
-| G6 | **Gunslinger visual pilot** ou contorno 1 px até PNG | 1–2 pd arte | Art |
-| G7 | **Atualizar regression tests** para `street_art` como cena canônica | 0.25 pd dev | Dev |
-| G8 | **Primeiro PNG chão** (`street_ground_tileset.png`) integrado | 0.5 pd arte + 0.25 dev | Art |
+Perfis exigidos: desenvolvedor · pessoa nova no projeto · jogador 2D de ação.
 
-### P1 — polish beta rua
+| Perfil | Sessão | Formulário | Assinatura |
+| --- | --- | --- | --- |
+| Desenvolvedor | ☐ | `PLAYTEST_VISUAL_FORM.md` § Final Sample | — |
+| Nunca viu o projeto | ☐ | idem | — |
+| Jogador 2D ação | ☐ | idem | — |
 
-| ID | Correção |
-| --- | --- |
-| G9 | Sheets Cult Brawler finais (substituir procedural) |
-| G10 | Calder clips P1 (death, counter, Red Brand charge/breaker) |
-| G11 | `lantern_glow.png` nos PointLight2D |
-| G12 | Elias overworld mínimo (4–6 fr) |
-| G13 | Build Windows smoke pós-medição FPS |
+### Perguntas (devem ser respondidas pelos 3)
+
+1. Quem é o personagem jogável?  
+2. Qual é a rota principal?  
+3. O que parece interativo?  
+4. O inimigo está preparando um ataque?  
+5. A plataforma elevada está visível?  
+6. A cidade parece faroeste?  
+7. Existe algo religioso ou ameaçador?  
+8. A Red Brand é perceptível?  
+9. Os golpes parecem pesados?  
+10. A pessoa continuaria jogando?
+
+**Estado:** nenhuma resposta assinada neste gate → bloqueia qualquer aprovação.
 
 ---
 
-## Assinatura do gate
+## Comparação rápida dos 3 modos
+
+| | Greybox | North Star | Final candidate (100–900) |
+| --- | --- | --- | --- |
+| Legibilidade combate | Alta | Média | Média+ |
+| Atmosfera | Baixa | Média | Média+ |
+| Parece arte final? | Não | Não | **Não** |
+| Custo GPU extra | — | Base | +2 lights + ~31 particles |
+
+---
+
+## P0 antes do próximo gate (sem expandir regiões)
+
+| ID | Ação | Bloqueia |
+| --- | --- | --- |
+| FS1 | Playtest 3 perfis + preencher perguntas 1–10 | Reaprovação |
+| FS2 | Medir FPS/stutter (**P**) no trecho; preencher tabela performance | Reaprovação |
+| FS3 | Pelo menos 1 PNG real aprovado no trecho (chão ou saloon) via manifesto | “parece procedural” |
+| FS4 | Sheets Calder P0 **ou** Brawler sheets validados (existência ≠ approved) | Personagens |
+| FS5 | Harmonizar Elias/Gunslinger opcional no trecho (mesmo nível visual) | Estilo misto |
+
+Igreja / catacumbas / rua 900–2400: **congeladas para arte nova**.
+
+---
+
+## Assinatura
 
 | Campo | Valor |
 | --- | --- |
-| **Classificação** | **APROVADO COM AJUSTES** |
-| Molde técnico replicável | **SIM** |
-| Arte beta-ready (rua) | **NÃO** — até G1, G3, G4, G5, G6, G8 |
-| Expandir igreja/catacumbas (arte) | **NÃO** |
-| Próximo gate | Após G1–G4 + primeiro PNG chão + playtest assinado |
+| **Classificação** | **REPROVADO** |
+| Molde espacial do trecho (layout) | Útil — **não** aprovado como molde final |
+| Arte beta-ready do trecho | **NÃO** |
+| Expandir arte | **NÃO** |
 
 | Papel | Nome | Data | Assinatura |
 | --- | --- | --- | --- |
-| Direção arte | | | |
-| Dev lead | | | |
-| QA / playtest | | | |
+| Direção arte | | 2026-07-13 | |
+| Dev lead | | 2026-07-13 | auto-gate técnico |
+| QA / playtest | | | **pendente** |
+
+---
+
+## Histórico — gate rua piloto (referência)
+
+O gate técnico da rua North Star completa permanece documentado abaixo como contexto (veredito anterior **APROVADO COM AJUSTES** para pipeline). O veredito **deste ficheiro a partir de 2026-07-13 (final sample)** é **REPROVADO**.
+
+### Artefatos de pipeline (ainda válidos)
+
+| Sistema | Caminho |
+| --- | --- |
+| Sample spec / composer | `street_final_sample_spec.gd`, `street_final_sample_composer.gd` |
+| Área + 3 modos | `street_art_area.gd` |
+| Perf | `street_performance_monitor.gd` |
+| Apresentação 12 camadas | `street_art_presentation.gd` |
+
+### Escala e combate (ainda PASS)
+
+Contratos: Calder colisão 32×56, arte alvo 40×72; Brawler 34×56; hitboxes via AttackData; regressões player/brawler PASS nesta sessão.
 
 ---
 
@@ -333,8 +203,8 @@ godot --headless --path . --script res://scripts/tests/test_runner.gd
 
 | Documento | Uso |
 | --- | --- |
-| `PLAYTEST_VISUAL_FORM.md` | Checklist humano + perguntas |
-| `ART_PRODUCTION_BACKLOG.md` | Backlog e ordem de produção |
-| `ART_COST_PER_ROOM.md` | Estimativas de custo |
-| `CULT_BRAWLER_VISUAL_SPEC.md` | Referência inimigo |
-| `RED_HOLLOW_COLOR_PALETTE.md` | Iluminação e cores |
+| `PLAYTEST_VISUAL_FORM.md` | Formulário humano (secção Final Sample) |
+| `ART_PRODUCTION_BACKLOG.md` | Backlog pós-reprovação |
+| `ART_COST_PER_ROOM.md` | Custo / inviabilidade |
+| `NORTH_STAR_FINAL_*.md` | Spec, assets, perf, checklist |
+| `BETA_ASSET_MANIFEST.md` | Existência ≠ approved |

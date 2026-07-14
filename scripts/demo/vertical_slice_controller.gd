@@ -66,7 +66,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return_to_start()
 
 
-func return_to_start() -> void:
+func return_to_start(wipe_disk_slot: bool = true) -> void:
 	_bind_lock_manager()
 	if _lock_manager != null:
 		_lock_manager.begin_new_session()
@@ -81,8 +81,11 @@ func return_to_start() -> void:
 	_hide_completion_overlay()
 
 	var save_manager := _find_node_in_group(SAVE_MANAGER_GROUP)
-	if save_manager != null and save_manager.has_method("delete_save"):
-		save_manager.call("delete_save")
+	if wipe_disk_slot and save_manager != null:
+		if save_manager.has_method("archive_and_clear_slot"):
+			save_manager.call("archive_and_clear_slot")
+		elif save_manager.has_method("delete_save"):
+			save_manager.call("delete_save")
 
 	_reset_progression_for_demo()
 
@@ -92,7 +95,7 @@ func return_to_start() -> void:
 
 	var save_manager_after := _find_node_in_group(SAVE_MANAGER_GROUP)
 	if save_manager_after != null and save_manager_after.has_method("create_new_save"):
-		save_manager_after.call("create_new_save")
+		save_manager_after.call("create_new_save", wipe_disk_slot)
 
 	_reset_player_combat_state()
 	_reset_style_and_brand()

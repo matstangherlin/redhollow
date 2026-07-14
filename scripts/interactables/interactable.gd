@@ -61,14 +61,16 @@ func interact(interactor: Node) -> void:
 
 
 func set_focused(is_focused: bool) -> void:
+	# InteractionDetector owns the single visible prompt (canvas or player label).
+	# Local PromptIndicator must stay hidden while focused to avoid duplicates.
 	if prompt_indicator is Label:
 		var label := prompt_indicator as Label
 		if is_focused:
-			if InputDeviceManager != null:
-				label.text = InputDeviceManager.format_interaction_prompt(get_prompt_text(null))
-			else:
-				label.text = "[E] %s" % get_prompt_text(null)
-		label.visible = is_focused
+			label.visible = false
+		elif not provisional_message.is_empty() and label.visible:
+			pass
+		else:
+			label.visible = false
 	focus_changed.emit(is_focused)
 
 

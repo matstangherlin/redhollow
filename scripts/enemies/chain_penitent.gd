@@ -28,12 +28,12 @@ const VULNERABLE_COLOR := Color(0.78, 0.72, 0.28, 1.0)
 const HURT_COLOR := Color(1.0, 0.64, 0.28, 1.0)
 const DEAD_COLOR := Color(0.18, 0.16, 0.16, 1.0)
 
-@export var max_health: float = 18.0
+@export var max_health: float = 16.0
 @export var move_speed: float = 82.0
-@export var detection_range: float = 240.0
+@export var detection_range: float = 230.0
 @export var attack_range: float = 96.0
-@export var attack_cooldown: float = 1.65
-@export var vulnerable_duration: float = 0.85
+@export var attack_cooldown: float = 1.85
+@export var vulnerable_duration: float = 1.05
 @export var patrol_distance: float = 120.0
 @export var sweep_attack: Resource = preload("res://resources/combat/chain_penitent_sweep.tres")
 @export var hook_attack: Resource = preload("res://resources/combat/chain_penitent_hook.tres")
@@ -48,6 +48,7 @@ const DEAD_COLOR := Color(0.18, 0.16, 0.16, 1.0)
 @onready var body_visual: Polygon2D = %BodyVisual
 @onready var chain_visual: Polygon2D = %ChainVisual
 @onready var telegraph_visual: Polygon2D = %TelegraphVisual
+@onready var visual_controller: ChainPenitentVisualController = %ChainPenitentVisualController
 @onready var hurtbox_component: Area2D = %HurtboxComponent
 @onready var hitbox_component: Area2D = %HitboxComponent
 @onready var health_component: Node = %HealthComponent
@@ -77,6 +78,8 @@ func _ready() -> void:
 	hurtbox_component.connect("hit_received", Callable(self, "_on_hit_received"))
 	health_component.connect("died", Callable(self, "_on_died"))
 	hitbox_component.connect("hit_landed", Callable(self, "_on_hit_landed"))
+	if visual_controller != null:
+		visual_controller.setup(self)
 	_update_visual()
 
 
@@ -89,7 +92,7 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	_apply_movement_rules(delta)
 	move_and_slide()
-	_update_visual()
+	_update_visual(delta)
 
 
 func reset_enemy() -> void:
@@ -106,6 +109,13 @@ func reset_enemy() -> void:
 	hitbox_component.call("deactivate")
 	health_component.call("reset_health")
 	_enable_hurtbox(true)
+	set_deferred("collision_layer", 2)
+	set_deferred("collision_mask", 1)
+	var body_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if body_shape != null:
+		body_shape.set_deferred("disabled", false)
+	if visual_controller != null:
+		visual_controller.reset_visual()
 	_update_visual()
 
 
@@ -217,6 +227,8 @@ func _begin_attack(state: int, data: Resource) -> void:
 	state_time_remaining = maxf(float(data.get("startup_time")), 0.0)
 	hitbox_component.call("deactivate")
 	_set_combat_pressure(true)
+	if visual_controller != null:
+		visual_controller.notify_attack_telegraph(data)
 	if state_time_remaining <= 0.0:
 		_advance_attack_phase()
 
@@ -288,6 +300,8 @@ func _on_hit_received(attack_data_received: Resource, hitbox: Area2D, attacker: 
 		state_time_remaining = knockback_state_duration
 	else:
 		current_state = PenitentState.HURT
+	if visual_controller != null:
+		visual_controller.apply_hit_reaction(attack_data_received)
 	_update_visual()
 
 
@@ -298,6 +312,8 @@ func _on_died() -> void:
 	_enable_hurtbox(false)
 	CorpseCollisionHelper.disable_body_collision(self)
 	velocity = Vector2.ZERO
+	if visual_controller != null:
+		visual_controller.play_death()
 	_update_visual()
 	HealthDropSpawner.try_spawn_from_defeat(self, HealthDropSpawner.PROFILE_ELITE)
 
@@ -378,7 +394,13 @@ func _set_combat_pressure(is_active: bool) -> void:
 	combat_pressure_changed.emit(is_active)
 
 
-func _update_visual() -> void:
+func _update_visual(delta: float = 0.0) -> void:
+	if visual_controller != null and visual_controller.refresh(self, delta):
+		return
+	_update_placeholder_visual()
+
+
+func _update_placeholder_visual() -> void:
 	telegraph_visual.visible = current_state in [PenitentState.SWEEP, PenitentState.HOOK] and attack_phase == "startup"
 	chain_visual.visible = current_state in [PenitentState.SWEEP, PenitentState.HOOK, PenitentState.RECOVERY]
 
@@ -393,3 +415,31 @@ func _update_visual() -> void:
 			body_visual.color = ATTACK_COLOR
 		_:
 			body_visual.color = IDLE_COLOR
+
+
+func _get_state_name(state: int) -> String:
+	match state:
+		PenitentState.IDLE:
+			return "idle"
+		PenitentState.PATROL:
+			return "patrol"
+		PenitentState.ALERT:
+			return "alert"
+		PenitentState.APPROACH:
+			return "approach"
+		PenitentState.SWEEP:
+			return "sweep"
+		PenitentState.HOOK:
+			return "hook"
+		PenitentState.RECOVERY:
+			return "recovery"
+		PenitentState.VULNERABLE:
+			return "vulnerable"
+		PenitentState.HURT:
+			return "hurt"
+		PenitentState.KNOCKED_BACK:
+			return "knocked_back"
+		PenitentState.DEAD:
+			return "dead"
+		_:
+			return "idle"

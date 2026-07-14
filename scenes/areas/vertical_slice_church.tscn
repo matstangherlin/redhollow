@@ -78,6 +78,7 @@ spawn_id = &"from_underground"
 [node name="ChurchYardArena" parent="WorldObjects" instance=ExtResource("5_combat_arena")]
 arena_id = &"vs_church_yard"
 completion_flag_id = &"arena_vs_church_yard_complete"
+spawn_stagger_seconds = 1.7
 blocked_exit_paths = Array[NodePath]([NodePath("../../Exits/ToStreetExit"), NodePath("../../Exits/ToUndergroundExit")])
 
 [node name="ChainPenitentAlcove" parent="WorldObjects" groups=["chapter_zero_chain_penitent"] instance=ExtResource("8_penitent")]
@@ -89,7 +90,7 @@ offset_top = 800.0
 offset_right = 420.0
 offset_bottom = 824.0
 theme_override_font_sizes/font_size = 11
-text = "Penitente — telegraph amplo, pune erro"
+text = "Corrente ampla — contra-ataque após o miss"
 
 [node name="ChurchCheckpoint" parent="WorldObjects" instance=ExtResource("10_checkpoint")]
 position = Vector2(480, 848)
@@ -106,7 +107,7 @@ offset_top = 780.0
 offset_right = 980.0
 offset_bottom = 804.0
 theme_override_font_sizes/font_size = 11
-text = "Passagem Red Brand — segure [U]"
+text = "Coração Rubro → [U] na barreira"
 
 [node name="ShortcutToStreet" parent="WorldObjects" instance=ExtResource("11_gate")]
 position = Vector2(1260, 848)

@@ -2,6 +2,26 @@
 
 Alvo: **60 FPS** estável no Windows na configuração de referência documentada.
 
+## Status RC1 (`0.2.0-beta.rc1`)
+
+| Campo | Valor |
+| --- | --- |
+| Build medida | `red-hollow-0.2.0-beta.rc1-release.exe` |
+| Medição FPS/memória | **Não executada** na sessão RC1 |
+| Classificação | Orçamento permanece alvo; **não** assinado → contribui para **REPROVADA** |
+| Hardware packaging (sem profiling) | i9-10900KF · RTX 2060 SUPER · ~64 GB RAM · Windows 11 |
+
+Preencher a tabela abaixo na próxima rodada QA na **release** exportada.
+
+| Métrica RC1 | Valor |
+| --- | --- |
+| FPS mínimo | — |
+| FPS médio | — |
+| Frame time (médio / p95) | — |
+| Memória estática pico | — |
+| Carregamentos (transições) | — |
+| Stutter observável | — |
+
 ## Configuração de referência (QA)
 
 | Parâmetro | Valor |
@@ -12,7 +32,7 @@ Alvo: **60 FPS** estável no Windows na configuração de referência documentad
 | Max FPS | 60 (`Engine.max_fps` / opções) |
 | GPU | D3D12 (`rendering_device/driver.windows=d3d12`) |
 | Cena | Capítulo Zero completo (rua → igreja → subterrâneo → Rusk) |
-| Build | **Release** export (`Windows Beta Release`) |
+| Build | **Release** export (`Windows Beta Release` / RC1 release exe) |
 
 ## Métricas a medir
 

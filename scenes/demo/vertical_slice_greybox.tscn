@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://0urvw8i3af5"]
+[gd_scene load_steps=28 format=3 uid="uid://0urvw8i3af5"]
 
 [ext_resource type="Script" path="res://scripts/core/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/core/hitstop_controller.gd" id="2_hitstop"]
@@ -26,6 +26,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/world_map_overlay.tscn" id="23_world_map"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud_v2.tscn" id="24_hud_v2"]
 [ext_resource type="Script" path="res://scripts/ui/hud_layout_controller.gd" id="25_hud_layout"]
+[ext_resource type="Script" path="res://scripts/debug/beta_playtest_recorder.gd" id="26_playtest_recorder"]
+[ext_resource type="Script" path="res://scripts/debug/beta_playtest_debug_panel.gd" id="27_playtest_panel"]
 
 [node name="vertical_slice_greybox" type="Node"]
 script = ExtResource("1_game")
@@ -86,6 +88,13 @@ script = ExtResource("18_narrative")
 [node name="HudLayoutController" type="Node" parent="."]
 script = ExtResource("25_hud_layout")
 use_hud_v2 = true
+
+[node name="BetaPlaytestRecorder" type="Node" parent="."]
+script = ExtResource("26_playtest_recorder")
+
+[node name="BetaPlaytestDebugPanel" type="CanvasLayer" parent="."]
+script = ExtResource("27_playtest_panel")
+start_visible = false
 
 [node name="WorldMapOverlay" parent="." instance=ExtResource("23_world_map")]
 

@@ -85,8 +85,28 @@ const SUITES: Array[Dictionary] = [
 		"path": "res://scripts/visual/enemies/cult_brawler_visual_tests.gd",
 	},
 	{
+		"name": "vermilite_gunslinger_visual_tests",
+		"path": "res://scripts/visual/enemies/vermilite_gunslinger_visual_tests.gd",
+	},
+	{
+		"name": "vermilite_gunslinger_asset_validation_tests",
+		"path": "res://scripts/visual/enemies/vermilite_gunslinger_asset_validation_tests.gd",
+	},
+	{
+		"name": "chain_penitent_visual_tests",
+		"path": "res://scripts/visual/enemies/chain_penitent_visual_tests.gd",
+	},
+	{
+		"name": "chain_penitent_asset_validation_tests",
+		"path": "res://scripts/visual/enemies/chain_penitent_asset_validation_tests.gd",
+	},
+	{
 		"name": "feedback_system_tests",
 		"path": "res://scripts/feedback/feedback_system_tests.gd",
+	},
+	{
+		"name": "beta_presentation_tests",
+		"path": "res://scripts/audio/beta_presentation_tests.gd",
 	},
 	{
 		"name": "player_respawn_tests",
@@ -105,8 +125,20 @@ const SUITES: Array[Dictionary] = [
 		"path": "res://scripts/visual/street_art_toggle_tests.gd",
 	},
 	{
+		"name": "street_final_sample_tests",
+		"path": "res://scripts/visual/street_final_sample_tests.gd",
+	},
+	{
+		"name": "street_final_mold_tests",
+		"path": "res://scripts/visual/street_final_mold_tests.gd",
+	},
+	{
 		"name": "street_beta_complete_tests",
 		"path": "res://scripts/visual/street_beta_complete_tests.gd",
+	},
+	{
+		"name": "church_final_mold_tests",
+		"path": "res://scripts/visual/church_final_mold_tests.gd",
 	},
 	{
 		"name": "church_beta_complete_tests",
@@ -115,6 +147,18 @@ const SUITES: Array[Dictionary] = [
 	{
 		"name": "underground_beta_complete_tests",
 		"path": "res://scripts/visual/underground_beta_complete_tests.gd",
+	},
+	{
+		"name": "underground_final_mold_tests",
+		"path": "res://scripts/visual/underground_final_mold_tests.gd",
+	},
+	{
+		"name": "deacon_rusk_visual_tests",
+		"path": "res://scripts/visual/enemies/deacon_rusk_visual_tests.gd",
+	},
+	{
+		"name": "deacon_rusk_asset_validation_tests",
+		"path": "res://scripts/visual/enemies/deacon_rusk_asset_validation_tests.gd",
 	},
 	{
 		"name": "region_visual_tests",
@@ -127,6 +171,14 @@ const SUITES: Array[Dictionary] = [
 	{
 		"name": "world_map_graph_tests",
 		"path": "res://scripts/world/world_map_graph_tests.gd",
+	},
+	{
+		"name": "beta_playtest_recorder_tests",
+		"path": "res://scripts/debug/beta_playtest_recorder_tests.gd",
+	},
+	{
+		"name": "beta_asset_manifest_tests",
+		"path": "res://scripts/art/beta_asset_manifest_tests.gd",
 	},
 ]
 

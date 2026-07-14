@@ -1,14 +1,17 @@
 # Audio workspace — Red Hollow
 
-Estrutura para SFX, UI, ambience e voice finais. **Beta atual usa placeholders procedurais.**
+Estrutura para SFX, UI, ambience, voice e music finais.
+
+**Beta presentation:** placeholders procedurais originais (sem assets externos).  
+Registro: `docs/AUDIO_ASSETS.md` · slots de música: `MusicController` / `MusicSlotId`.
 
 ```
 audio/
-  sfx/           # combate, passos, impactos
+  sfx/           # combate, passos, impactos (final)
   ui/            # menus, confirmações
   ambience/      # vento, minas, sino, Vermilite
-  voice/         # blips de diálogo (sem dublagem nesta etapa)
-  music/         # trilha (futuro)
+  voice/         # blips de diálogo
+  music/         # slots menu/rua/igreja/catacumbas/boss/finale
 ```
 
-Ver `docs/AUDIO_ASSETS.md` para licenças e registro de substituição.
+Ver `docs/BETA_PRESENTATION_PASS.md`.

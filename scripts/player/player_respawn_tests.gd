@@ -17,7 +17,6 @@ const PlayerScript := preload("res://scripts/player/player.gd")
 
 func _run_suite() -> void:
 	var suite := TestHelpers.begin_suite(get_tree(), "player_respawn_tests")
-	suite.allow_error_contains("CombatArena 'church_yard_01' integrity failure")
 
 	var failures: PackedStringArray = PackedStringArray()
 	var root_node := Node2D.new()
@@ -34,13 +33,15 @@ func _run_suite() -> void:
 	await _test_fall_recovery_without_death(failures, player)
 	await _test_arena_reset_on_death(failures, root_node, player, respawn_service)
 	await _test_boss_reset_on_death(failures, root_node, player, respawn_service)
+	await _test_boss_deferred_activation_and_no_duplicate(failures, root_node, player)
+	await _test_boss_completion_is_idempotent(failures, root_node, player)
 	await _test_save_load_checkpoint_contract(failures, player)
 
 	player.queue_free()
 	root_node.queue_free()
 	await TestHelpers.await_frames(get_tree(), 2)
 
-	suite.finish(failures, 6)
+	suite.finish(failures, 8)
 
 
 func _mount_lock_manager(parent: Node) -> GameplayLockManager:
@@ -179,10 +180,12 @@ func _test_arena_reset_on_death(
 	await TestHelpers.await_seconds(get_tree(), 0.2)
 	await TestHelpers.await_frames(get_tree(), 8)
 
-	if arena.get_remaining_enemy_count() < before_count:
-		failures.append("Arena should respawn living enemies after player death.")
-	if arena.state != CombatArenaController.ArenaState.ACTIVE:
-		failures.append("Arena should remain active after player death reset.")
+	if arena.get_remaining_enemy_count() != 0:
+		failures.append("Arena should remove the previous roster after player death.")
+	if arena.state != CombatArenaController.ArenaState.INACTIVE:
+		failures.append("Arena should return to INACTIVE after player death.")
+	if gate_left.is_closed() or gate_right.is_closed():
+		failures.append("Player respawn must not leave arena gates closed.")
 
 	arena.queue_free()
 
@@ -220,11 +223,117 @@ func _test_boss_reset_on_death(
 		failures.append("Boss should be reset to alive state after player death.")
 	if float(boss_health.get("current_health")) < float(boss_health.get("max_health")):
 		failures.append("Boss health should be fully restored after player death reset.")
-	if boss_hud.panel == null or not boss_hud.panel.visible:
-		failures.append("Boss HUD should be rebound and visible after player death reset.")
+	if encounter.state != BossEncounterController.EncounterState.INACTIVE:
+		failures.append("Boss encounter should return to INACTIVE after player death.")
+	if bool(boss.get("is_boss_active")):
+		failures.append("Deacon Rusk should be dormant until the encounter is re-entered.")
+	if boss_hud.panel != null and boss_hud.panel.visible:
+		failures.append("Boss HUD should remain hidden after encounter reset.")
 
 	encounter.queue_free()
 	boss_hud.queue_free()
+
+
+func _test_boss_deferred_activation_and_no_duplicate(
+	failures: PackedStringArray,
+	root_node: Node2D,
+	player: CharacterBody2D
+) -> void:
+	var fixture := await _build_boss_fixture(root_node)
+	var encounter := fixture["encounter"] as BossEncounterController
+	var boss := fixture["boss"] as DeaconRusk
+	var boss_hud := fixture["hud"] as BossHealthHud
+	var start_tracker := {"count": 0}
+	encounter.encounter_started.connect(
+		func(_encounter_id: StringName) -> void: start_tracker["count"] += 1
+	)
+
+	var first_request := encounter.request_activation(player)
+	var duplicate_request := encounter.request_activation(player)
+	if not first_request or duplicate_request:
+		failures.append("Boss encounter should accept only one activation request per entry.")
+	if encounter.state != BossEncounterController.EncounterState.ACTIVATION_REQUESTED:
+		failures.append("Boss body_entered should stop at ACTIVATION_REQUESTED on the callback stack.")
+	if boss.is_boss_active:
+		failures.append("Deacon Rusk must not activate before the deferred physics boundary.")
+
+	await TestHelpers.await_physics_frames(get_tree(), 5)
+	await TestHelpers.await_frames(get_tree(), 2)
+	if encounter.state != BossEncounterController.EncounterState.ACTIVE:
+		failures.append("Deferred boss encounter should reach ACTIVE.")
+	if not boss.is_boss_active or int(start_tracker["count"]) != 1:
+		failures.append("Boss activation should start exactly once.")
+
+	encounter.reset_active_encounter_for_player_death()
+	await TestHelpers.await_physics_frames(get_tree(), 6)
+	await TestHelpers.await_frames(get_tree(), 2)
+	if encounter.state != BossEncounterController.EncounterState.INACTIVE:
+		failures.append("Boss reset should reopen the encounter in INACTIVE.")
+	if boss.is_boss_active or (boss_hud.panel != null and boss_hud.panel.visible):
+		failures.append("Boss and HUD should remain dormant after reset.")
+
+	encounter._on_activation_body_exited(player)
+	encounter.request_activation(player)
+	await TestHelpers.await_physics_frames(get_tree(), 5)
+	await TestHelpers.await_frames(get_tree(), 2)
+	if int(start_tracker["count"]) != 2:
+		failures.append("Re-entry after reset should start one new boss cycle.")
+	if encounter.get_children().filter(func(node: Node) -> bool: return node is DeaconRusk).size() != 1:
+		failures.append("Deacon Rusk must not duplicate after respawn.")
+
+	encounter.on_area_unloading()
+	encounter.queue_free()
+	boss_hud.queue_free()
+	await TestHelpers.await_frames(get_tree(), 2)
+
+
+func _test_boss_completion_is_idempotent(
+	failures: PackedStringArray,
+	root_node: Node2D,
+	player: CharacterBody2D
+) -> void:
+	var fixture := await _build_boss_fixture(root_node)
+	var encounter := fixture["encounter"] as BossEncounterController
+	var boss := fixture["boss"] as DeaconRusk
+	var boss_hud := fixture["hud"] as BossHealthHud
+	var completion_tracker := {"count": 0}
+	encounter.encounter_completed.connect(
+		func(_encounter_id: StringName) -> void: completion_tracker["count"] += 1
+	)
+
+	encounter.request_activation(player)
+	await TestHelpers.await_physics_frames(get_tree(), 5)
+	await TestHelpers.await_frames(get_tree(), 2)
+	var health := boss.get_node("%HealthComponent") as HealthComponent
+	health.apply_damage(health.max_health, player)
+	await TestHelpers.await_frames(get_tree(), 4)
+	encounter._on_boss_defeated(boss.boss_id)
+
+	if encounter.state != BossEncounterController.EncounterState.COMPLETED:
+		failures.append("Boss encounter should complete after Deacon Rusk is defeated.")
+	if int(completion_tracker["count"]) != 1:
+		failures.append("Boss completion must be idempotent.")
+	if boss_hud.panel != null and boss_hud.panel.visible:
+		failures.append("Boss HUD should hide when the encounter completes.")
+
+	encounter.queue_free()
+	boss_hud.queue_free()
+	await TestHelpers.await_frames(get_tree(), 2)
+
+
+func _build_boss_fixture(parent: Node2D) -> Dictionary:
+	var encounter: BossEncounterController = BossEncounterScene.instantiate()
+	parent.add_child(encounter)
+	var boss: DeaconRusk = DeaconRuskScene.instantiate()
+	encounter.add_child(boss)
+	boss.global_position = Vector2(820, 848)
+	encounter.boss_path = boss.get_path()
+	encounter._resolve_nodes()
+	var boss_hud: BossHealthHud = BossHealthHudScene.instantiate()
+	parent.add_child(boss_hud)
+	encounter.bind_encounter_services(null, null, boss_hud)
+	await TestHelpers.await_frames(get_tree(), 2)
+	return {"encounter": encounter, "boss": boss, "hud": boss_hud}
 
 
 func _test_save_load_checkpoint_contract(failures: PackedStringArray, player: CharacterBody2D) -> void:

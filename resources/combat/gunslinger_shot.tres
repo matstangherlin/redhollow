@@ -6,10 +6,10 @@
 script = ExtResource("1_attack_data")
 attack_id = &"gunslinger_shot"
 display_name = "Vermilite Shot"
-damage = 4.0
-startup_time = 0.55
+damage = 3.0
+startup_time = 0.62
 active_time = 0.08
-recovery_time = 0.45
+recovery_time = 0.48
 hitbox_size = Vector2(14, 6)
 hitbox_offset = Vector2(18, -4)
 hitstun_time = 0.18

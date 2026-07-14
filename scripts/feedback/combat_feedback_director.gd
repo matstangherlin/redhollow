@@ -6,23 +6,28 @@ class_name CombatFeedbackDirector
 const FEEDBACK_DIRECTOR_GROUP := "combat_feedback_director"
 const CHECKPOINT_GROUP := "checkpoints"
 const RED_BARRIER_GROUP := "red_barrier"
+const BOSS_ENCOUNTER_GROUP := "boss_encounter_controller"
 
 const FOOTSTEP_INTERVAL := 0.28
 const FOOTSTEP_MIN_SPEED := 40.0
 
 @export var enable_footsteps: bool = true
 @export var enable_ambient_layers: bool = true
+@export var enable_music_slots: bool = true
+@export var enable_door_sfx: bool = true
 
 var _audio: AudioManager = null
 var _vfx: CombatVfxSpawner = null
 var _camera: CameraController = null
 var _ambient: AmbientAudioController = null
+var _music: MusicController = null
 var _player: CharacterBody2D = null
 var _player_hitbox: HitboxComponent = null
 var _player_hurtbox: HurtboxComponent = null
 var _player_health: HealthComponent = null
 var _footstep_cooldown: float = 0.0
 var _bound_signals: Dictionary = {}
+var _last_area_id: StringName = &""
 
 
 func _ready() -> void:
@@ -34,12 +39,14 @@ func setup(
 	audio_manager: AudioManager,
 	vfx_spawner: CombatVfxSpawner,
 	camera_controller: CameraController,
-	ambient_controller: AmbientAudioController = null
+	ambient_controller: AmbientAudioController = null,
+	music_controller: MusicController = null
 ) -> void:
 	_audio = audio_manager
 	_vfx = vfx_spawner
 	_camera = camera_controller
 	_ambient = ambient_controller
+	_music = music_controller
 
 
 func bind_player(player: CharacterBody2D) -> void:
@@ -83,6 +90,7 @@ func bind_game_services(services: GameServices) -> void:
 
 	_connect_world_checkpoints()
 	_connect_barriers()
+	_connect_boss_encounters()
 
 
 func _physics_process(delta: float) -> void:
@@ -183,6 +191,11 @@ func _request_vibration(feedback: Dictionary) -> void:
 	var duration := float(feedback.get("vibration_duration", 0.0))
 	if intensity <= 0.0 or duration <= 0.0:
 		return
+
+	var weak := clampf(intensity * 0.55, 0.0, 1.0)
+	var strong := clampf(intensity, 0.0, 1.0)
+	for device_id in Input.get_connected_joypads():
+		Input.start_joy_vibration(int(device_id), weak, strong, duration)
 
 	if Engine.has_singleton("JavaClassWrapper"):
 		return
@@ -317,11 +330,34 @@ func _on_dialogue_line(_dialogue_id: StringName, _line_index: int, _text: String
 
 
 func _on_area_changed(area_id: StringName, _area_scene_path: String) -> void:
-	if not enable_ambient_layers or _ambient == null:
-		return
-	_ambient.apply_area_profile(area_id)
+	if enable_door_sfx and _audio != null and _last_area_id != &"" and area_id != _last_area_id:
+		_audio.play_event(AudioEventId.DOOR, null, 0.72)
+
+	_last_area_id = area_id
+
+	if enable_ambient_layers and _ambient != null:
+		_ambient.apply_area_profile(area_id)
+
+	if enable_music_slots and _music != null:
+		_music.play_for_area(area_id)
+
 	_connect_world_checkpoints()
 	_connect_barriers()
+	_connect_boss_encounters()
+
+
+func _on_boss_encounter_started(_encounter_id: StringName) -> void:
+	if _audio != null:
+		_audio.play_event(AudioEventId.BOSS_STINGER, null, 0.9)
+	if enable_music_slots and _music != null:
+		_music.begin_boss_override(MusicSlotId.DEACON_RUSK)
+	if _vfx != null and _player != null:
+		_vfx.spawn(&"boss", _player.global_position + Vector2(0, -40), 0.85)
+
+
+func _on_boss_encounter_completed(_encounter_id: StringName) -> void:
+	if enable_music_slots and _music != null:
+		_music.end_boss_override()
 
 
 func _on_checkpoint_activated(
@@ -400,6 +436,16 @@ func _connect_barriers() -> void:
 		var destroy_callable := _on_barrier_destroyed.bind(barrier)
 		_connect_once(node, &"wrong_hit_received", wrong_callable)
 		_connect_once(node, &"barrier_destroyed", destroy_callable)
+
+
+func _connect_boss_encounters() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+
+	for node in tree.get_nodes_in_group(BOSS_ENCOUNTER_GROUP):
+		_connect_once(node, &"encounter_started", _on_boss_encounter_started)
+		_connect_once(node, &"encounter_completed", _on_boss_encounter_completed)
 
 
 func _connect_once(source: Object, signal_name: StringName, callable: Callable) -> void:

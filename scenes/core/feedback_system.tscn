@@ -5,12 +5,16 @@
 [ext_resource type="Script" path="res://scripts/feedback/combat_vfx_spawner.gd" id="3_vfx"]
 [ext_resource type="Script" path="res://scripts/audio/ambient_audio_controller.gd" id="4_ambient"]
 [ext_resource type="Script" path="res://scripts/feedback/combat_feedback_director.gd" id="5_director"]
+[ext_resource type="Script" path="res://scripts/audio/music_controller.gd" id="6_music"]
 
 [node name="FeedbackSystem" type="Node"]
 script = ExtResource("1_system")
 
 [node name="AudioManager" type="Node" parent="."]
 script = ExtResource("2_audio")
+
+[node name="MusicController" type="Node" parent="."]
+script = ExtResource("6_music")
 
 [node name="CombatVfxSpawner" type="Node2D" parent="."]
 script = ExtResource("3_vfx")

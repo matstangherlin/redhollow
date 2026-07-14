@@ -70,7 +70,8 @@ Ordem de produção alinhada ao commit **`e07ba0e`** (beta foundation) e meta Ca
 | C11 | Teaser Arcturus | |
 | C12 | Variante corrupção (uma área) | |
 
-**Nota:** C1–C12 produzem **conteúdo final**; substituem greybox incrementalmente.
+**Nota:** C1–C12 produzem **conteúdo final**; substituem greybox incrementalmente.  
+Controle de slots/status/aprovação: `data/art/beta_asset_manifest.json` — ver `docs/BETA_ASSET_MANIFEST.md` e `docs/ART_APPROVAL_WORKFLOW.md`. Existência de arquivo ≠ `approved`.
 
 ---
 

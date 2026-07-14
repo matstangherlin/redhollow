@@ -51,7 +51,7 @@ Tom: funcional no combate, sombrio fora dele, sem poluição visual no centro da
 - Avanço com **E**; não bloquear input após fechar.
 - Estilo visual: pergaminho escuro ou painel de madeira com borda metálica.
 
-Estado atual: `DialogueBox` funcional com layout provisório.
+Estado atual: `DialogueBox` com typewriter, escala de legenda e tema de apresentação provisório.
 
 ## Feedback de combate
 

@@ -1,91 +1,69 @@
-# Red Hollow — Build Instructions (Windows local beta)
+# Red Hollow — Build Instructions (Windows RC / local beta)
 
-Build **local** para QA interno. **Não** publicar na Steam nem distribuir publicamente sem gate completo.
+Build **local** para avaliação / QA. **Não** publicar na Steam nem distribuir publicamente sem classificação aprovada.
 
-## Versões canônicas
+## Versões canônicas (RC1)
 
 | Campo | Valor | Fonte |
 | --- | --- | --- |
-| Jogo | `0.2.0-beta.1` | `project.godot` → `config/version`, `GameVersion.GAME_VERSION` |
+| Display | Red Hollow — Chapter Zero Beta RC1 | `GameVersion.DISPLAY_NAME` |
+| Jogo | `0.2.0-beta.rc1` | `project.godot` → `config/version`, `GameVersion.GAME_VERSION` |
+| Build number | `20260713.rc1` | `GameVersion.BUILD_NUMBER` |
 | Save | `1` | `SaveData.CURRENT_SAVE_VERSION` |
 | Settings | `1` | `SettingsData.CURRENT_SETTINGS_VERSION` |
-| Engine | Godot **4.7** | `project.godot` → `config/features` |
-| Canal | `local-beta` | `GameVersion.BUILD_CHANNEL` |
+| Manifest conteúdo | `beta_demo` | `resources/content/manifests/beta_demo.tres` |
+| Engine | Godot **4.7** | `config/features` |
+| Canal | `rc1-closed` | `GameVersion.BUILD_CHANNEL` |
 
 ## Pré-requisitos
 
-1. **Godot 4.7** instalado (editor ou export templates embutidos).
-2. **Export templates Windows** instalados no Godot (Editor → Manage Export Templates).
-3. Repositório em estado conhecido; anote `git rev-parse HEAD`.
-4. Suíte headless executada (ver abaixo).
+1. **Godot 4.7** + export templates Windows.
+2. Anote `git rev-parse HEAD`.
+3. Preferir working tree limpa (RC1 packaging avisou tree suja).
+4. Suíte headless (`test_runner.gd`) — **obrigatória** para `qa_release_approved: true`.
 
 ## Export presets
 
-Arquivo: `export_presets.cfg`
+| Preset | Saída |
+| --- | --- |
+| **Windows Beta Debug** | `builds/windows/red-hollow-0.2.0-beta.rc1-debug.exe` |
+| **Windows Beta Release** | `builds/windows/red-hollow-0.2.0-beta.rc1-release.exe` |
 
-| Preset | Saída | Uso |
-| --- | --- | --- |
-| **Windows Beta Debug** | `builds/windows/red-hollow-0.2.0-beta.1-debug.exe` | Console, diagnóstico, QA técnico |
-| **Windows Beta Release** | `builds/windows/red-hollow-0.2.0-beta.1-release.exe` | Jogadores internos (sem console) |
+`builds/` está no `.gitignore`.
 
-A pasta `builds/` está no `.gitignore`.
-
-## Script automatizado (recomendado)
+## Script automatizado
 
 ```powershell
 cd C:\Users\Stan\Documents\red-hollow
 .\tools\build_windows.ps1 -GodotExe "C:\Users\Stan\Documents\Godot_v4.7-stable_win64.exe"
 ```
 
-Opções:
-
 | Flag | Efeito |
 | --- | --- |
-| `-SkipTests` | Pula `test_runner.gd` (não recomendado) |
-| `-DebugOnly` | Só export debug |
-| `-ReleaseOnly` | Só export release |
+| `-SkipTests` | Pula runner (manifest `test_runner=skipped`) |
+| `-DebugOnly` / `-ReleaseOnly` | Um preset |
+| `-SkipZip` | Não gera ZIP portátil |
 
-Manifest gerado: `builds/windows/build-manifest.json` (versão, commit, resultado dos testes, `qa_release_approved`).
+Saídas típicas:
 
-Exit code `2` = build exportou, mas **testes falharam** — release **não aprovada**.
+- `build-manifest.json`
+- `red-hollow-0.2.0-beta.rc1-<short>-portable.zip` (release + pck + README)
 
-## Manual (Godot CLI)
+Exit `2` = exportou, mas **testes falharam** — classificação permanece **REPROVADA**.
 
-```powershell
-# 1. Testes
-& "C:\Path\To\Godot.exe" --headless --path . --script res://scripts/tests/test_runner.gd
+## Gate antes de aprovar
 
-# 2. Import
-& "C:\Path\To\Godot.exe" --headless --path . --import
+1. Runner **43/43 PASS**, unexpected = 0 (allowlist documentada OK).
+2. Playthrough assinado (`BETA_RELEASE_CHECKLIST.md` / `BETA_PLAYTHROUGH_REPORT.md`).
+3. **Zero P0** em `KNOWN_ISSUES.md`.
+4. Performance medida na release (`PERFORMANCE_BUDGET.md`).
+5. Smoke 1–14 na build exportada.
 
-# 3. Export
-& "C:\Path\To\Godot.exe" --headless --path . --export-debug "Windows Beta Debug"
-& "C:\Path\To\Godot.exe" --headless --path . --export-release "Windows Beta Release"
-```
+Veredito RC1: `docs/RC1_REPORT.md` → **REPROVADA**.
 
-## Gate antes de marcar release “aprovada”
+## Alterações em `project.godot` (RC1)
 
-1. `test_runner.gd` → **17/17 PASS**, unexpected issues = 0 (allowlist documentada OK).
-2. Playthrough manual (`BETA_RELEASE_CHECKLIST.md`) assinado.
-3. Sem **P0** em `KNOWN_ISSUES.md`.
-4. Performance dentro de `PERFORMANCE_BUDGET.md` na config de referência.
-5. Save/load validado na build exportada (não só no editor).
+- `config/version="0.2.0-beta.rc1"`
+- `config/description` — Chapter Zero Beta RC1 (closed test candidate)
 
-## Alterações em `project.godot` (beta build)
-
-- `config/version="0.2.0-beta.1"` — rótulo da build.
-- `config/description` — Capítulo Zero beta local.
-
-Main scene permanece `scenes/product/main_menu.tscn`.
-
-## Limitação conhecida — testes headless
-
-Suítes executadas com `--script` como `SceneTree` raiz **não carregam autoloads** da mesma forma que o jogo exportado. Isso pode falhar verificações de `SettingsManager` / `InputDeviceManager` no runner, mesmo com o jogo funcional no export.
-
-**Validação definitiva:** build exportada + checklist manual.
-
-## Distribuição interna
-
-1. Copiar `.exe` + `build-manifest.json`.
-2. Incluir `BETA_TEST_FORM.md` para feedback.
-3. Não enviar para Steam, itch público ou links abertos.
+Main scene: `scenes/product/main_menu.tscn`.

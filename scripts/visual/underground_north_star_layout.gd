@@ -73,3 +73,86 @@ static func get_zone_ground_tints() -> Dictionary:
 		Zone.MOL_PRISON: Palette.VERMILITE_SHADOW,
 		Zone.SPIRITUAL_MANIFESTATION: Palette.MOL_STONE_BLACK,
 	}
+
+
+static func get_mold_structures_for_zone(zone_id: int, ground_y: float) -> Array[Dictionary]:
+	match zone_id:
+		Zone.HUMAN_INFRA:
+			return [
+				{"name": "TimberShoreA", "pos": Vector2(80, ground_y), "w": 28.0, "h": 96.0, "kind": "timber"},
+				{"name": "TimberShoreB", "pos": Vector2(180, ground_y), "w": 32.0, "h": 110.0, "kind": "timber"},
+			]
+		Zone.ORDER_TUNNELS:
+			return [
+				{"name": "OrderArchA", "pos": Vector2(280, ground_y), "w": 64.0, "h": 120.0, "kind": "arch"},
+				{"name": "OrderArchB", "pos": Vector2(400, ground_y), "w": 72.0, "h": 128.0, "kind": "arch"},
+			]
+		Zone.ANCIENT_RUINS:
+			return [
+				{"name": "RuinPillarL", "pos": Vector2(520, ground_y), "w": 36.0, "h": 140.0, "kind": "ruin"},
+				{"name": "RuinPillarR", "pos": Vector2(640, ground_y), "w": 40.0, "h": 150.0, "kind": "ruin"},
+			]
+		Zone.MOL_PRISON:
+			return [
+				{"name": "PrisonColumn", "pos": Vector2(760, ground_y), "w": 48.0, "h": 132.0, "kind": "prison"},
+				{"name": "VeinWall", "pos": Vector2(880, ground_y), "w": 56.0, "h": 100.0, "kind": "vermilite_wall"},
+			]
+		Zone.SPIRITUAL_MANIFESTATION:
+			return [
+				{"name": "RitualFlank", "pos": Vector2(1020, ground_y), "w": 44.0, "h": 160.0, "kind": "ritual"},
+			]
+		_:
+			return []
+
+
+static func get_mold_props_for_zone(zone_id: int, ground_y: float) -> Array[Dictionary]:
+	match zone_id:
+		Zone.HUMAN_INFRA:
+			return [
+				{"kind": "crate", "pos": Vector2(120, ground_y)},
+				{"kind": "lamp", "pos": Vector2(200, ground_y)},
+			]
+		Zone.ORDER_TUNNELS:
+			return [
+				{"kind": "chains", "pos": Vector2(300, ground_y - 20)},
+				{"kind": "candle", "pos": Vector2(360, ground_y)},
+				{"kind": "banner", "pos": Vector2(440, ground_y - 60)},
+			]
+		Zone.ANCIENT_RUINS:
+			return [
+				{"kind": "glyph", "pos": Vector2(540, ground_y - 40)},
+				{"kind": "bones", "pos": Vector2(600, ground_y)},
+				{"kind": "roots", "pos": Vector2(660, ground_y - 8)},
+			]
+		Zone.MOL_PRISON:
+			return [
+				{"kind": "vermilite", "pos": Vector2(800, ground_y)},
+				{"kind": "altar", "pos": Vector2(860, ground_y)},
+			]
+		Zone.SPIRITUAL_MANIFESTATION:
+			return [
+				{"kind": "candle", "pos": Vector2(1040, ground_y)},
+				{"kind": "vermilite", "pos": Vector2(1120, ground_y)},
+			]
+		_:
+			return []
+
+
+static func get_mold_kit_placements(ground_y: float) -> Array[Dictionary]:
+	var art_base := "res://art/environments/chapter_zero/modules/"
+	var base := get_kit_module_placements(ground_y)
+	var extra: Array[Dictionary] = [
+		{"module": &"timber", "pos": Vector2(60, ground_y - 32), "path": art_base + "underground_mod_timber.png", "size": Vector2(48, 32)},
+		{"module": &"candle", "pos": Vector2(480, ground_y - 48), "path": art_base + "underground_mod_candle.png", "size": Vector2(12, 20)},
+		{"module": &"vermilite", "pos": Vector2(920, ground_y - 12), "path": art_base + "underground_mod_vermilite.png", "size": Vector2(16, 24)},
+		{"module": &"lantern", "pos": Vector2(240, ground_y), "path": art_base + "street_mod_lantern.png", "size": Vector2(16, 24)},
+	]
+	var out: Array[Dictionary] = []
+	out.append_array(base)
+	out.append_array(extra)
+	return out
+
+
+static func get_boss_arena_bounds() -> Dictionary:
+	return {"x_min": 60.0, "x_max": 1140.0, "center_x": 780.0}
+

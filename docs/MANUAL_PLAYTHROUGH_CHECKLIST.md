@@ -19,16 +19,20 @@ Use este roteiro para fechar **KI-004** e converter o gate de **PASS COM RESTRI�
 | A1 | Abrir o jogo — main scene é o menu (sem crash) | [ ] | |
 | A2 | Menu principal visível com título e botões | [ ] | |
 | A3 | **Novo Jogo** sem save existente inicia direto | [ ] | |
-| A4 | Criar save (jogar até F8 ou checkpoint) e voltar ao menu | [ ] | |
-| A5 | **Novo Jogo** com save — diálogo de confirmação aparece | [ ] | |
-| A6 | Confirmar overwrite — save anterior substituído | [ ] | |
+| A4 | Criar save (checkpoint; F8 só em debug) e voltar ao menu | [ ] | |
+| A5 | **Novo Jogo** com save válido — diálogo de confirmação | [ ] | |
+| A6 | Confirmar — save arquivado + progresso substituído; inicia na rua | [ ] | |
 | A7 | Cancelar overwrite — permanece no menu | [ ] | |
 | A8 | **Continuar** desabilitado sem save válido | [ ] | |
-| A9 | **Continuar** com save válido — loading → greybox | [ ] | |
+| A9 | **Continuar** com save válido — loading → área correta | [ ] | |
 | A10 | Loading screen aparece durante transição | [ ] | |
 | A11 | **Opções** abre e fecha sem travar menu | [ ] | |
 | A12 | **Créditos** abre e fecha | [ ] | |
-| A13 | **Sair** encerra (ou volta ao editor em dev) | [ ] | |
+| A13 | **Sair** encerra (ou volta ao editor em dest) | [ ] | |
+| A14 | Save corrompido — Continuar off; mensagem amigável; oferta Novo Jogo | [ ] | |
+| A15 | Primary corrompido + `.bak` válido — Continuar habilitado | [ ] | |
+| A16 | Save com área/manifesto inválido — `incompatible`; Novo Jogo | [ ] | |
+| A17 | Abrir greybox direto no editor — **não** auto-carrega slot | [ ] | |
 
 ---
 
@@ -134,17 +138,25 @@ Testar no menu **e** na pausa in-game.
 
 ## H. Save / load
 
+Política: `docs/BOOT_AND_SAVE_POLICY.md` + `docs/SAVE_COMPATIBILITY.md`.
+
 | # | Cenário | OK | Notas |
 | --- | --- | --- | --- |
-| H1 | **F8** grava save em jogo | [ ] | |
-| H2 | **F9** carrega save manual | [ ] | |
-| H3 | Checkpoint grava ao ativar | [ ] | |
-| H4 | Continuar restaura área, posição, flags | [ ] | |
-| H5 | Flags narrativas persistem (Elias, arena, boss) | [ ] | |
-| H6 | Barreira destruída permanece destruída após load | [ ] | |
-| H7 | Save corrompido (editar JSON) — jogo não crasha | [ ] | |
-| H8 | Backup `.bak` recupera save se principal corrompido | [ ] | |
-| H9 | Manifesto `beta_demo` no save após sessão | [ ] | |
+| H1 | **F8** grava save (**somente debug build**) | [ ] | |
+| H2 | **F9** carrega save (**somente debug build**) | [ ] | |
+| H3 | Release: F8/F9 **não** gravam nem carregam | [ ] | |
+| H4 | Checkpoint grava ao ativar (sem hitch perceptível) | [ ] | |
+| H5 | Continuar restaura área, posição, flags, mapa | [ ] | |
+| H6 | Barreira destruída permanece após Continuar | [ ] | |
+| H7 | Load **antes** do boss — Rusk ainda ativo | [ ] | |
+| H8 | Load **depois** do boss — flags de vitória coerentes | [ ] | |
+| H9 | Save corrompido — jogo não crasha | [ ] | |
+| H10 | Backup `.bak` recupera se principal corrompido | [ ] | |
+| H11 | Write com primary inválido **não** clobber `.bak` | [ ] | |
+| H12 | Novo Jogo gera `.save.archive.json` | [ ] | |
+| H13 | Manifesto `beta_demo` no save após sessão | [ ] | |
+| H14 | Morte após Continuar — respawn coerente com checkpoint | [ ] | |
+| H15 | Novo Jogo após concluir beta — reset completo | [ ] | |
 
 ---
 

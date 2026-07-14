@@ -1,233 +1,192 @@
 # Red Hollow — Stabilization Gate Report
 
-**Data:** 2026-07-13 (auditoria pós-commit `4babadc`)  
-**Commit auditado:** `4babadc9a1c16b838aba541f89c17d5c9174f21a` (`4babadc`)  
-**Main scene:** `res://scenes/product/main_menu.tscn`  
-**Gameplay scene:** `res://scenes/demo/vertical_slice_greybox.tscn`  
-**Versão:** `0.2.0-beta.1`  
-**Godot:** 4.7 stable (`C:\Users\Stan\Documents\Godot_v4.7-stable_win64.exe`)
+**Data:** 2026-07-13
+**Repositório:** `matstangherlin/redhollow`
+**Branch:** `main`
+**Commit auditado:** `4f20f76e5f505f36eacdb9866d7d7e33404c15f3` (`4f20f76`)
+**Versão:** `0.2.0-beta.1`
+**Godot:** 4.7 stable
+**Main scene:** `res://scenes/product/main_menu.tscn`
+**Gameplay entry:** `res://scenes/demo/vertical_slice_greybox.tscn`
 
----
+## Veredito formal
 
-## Conclusão do gate (auditoria `4babadc`)
+# BASELINE DE CÓDIGO ESTABELECIDO — GATE DE RELEASE REPROVADO
 
-# APROVADO PARA MOLDE TÉCNICO VISUAL — REPROVADO PARA SHIP BETA E ARTE FINAL
+`4f20f76` passa a ser o baseline canônico da beta porque contém as três áreas North Star e corrige o crash das catacumbas. O estado não pode ser promovido a release:
 
-O commit adiciona fundação visual e de mundo (mapa em grafo, rua art, kit modular, PILOT Calder, `RespawnService`, pickups, smoke beta). Estado após auditoria:
+1. o runner registra **30** suítes, não 23/27;
+2. o resultado agregado é **25 PASS / 4 FAIL / 1 TIMEOUT**;
+3. o runner completo não termina quando `modular_kit_tests` trava;
+4. o playthrough manual não foi assinado;
+5. a build local existente é de um commit antigo e não foi aprovada;
+6. a arte continua procedural/pilot, sem assets finais.
 
-1. **Gate automatizado PASS** — runner **23/23** suítes, exit **0**, ~51 s (bootstrap `--main-scene`).
-2. **Playthrough manual** menu→fim **não assinado** (KI-004, P0).
-3. **Produção artística final** **bloqueada** — P0 visual G1/G2 (`VISUAL_FOUNDATION_BASELINE.md`).
-4. **Molde técnico** rua → igreja/catacumbas **liberado** (`ART_VERTICAL_SLICE_GATE.md`).
-5. **Build Windows** — preset/script existem; build **não aprovada** QA (KI-106).
-6. **Arena physics flush** — não corrigido em produção; allowlist headless (KI-002).
-
----
-
-## 1. Pré-condições da auditoria
+## 1. Pré-condições
 
 | Verificação | Resultado |
 | --- | --- |
-| Commit HEAD | `4babadc` ✓ |
-| Alterações locais (tracked) | **7 scripts** corrigidos na auditoria (não commitados) |
-| `.godot/` ignorada | ✓ (`.gitignore`) |
-| `builds/` ignorada | ✓ |
-| Arquivos temporários de teste | Presentes (`runner_*.txt`, `docs/_*_out.txt`) — **não versionar** |
+| HEAD | `4f20f76e5f505f36eacdb9866d7d7e33404c15f3` — PASS |
+| Branch | `main` — PASS |
+| Remote | `https://github.com/matstangherlin/redhollow.git` — PASS |
+| Tracked changes antes da auditoria | Nenhuma |
+| Working tree limpa | **Não** — 18 arquivos untracked preexistentes |
+| `.godot/`, `.import/` | Ignoradas |
+| Builds/exports | Ignorados |
+| Source art pesada | Calder protegido; Cult Brawler com gap de ignore |
 
----
+## 2. Execução do gate
 
-## 2. Testes automatizados
+### 2.1 Comandos
 
-### Configuração do runner
-
-| Parâmetro | Valor |
-| --- | --- |
-| Suítes registradas | **23** |
-| Bootstrap | `res://scenes/tests/test_bootstrap.tscn` |
-| Invocação subprocesso | `--main-scene` + `-- res://…suite.gd` |
-| Timeout padrão | 180 s |
-| Timeout `player_regression_tests` | 300 s |
-| Exit timeout | 124 |
-| Autoloads | Carregados no subprocesso |
-
-### Comandos
+O wrapper solicitado foi tentado primeiro:
 
 ```powershell
 .\tools\test_all.ps1
 ```
 
-```bash
-godot --headless --path . --script res://scripts/tests/test_runner.gd
-```
+Resultado: bloqueado pela política local de execução (`PSSecurityException`). Foi usado o comando portável documentado, com o executável Godot 4.7 e `--log-file` isolado.
 
-### Resultado (2026-07-13, pós-correções de auditoria)
+### 2.2 Quantidade real
 
-| Métrica | Valor |
+Contagem direta das entradas do array `SUITES` em `scripts/tests/test_runner.gd`: **30**.
+
+### 2.3 Resultado agregado auditado
+
+| Métrica | Resultado |
 | --- | --- |
-| Suítes | **23** |
-| PASS | **23** |
-| FAIL | **0** |
-| Exit code | **0** |
-| Tempo total | **50,73 s** |
-| Unexpected issues (parsed) | **0** |
-| Allowed issues (parsed) | **13** |
+| Suítes registradas | 30 |
+| Aprovadas | 25 |
+| Falhas | 4 |
+| Timeouts | 1 |
+| Unexpected issues parsed | 1 |
+| Allowed issues parsed | 13 |
+| Leaks observados | 43 objetos; 6 resources (`world_map_graph_tests`) |
+| Exit do lote crítico isolado | 1 |
+| Exit atribuído ao timeout | 124 |
+| Exit do runner completo | **Ausente** — runner travou e não retornou summary |
+| Duração runner completo | >300 s antes de interrupção controlada |
+| Duração das 13 críticas | 51,2 s |
+| Duração da sonda modular | >180 s; processo não encerrou sozinho |
 
-### Suítes novas desde `e07ba0e`
+### 2.4 Suítes com problema
 
-| Suíte | Resultado |
-| --- | --- |
-| `player_respawn_tests` | **PASS** (6) |
-| `beta_integration_smoke_tests` | **PASS** (22) |
-| `street_art_toggle_tests` | **PASS** (4) |
-| `modular_kit_tests` | **PASS** (7) |
-| `world_map_graph_tests` | **PASS** (10) |
+| Suíte | Resultado | Evidência |
+| --- | --- | --- |
+| `vertical_slice_verification` | FAIL | 5/7; 2 alvos antigos de igreja greybox |
+| `vertical_slice_regression_tests` | FAIL | 12/14; retornos ainda esperam cenas greybox |
+| `content_registry_tests` | FAIL | 17/18; `street scene allowed` |
+| `world_map_graph_tests` | FAIL | 9/10; `Area not available in this build`; 1 unexpected warning |
+| `modular_kit_tests` | TIMEOUT | >180 s; impede término do runner |
 
-### Lista completa
+### 2.5 Warnings permitidos
 
-| # | Suíte | Exit | Unexpected | Allowed |
+| Suíte | Allowed | Motivo |
+| --- | ---: | --- |
+| `dialogue_tests` | 2 | ID de diálogo ausente injetado |
+| `save_tests` | 7 | JSON corrompido/backup injetados |
+| `combat_arena_tests` | 1 | integridade `living_enemy_despawned` injetada |
+| `product_shell_tests` | 1 | save corrompido em inspeção |
+| `player_visual_pipeline_tests` | 1 | fallback de clip ausente |
+| `feedback_system_tests` | 1 | câmera sem target no fixture |
+| **Total** | **13** | |
+
+O processo pai também emite os erros conhecidos de autoload ausente (`SettingsManager`, `InputDeviceManager`). Eles não são contabilizados pelo parser das suítes e permanecem abertos como KI-108.
+
+## 3. Suítes críticas isoladas
+
+| Suíte | Asserts | Exit | Unexpected | Allowed | Resultado |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `area_transition_tests` | 6/6 | 0 | 0 | 0 | PASS |
+| `combat_arena_tests` | 15/15 | 0 | 0 | 1 | PASS |
+| `player_respawn_tests` | 6/6 | 0 | 0 | 0 | PASS |
+| `vertical_slice_regression_tests` | 12/14 | 1 | 0 | 0 | **FAIL** |
+| `street_beta_complete_tests` | 5/5 | 0 | 0 | 0 | PASS |
+| `church_beta_complete_tests` | 6/6 | 0 | 0 | 0 | PASS |
+| `underground_beta_complete_tests` | 6/6 | 0 | 0 | 0 | PASS |
+| `beta_integration_smoke_tests` | 22/22 | 0 | 0 | 0 | PASS |
+| `player_visual_pipeline_tests` | 8/8 | 0 | 0 | 1 | PASS |
+| `calder_asset_validation_tests` | 6/6 | 0 | 0 | 0 | PASS |
+| `cult_brawler_visual_tests` | 6/6 | 0 | 0 | 0 | PASS |
+| `region_visual_tests` | 6/6 | 0 | 0 | 0 | PASS |
+| `world_map_graph_tests` | 9/10 | 1 | 1 | 0 | **FAIL** |
+
+**Resumo crítico:** 11 PASS, 2 FAIL, 0 timeout.
+
+## 4. Validação específica do crash das catacumbas
+
+| # | Critério | Evidência | Resultado |
+| --- | --- | --- | --- |
+| 1 | `vertical_slice_underground_art.tscn` carrega | carga direta headless, exit 0 em 1,68 s | PASS |
+| 2 | `UndergroundArtArea` entra na `SceneTree` | cena instanciada e adicionada ao root na suíte | PASS |
+| 3 | apresentação deferred é criada | `call_deferred("_apply_visual_mode")`; não nula após 3 frames | PASS |
+| 4 | checkpoint existe | `WorldObjects/UndergroundCheckpoint` | PASS |
+| 5 | Deacon Rusk existe | `DeaconRusk` e `DeaconRuskEncounter` | PASS |
+| 6 | exit para igreja existe | `Exits/ToChurchExit` → `vertical_slice_church_art.tscn` | PASS |
+| 7 | hooks do finale existem | shadow Mol-Khar, silhueta Arcturus, statue eyes/hidden passage | PASS |
+| 8 | sem erro de `NodePath` | carga direta e suíte sem erro | PASS |
+| 9 | sem crash | exit 0, cena permaneceu na árvore | PASS |
+| 10 | teste falha sem apresentação | sonda temporária desabilitou apresentação: exit 1 esperado | PASS |
+
+A sonda temporária foi removida após a contraprova. Nenhum arquivo de gameplay foi alterado.
+
+## 5. Estado das três áreas
+
+| Área | Integração técnica | Teste dedicado | Arte final | Manual/performance |
 | --- | --- | --- | --- | --- |
-| 1 | vertical_slice_verification | 0 | 0 | 0 |
-| 2 | dialogue_tests | 0 | 0 | 2 |
-| 3 | save_tests | 0 | 0 | 7 |
-| 4 | area_transition_tests | 0 | 0 | 0 |
-| 5 | combat_arena_tests | 0 | 0 | 1 |
-| 6 | cult_brawler_tests | 0 | 0 | 0 |
-| 7 | deacon_rusk_tests | 0 | 0 | 0 |
-| 8 | gameplay_lock_tests | 0 | 0 | 0 |
-| 9 | player_regression_tests | 0 | 0 | 0 |
-| 10 | vertical_slice_regression_tests | 0 | 0 | 0 |
-| 11 | product_shell_tests | 0 | 0 | 1 |
-| 12 | narrative_chapter_zero_tests | 0 | 0 | 0 |
-| 13 | vermilite_gunslinger_tests | 0 | 0 | 0 |
-| 14 | chain_penitent_tests | 0 | 0 | 0 |
-| 15 | enemy_encounter_tests | 0 | 0 | 0 |
-| 16 | player_visual_pipeline_tests | 0 | 0 | 1 |
-| 17 | feedback_system_tests | 0 | 0 | 1 |
-| 18 | player_respawn_tests | 0 | 0 | 0 |
-| 19 | content_registry_tests | 0 | 0 | 0 |
-| 20 | beta_integration_smoke_tests | 0 | 0 | 0 |
-| 21 | street_art_toggle_tests | 0 | 0 | 0 |
-| 22 | modular_kit_tests | 0 | 0 | 0 |
-| 23 | world_map_graph_tests | 0 | 0 | 0 |
+| Rua North Star | Completa para pilot procedural | 5/5 PASS | Ausente | Pendente |
+| Igreja North Star | Completa para pilot procedural | 6/6 PASS | Ausente | Pendente |
+| Catacumbas North Star | Completa; crash corrigido | 6/6 PASS + carga direta | Ausente | Pendente |
 
-Evidência: `docs/_audit_runner_output.txt`
+## 6. Build, arte e playthrough
 
-### Warnings no encerramento do runner (P2)
+### Build
 
-- `43 ObjectDB instances were leaked at exit`
-- `6 resources still in use at exit`
+- Presets Debug/Release e `tools/build_windows.ps1` existem.
+- Há executáveis locais ignorados, mas o manifest aponta para `1c8e89d`, não `4f20f76`.
+- O manifest registra runner FAIL e `qa_release_approved: false`.
+- Resultado: **build do baseline atual pendente**.
 
-Não alteram exit code; ver KI-107.
+### Arte
 
----
+- Pipelines, profiles, factories, fallback procedural e validators existem.
+- Não há conjunto final de sheets/PNGs para Calder, inimigos e ambientes.
+- Resultado: **arte final não iniciada/aprovada**.
 
-## 3. Warnings / errors permitidos (allowlist)
+### Playthrough
 
-| Suíte | Tipo | Motivo |
-| --- | --- | --- |
-| `dialogue_tests` | WARNING | `missing_dialogue_id` injetado |
-| `save_tests` | ERROR/WARNING | JSON corrompido / backup recovery injetado |
-| `product_shell_tests` | ERROR | JSON corrompido em `inspect_slot` |
-| `combat_arena_tests` | ERROR | `living_enemy_despawned` (integrity test) |
-| `feedback_system_tests` | WARNING | `CameraController target was not found` |
-| `player_visual_pipeline_tests` | WARNING | `missing animation clip` (fallback test) |
+- Não há assinatura manual do fluxo menu→fim.
+- Performance, legibilidade, gamepad, save/reboot e retorno ao menu continuam pendentes.
 
----
+## 7. Prioridades
 
-## 4. Correções aplicadas na auditoria (não commitadas)
+### P0
 
-| Área | Problema | Correção |
-| --- | --- | --- |
-| `street_art_presentation.gd` | Parse: parâmetro `name` em `_parallax` | Renomeado `layer_name` |
-| `street_art_presentation.gd` | Headless hang em luz/partículas | Skip `PointLight2D` / `GPUParticles2D` em headless |
-| `street_art_toggle_tests.gd` | Hang ao instanciar cena art completa | Contrato offline + greybox para gameplay |
-| `environment_kit_factory.gd` | Parse: args `_add_module` desalinhados | `false` antes de `prop_scene_path` |
-| `player_regression_tests.gd` | DEATH lock / RespawnService | Fixture + `set_death_vulnerability` |
-| `world_map_graph_tests.gd` | Transição street→church | Flag `cz_met_elias` + timer |
-| `player_visual_pipeline_tests.gd` | Warning clip contado | Allowlist |
+1. restaurar gate 30/30 com término normal e exit 0;
+2. assinar playthrough manual completo;
+3. gerar e aprovar build Windows de `4f20f76` ou do commit de correção subsequente.
 
----
+### P1
 
-## 5. Auditoria por sistema
+1. alinhar contratos legados às cenas North Star;
+2. corrigir registry/world map;
+3. eliminar hang do kit modular e tornar timeout efetivo;
+4. limpar/normalizar artefatos untracked e proteger source art do Cult Brawler.
 
-### Sistemas aprovados (headless)
+### P2
 
-| Sistema | Evidência |
+1. corrigir leaks de teardown;
+2. remover ruído de autoload no processo pai;
+3. revisar allowlists e panic unlock antes do release.
+
+## 8. Decisão
+
+| Gate | Estado |
 | --- | --- |
-| Movimento / combo / esquiva / counter / taunt / Red Brand | `player_regression_tests` 48/48 |
-| Morte / respawn | `player_respawn_tests` 6/6 |
-| Gameplay locks | `gameplay_lock_tests` 10/10 |
-| Transição de áreas | `area_transition_tests` 6/6 |
-| Arena + integridade | `combat_arena_tests` 15/15 |
-| Cult Brawler / Rusk / Gunslinger / Penitent | suítes dedicadas PASS |
-| Save F8/F9 + snapshot | `save_tests` 5/5 |
-| Content registry + manifest | `content_registry_tests` 18/18 |
-| Narrativa Cap. Zero | `narrative_chapter_zero_tests` 6/6 |
-| Smoke integração beta | `beta_integration_smoke_tests` 22/22 |
-| Mapa do mundo + descoberta | `world_map_graph_tests` 10/10 |
-| Rua art toggle + camadas | `street_art_toggle_tests` 4/4 |
-| Kit modular | `modular_kit_tests` 7/7 |
-| Pipeline visual PILOT | `player_visual_pipeline_tests` 8/8 |
-| Feedback / áudio placeholder | `feedback_system_tests` 6/6 |
-
-### Sistemas não aprovados manualmente
-
-| Sistema | Motivo |
-| --- | --- |
-| Menu principal → novo jogo / continuar | KI-006, KI-004 |
-| Pausa / opções / gamepad stress | KI-006 |
-| Mapa overlay in-game (**M**) | Sem playtest assinado |
-| Alternância greybox ↔ street art in-game | Demo principal ainda greybox |
-| Conclusão beta / retorno ao menu | KI-004 |
-| Build Windows exportada | KI-106 |
-| Performance FPS / draw calls sala art | G3 — não medido |
-
----
-
-## 6. Classificação de bugs (resumo)
-
-| ID | P | Título |
-| --- | --- | --- |
-| KI-004 | **P0** | Playthrough manual pendente |
-| KI-ART-G1/G2 | **P0** | Plataformas invisíveis / labels debug (arte) |
-| KI-001 | P1 | Respawn — playtest manual pendente |
-| KI-002 | P1 | Arena spawn physics flush |
-| KI-006 | P1 | Product shell não validado manualmente |
-| KI-101–108 | P2 | Panic unlock, auto-load, leaks runner, build, … |
-| KI-201–203 | P3 | Nomenclatura, controle, warnings teste |
-
-**KI-005 resolvido** — bootstrap + 23/23 PASS.
-
----
-
-## 7. Decisão: produção artística
-
-| Pergunta | Resposta |
-| --- | --- |
-| Iniciar **arte final** Capítulo Zero? | **Não** — G1, G2, KI-004, KI-106 |
-| Replicar **molde técnico** (igreja/catacumbas)? | **Sim** — mesmo pipeline da rua art |
-| Ship beta pública? | **Bloqueado** — KI-004 + build QA |
-| Escalar conteúdo greybox? | **Sim com restrições** — runner verde |
-
----
-
-## 8. Próximos passos (ordem)
-
-1. Commitar correções de auditoria (7 scripts).
-2. Playthrough manual menu→fim + mapa + morte (KI-004).
-3. Corrigir G1/G2 na rua art antes de declarar sala “visual beta ready”.
-4. Build Windows smoke após playtest (KI-106).
-5. P1 eng: arena deferred spawn; teardown runner (KI-107).
-6. Produção arte final após critérios em `VISUAL_FOUNDATION_BASELINE.md`.
-
----
-
-## 9. Assinaturas
-
-| Papel | Status |
-| --- | --- |
-| Gate automatizado (`4babadc` + correções) | **PASS** (23/23) |
-| Gate manual | **PENDENTE** |
-| Molde técnico visual | **APROVADO** |
-| Arte final Capítulo Zero | **BLOQUEADO** |
+| Baseline canônico de estabilização | **APROVADO: `4f20f76`** |
+| Correção do crash das catacumbas | **APROVADA** |
+| Gate automatizado | **REPROVADO** |
+| Playthrough manual | **PENDENTE** |
+| Build Windows atual | **REPROVADA / inexistente para o commit** |
+| Arte final | **NÃO APROVADA** |
 | Ship beta pública | **BLOQUEADO** |

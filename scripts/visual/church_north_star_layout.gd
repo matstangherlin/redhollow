@@ -98,3 +98,105 @@ static func get_set_piece_positions(ground_y: float) -> Dictionary:
 		"cult_gate": Vector2(1150, ground_y),
 		"underground_passage": Vector2(1500, ground_y - 16),
 	}
+
+
+static func get_mold_facades_for_district(district_id: int, ground_y: float) -> Array[Dictionary]:
+	## Ritual stone masses — not saloon wood clones. Positions avoid gameplay markers.
+	match district_id:
+		District.STREET_APPROACH:
+			return [
+				{"name": "ThresholdColonade", "pos": Vector2(100, ground_y), "w": 88.0, "h": 110.0, "variant": 0, "lit": false},
+			]
+		District.PENITENT_ALCOVE:
+			return [
+				{"name": "AlcoveButtress", "pos": Vector2(240, ground_y), "w": 64.0, "h": 96.0, "variant": 2, "lit": false},
+				{"name": "PenaltyAnnex", "pos": Vector2(380, ground_y), "w": 72.0, "h": 120.0, "variant": 1, "lit": true},
+			]
+		District.ORDER_PLAZA:
+			return [
+				{"name": "PlazaWingL", "pos": Vector2(460, ground_y), "w": 70.0, "h": 100.0, "variant": 3, "lit": false},
+				{"name": "ScriptoriumFlank", "pos": Vector2(700, ground_y), "w": 84.0, "h": 132.0, "variant": 0, "lit": false},
+			]
+		District.ARENA_SQUARE:
+			return [
+				{"name": "YardTransept", "pos": Vector2(1060, ground_y), "w": 96.0, "h": 140.0, "variant": 1, "lit": true},
+			]
+		District.RED_BRAND_CORRIDOR:
+			return [
+				{"name": "CorridorVault", "pos": Vector2(1200, ground_y), "w": 80.0, "h": 108.0, "variant": 2, "lit": true},
+				{"name": "BrandWatch", "pos": Vector2(1340, ground_y), "w": 60.0, "h": 88.0, "variant": 3, "lit": false},
+			]
+		District.UNDERGROUND_GATE:
+			return [
+				{"name": "DescentKeep", "pos": Vector2(1600, ground_y), "w": 100.0, "h": 124.0, "variant": 0, "lit": false},
+				{"name": "CatacombApproachWall", "pos": Vector2(1720, ground_y), "w": 72.0, "h": 96.0, "variant": 2, "lit": true},
+			]
+		_:
+			return []
+
+
+static func get_mold_props_for_district(district_id: int, ground_y: float) -> Array[Dictionary]:
+	match district_id:
+		District.STREET_APPROACH:
+			return [
+				{"kind": "banner", "pos": Vector2(80, ground_y - 70)},
+				{"kind": "lamp", "pos": Vector2(150, ground_y)},
+			]
+		District.PENITENT_ALCOVE:
+			return [
+				{"kind": "chains", "pos": Vector2(300, ground_y - 20)},
+				{"kind": "candle", "pos": Vector2(360, ground_y)},
+			]
+		District.ORDER_PLAZA:
+			return [
+				{"kind": "banner", "pos": Vector2(520, ground_y - 64)},
+				{"kind": "candle", "pos": Vector2(600, ground_y)},
+				{"kind": "fence", "pos": Vector2(640, ground_y)},
+			]
+		District.ARENA_SQUARE:
+			return [
+				{"kind": "crate", "pos": Vector2(740, ground_y)},
+				{"kind": "lamp", "pos": Vector2(1000, ground_y)},
+			]
+		District.RED_BRAND_CORRIDOR:
+			return [
+				{"kind": "vermilite", "pos": Vector2(1120, ground_y)},
+				{"kind": "candle", "pos": Vector2(1280, ground_y)},
+			]
+		District.UNDERGROUND_GATE:
+			return [
+				{"kind": "chains", "pos": Vector2(1460, ground_y - 12)},
+				{"kind": "banner", "pos": Vector2(1560, ground_y - 72)},
+				{"kind": "lamp", "pos": Vector2(1680, ground_y)},
+			]
+		_:
+			return []
+
+
+static func get_mold_extra_narrative(ground_y: float) -> Array[Dictionary]:
+	return [
+		{"id": "order_claim_plaza", "pos": Vector2(540, ground_y - 52), "kind": "sign_order", "theme": "order"},
+		{"id": "fear_curtain_alcove", "pos": Vector2(340, ground_y - 24), "kind": "fear_curtain", "theme": "fear"},
+		{"id": "ritual_candles_altar", "pos": Vector2(660, ground_y - 8), "kind": "ritual", "theme": "ritual"},
+		{"id": "combat_scuff_yard", "pos": Vector2(780, ground_y - 2), "kind": "scuff", "theme": "combat"},
+		{"id": "vermilite_whisper", "pos": Vector2(1100, ground_y - 6), "kind": "vermilite", "theme": "vermilite"},
+		{"id": "resistance_scratch", "pos": Vector2(260, ground_y - 40), "kind": "scratch", "theme": "resistance"},
+		{"id": "descent_mining", "pos": Vector2(1480, ground_y - 4), "kind": "mining", "theme": "mining"},
+	]
+
+
+static func get_mold_kit_placements(ground_y: float) -> Array[Dictionary]:
+	var art_base := "res://art/environments/chapter_zero/modules/"
+	var base := get_kit_module_placements(ground_y)
+	var extra: Array[Dictionary] = [
+		{"module": &"lantern", "pos": Vector2(200, ground_y), "path": art_base + "street_mod_lantern.png", "size": Vector2(16, 24)},
+		{"module": &"fence", "pos": Vector2(500, ground_y - 8), "path": art_base + "street_mod_fence.png", "size": Vector2(64, 32)},
+		{"module": &"sign", "pos": Vector2(100, ground_y - 56), "path": art_base + "street_mod_sign.png", "size": Vector2(32, 16)},
+		{"module": &"crate", "pos": Vector2(980, ground_y - 2), "path": art_base + "street_mod_crate.png", "size": Vector2(24, 18)},
+		{"module": &"barrel", "pos": Vector2(1360, ground_y - 2), "path": art_base + "street_mod_barrel.png", "size": Vector2(16, 20)},
+		{"module": &"lantern", "pos": Vector2(1580, ground_y), "path": art_base + "street_mod_lantern.png", "size": Vector2(16, 24)},
+	]
+	var out: Array[Dictionary] = []
+	out.append_array(base)
+	out.append_array(extra)
+	return out

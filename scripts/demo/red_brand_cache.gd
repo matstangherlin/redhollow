@@ -4,7 +4,7 @@ signal cache_used
 
 const PLAYER_GROUP := "player"
 
-@export var energy_amount: float = 35.0
+@export var energy_amount: float = 45.0
 @export var one_shot: bool = true
 @export var required_narrative_flag: StringName = &"arena_vs_church_yard_complete"
 @export var completion_flag_id: StringName = &"vs_red_brand_cache_used"

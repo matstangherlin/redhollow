@@ -47,7 +47,8 @@ Documentação canônica dos grupos de cor e estados visuais por região. Implem
 
 | Classe | Arquivo | Função |
 | --- | --- | --- |
-| `RegionVisualTheme` | `region_visual_theme.gd` | Tema por região + 4 estados |
+| `RegionVisualTheme` | `scripts/visual/lighting/region_visual_theme.gd` | Tema por região + 4 estados de iluminação |
+| `EnvironmentRegionTheme` | `scripts/environment/region_visual_theme.gd` | Herança de kit/distrito (stubs futuros) |
 | `LightingProfile` | `lighting_profile.gd` | Modulate, luzes, partículas, vignette |
 | `CorruptionVisualState` | `corruption_visual_state.gd` | Enum + perfil por estado |
 | `RegionVisualController` | `region_visual_controller.gd` | Aplica perfis com tween |

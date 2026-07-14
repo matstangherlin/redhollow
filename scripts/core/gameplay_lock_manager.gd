@@ -4,6 +4,7 @@ class_name GameplayLockManager
 signal lock_acquired(reason: int, token_id: int)
 signal lock_released(reason: int, token_id: int)
 signal player_input_blocked_changed(is_blocked: bool)
+signal softlock_recovery(reason: String)
 
 enum LockReason {
 	DIALOGUE,
@@ -178,6 +179,7 @@ func debug_force_release_all(_reason: String = "debug") -> void:
 		tree.paused = false
 	Engine.time_scale = 1.0
 	_refresh_blocking_state()
+	softlock_recovery.emit(String(_reason))
 
 
 func request_hitstop(duration: float) -> void:

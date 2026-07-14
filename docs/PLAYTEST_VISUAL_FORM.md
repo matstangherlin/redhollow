@@ -1,260 +1,169 @@
-# Playtest Visual Form — Art Vertical Slice (Rua North Star)
+# Playtest Visual Form — Trecho North Star Final + Rua
 
 Formulário para gate `ART_VERTICAL_SLICE_GATE.md`.  
-**Versão:** 2026-07-13  
+**Versão:** 2026-07-13 (final sample X 100–900)  
+**Veredito gate vigente:** **REPROVADO** (playtests abaixo ainda não assinados)  
 **Build testada:** _______________  
 **Resolução:** _______________  
-**Dispositivo:** Teclado / Controle (círculo)  
+**Dispositivo:** Teclado / Controle  
+**Modo visual:** greybox / north_star / **final_candidate**  
 **HUD:** V2 / Legado (F3)  
 **Acessibilidade ativa:** shake ___ / flashes ___ / partículas ___ / distorção ___
 
 ---
 
+## Escopo desta sessão
+
+| Item | Valor |
+| --- | --- |
+| Faixa X | **100–900** |
+| Cena recomendada | `scenes/tests/street_final_sample_test.tscn` (F6) |
+| Toggle | **F** = greybox → north_star → final_candidate |
+| Perf | **P** |
+
+**Regra:** não expandir arte / não “corrigir” visual durante a sessão — só observar e anotar.
+
+---
+
+## Perfis obrigatórios (mínimo 3)
+
+| Perfil | Quill | Sessão feita? | Assinatura |
+| --- | --- | :---: | --- |
+| A — Desenvolvedor | Conhece o projeto | ☐ | |
+| B — Nunca viu o projeto | Sem briefing de lore | ☐ | |
+| C — Jogador 2D de ação | Metroidvania / beat 'em up | ☐ | |
+
+---
+
+## Perguntas obrigatórias (responder nos 3 perfis)
+
+| # | Pergunta | A | B | C |
+| ---: | --- | --- | --- | --- |
+| 1 | Quem é o personagem jogável? | | | |
+| 2 | Qual é a rota principal? | | | |
+| 3 | O que parece interativo? | | | |
+| 4 | O inimigo está preparando um ataque? | | | |
+| 5 | A plataforma elevada está visível? | | | |
+| 6 | A cidade parece faroeste? | | | |
+| 7 | Existe algo religioso ou ameaçador? | | | |
+| 8 | A Red Brand é perceptível? | | | |
+| 9 | Os golpes parecem pesados? | | | |
+| 10 | A pessoa continuaria jogando? (1–5) | | | |
+
+---
+
 ## Instruções para o facilitador
 
-1. Usar demo principal: menu → Capítulo Zero → rua art (`vertical_slice_greybox.tscn`).  
-2. Duração sugerida: **15–25 min** por sessão.  
-3. Não explicar controles antes da sessão **“jogador novo”**.  
-4. Registrar FPS com tecla **P** na rua (repouso + combate).  
-5. Anexar screenshots ou notas à seção final.  
-6. Cada perfil abaixo deve completar pelo menos **uma** sessão.
+1. Preferir `street_final_sample_test.tscn` no modo **FINAL CANDIDATE**.  
+2. Duração: **10–20 min** no trecho (spawn → Elias → saloon → plataforma → Brawler sample).  
+3. Perfil B: não explicar controles além de “ação 2D”.  
+4. Registrar FPS com **P** (repouso + combate no X~740).  
+5. Não pular perguntas 1–10.
 
 ---
 
 ## Perfil A — Desenvolvedor
 
-Conhece sistemas; valida técnica e regressões.
-
-### Checklist técnico
+### Checklist técnico (trecho)
 
 | # | Item | OK | Falha | Notas |
 | ---: | --- | :---: | :---: | --- |
 | A1 | Elias visível e interativo | ☐ | ☐ | |
-| A2 | Flag `cz_met_elias` após diálogo | ☐ | ☐ | |
-| A3 | Exit igreja abre após flag | ☐ | ☐ | |
-| A4 | Plataformas elevadas visíveis | ☐ | ☐ | |
-| A5 | Cult Brawler sprite ativo (não só polígono) | ☐ | ☐ | |
-| A6 | Counter **L** funciona (não cicla luz) | ☐ | ☐ | |
-| A7 | HUD V2 não cobre centro da tela | ☐ | ☐ | |
-| A8 | F8/F9 save/load na rua art | ☐ | ☐ | |
-| A9 | Pausa durante combate/diálogo | ☐ | ☐ | |
-| A10 | Performance overlay **P**: FPS ≥ 55 | ☐ | ☐ | FPS: ___ draw: ___ |
-| A11 | Ciclo iluminação **'** sem crash | ☐ | ☐ | |
-| A12 | Esquiva **K** no chão e no ar | ☐ | ☐ | |
+| A2 | Saloon interativo | ☐ | ☐ | |
+| A3 | PlatformA perceptível | ☐ | ☐ | |
+| A4 | CultBrawlerFinalSample no modo final | ☐ | ☐ | |
+| A5 | CultBrawlerStreet (1280) ainda existe se explorar além | ☐ | ☐ | |
+| A6 | Counter **L** / Esquiva **K** | ☐ | ☐ | |
+| A7 | HUD não cobre centro | ☐ | ☐ | |
+| A8 | Save F8/F9 (debug) | ☐ | ☐ | |
+| A9 | Overlay **P**: FPS ≥ 55 | ☐ | ☐ | |
+| A10 | Sem warnings spam no debugger | ☐ | ☐ | |
+| A11 | Toggle F cicla 3 modos sem crash | ☐ | ☐ | |
 
-### Perguntas (resposta 1–5 ou Sim/Não)
-
-| Pergunta | Resposta |
-| --- | --- |
-| Entendeu para onde ir? | |
-| Identificou inimigo? | |
-| Entendeu quando atacar? | |
-| Entendeu quando esquivar? | |
-| Conseguiu ler o HUD? | |
-| Percebeu Red Brand? | |
-| Sentiu peso nos golpes? | |
-| Reconheceu o faroeste? | |
-| Percebeu o culto? | |
-| Gostaria de continuar? | |
-
-**Observações desenvolvedor:**  
-_________________________________________________________________
+**Observações:** _______________________________________________
 
 ---
 
-## Perfil B — Jogador que nunca viu o jogo
-
-Sem briefing de controles (máx. “é um metroidvania de ação”).
-
-### Checklist observação (facilitador marca)
+## Perfil B — Nunca viu o projeto
 
 | # | Item | OK | Falha | Notas |
 | ---: | --- | :---: | :---: | --- |
-| B1 | Encontrou Elias sem hint em < 3 min | ☐ | ☐ | Tempo: ___ |
-| B2 | Descobriu ataque básico | ☐ | ☐ | |
-| B3 | Descobriu interação [E] | ☐ | ☐ | |
-| B4 | Percebeu objetivo na HUD | ☐ | ☐ | |
-| B5 | Chegou ao Cult Brawler | ☐ | ☐ | |
-| B6 | Sobreviveu ou morreu com compreensão do telegraph | ☐ | ☐ | |
-| B7 | Encontrou rota elevada (opcional) | ☐ | ☐ | |
-| B8 | Tentou ir à igreja antes de Elias (bloqueio claro?) | ☐ | ☐ | |
+| B1 | Identificou o jogável sem dica | ☐ | ☐ | |
+| B2 | Achou algo para falar / examinar | ☐ | ☐ | |
+| B3 | Percebeu inimigo | ☐ | ☐ | |
+| B4 | Percebeu telegraph de ataque | ☐ | ☐ | |
+| B5 | Subiu ou notou plataforma | ☐ | ☐ | |
+| B6 | Descreveu “faroeste” espontaneamente | ☐ | ☐ | |
+| B7 | Mencionou culto / religião / ameaça | ☐ | ☐ | |
+| B8 | Quis continuar após 10 min | ☐ | ☐ | |
 
-### Perguntas (voz do jogador — transcrever)
-
-| Pergunta | Resposta |
-| --- | --- |
-| Entendeu para onde ir? | |
-| Identificou inimigo? | |
-| Entendeu quando atacar? | |
-| Entendeu quando esquivar? | |
-| Conseguiu ler o HUD? | |
-| Percebeu Red Brand? | |
-| Sentiu peso nos golpes? | |
-| Reconheceu o faroeste? | |
-| Percebeu o culto? | |
-| Gostaria de continuar? | |
-
-**Frases espontâneas memoráveis:**  
-_________________________________________________________________
+**Citações / dúvidas:** _______________________________________________
 
 ---
 
-## Perfil C — Jogador de metroidvania
-
-Já jogou Hollow Knight, Ori, Metroid, etc.
-
-### Checklist
+## Perfil C — Jogador 2D de ação
 
 | # | Item | OK | Falha | Notas |
 | ---: | --- | :---: | :---: | --- |
-| C1 | Leitura de plataformas vs fundo | ☐ | ☐ | |
-| C2 | Fluxo rua → objetivo → área seguinte claro | ☐ | ☐ | |
-| C3 | Combate legível em 480p lógico / upscale | ☐ | ☐ | |
-| C4 | Rota secreta / elevada perceptível | ☐ | ☐ | |
-| C5 | Ritmo combate vs exploração | ☐ | ☐ | |
-| C6 | Comparação justa: “parece protótipo” vs “parece produto” | ☐ | ☐ | |
+| C1 | Timing de ataque vs telegraph legível | ☐ | ☐ | |
+| C2 | Golpes “pesados” vs floaty | ☐ | ☐ | |
+| C3 | Contraste Calder vs fundo | ☐ | ☐ | |
+| C4 | HUD atrapalha? | ☐ | ☐ | |
+| C5 | Comparou com outro beat 'em up 2D | ☐ | ☐ | |
+| C6 | Continuaria? (1–5) | ☐ | ☐ | |
 
-### Perguntas
-
-| Pergunta | Resposta |
-| --- | --- |
-| Entendeu para onde ir? | |
-| Identificou inimigo? | |
-| Entendeu quando atacar? | |
-| Entendeu quando esquivar? | |
-| Conseguiu ler o HUD? | |
-| Percebeu Red Brand? | |
-| Sentiu peso nos golpes? | |
-| Reconheceu o faroeste? | |
-| Percebeu o culto? | |
-| Gostaria de continuar? | |
-
-**O que faltou vs metroidvania de referência (sem pedir cópia):**  
-_________________________________________________________________
+**Observações:** _______________________________________________
 
 ---
 
-## Perfil D — Jogador com controle (gamepad)
+## Notas 1–5 (após cada sessão — média dos 3)
 
-`InputDeviceManager` deve mostrar prompts de controle.
-
-### Checklist
-
-| # | Item | OK | Falha | Notas |
-| ---: | --- | :---: | :---: | --- |
-| D1 | Prompts mudam para gamepad | ☐ | ☐ | |
-| D2 | Movimento + pulo responsivos | ☐ | ☐ | |
-| D3 | Combate (ataque, esquiva, counter) | ☐ | ☐ | |
-| D4 | Interação e diálogo | ☐ | ☐ | |
-| D5 | Pausa com botão Start/Options | ☐ | ☐ | |
-| D6 | Mapa **M** acessível | ☐ | ☐ | |
-| D7 | Red Brand (hold/tap conforme settings) | ☐ | ☐ | |
-| D8 | Sem conflito deadzone / drift | ☐ | ☐ | |
-
-### Perguntas
-
-| Pergunta | Resposta |
-| --- | --- |
-| Entendeu para onde ir? | |
-| Identificou inimigo? | |
-| Entendeu quando atacar? | |
-| Entendeu quando esquivar? | |
-| Conseguiu ler o HUD? | |
-| Percebeu Red Brand? | |
-| Sentiu peso nos golpes? | |
-| Reconheceu o faroeste? | |
-| Percebeu o culto? | |
-| Gostaria de continuar? | |
+| Critério | A | B | C | Média |
+| --- | :---: | :---: | :---: | :---: |
+| Faroeste | | | | |
+| Anime | | | | |
+| Decadência | | | | |
+| Culto | | | | |
+| Vermilite | | | | |
+| Terror religioso | | | | |
+| Identidade original | | | | |
+| Profundidade | | | | |
+| Iluminação | | | | |
+| Legibilidade | | | | |
+| Qualidade personagens | | | | |
+| Qualidade cenário | | | | |
+| Peso dos golpes | | | | |
+| UI | | | |
 
 ---
 
-## Seção comum — Legibilidade visual
+## Performance (FS2 / G3)
 
-Marcar após sessão (qualquer perfil):
+| Cenário | FPS | Frame ms | Draw calls | Partículas | Luzes | Mem MB | Stutter0 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Final candidate repouso | | | | | | | |
+| Combate Brawler sample | | | | | | | |
+| North Star (mesmo trecho) | | | | | | | |
+| Greybox | | | | | | | |
 
-| Elemento | 1 ilegível — 5 excelente | Notas |
-| --- | :---: | --- |
-| Calder vs background | | |
-| Cult Brawler | | |
-| Gunslinger | | |
-| Projéteis | | |
-| Telegraphs | | |
-| Plataformas chão | | |
-| Plataformas elevadas | | |
-| Porta / exit igreja | | |
-| Story props | | |
-| NPC Elias | | |
-| Prompt [E] | | |
-| Objetivo HUD | | |
-| Vida | | |
-| Red Brand | | |
-| Estilo / rank | | |
+**Stutter perceptível?** Sim / Não — quando: _______________
 
 ---
 
-## Seção comum — Movimento e combate
-
-| Ação | Responsivo? | Legível? | Notas |
-| --- | :---: | :---: | --- |
-| Corrida | ☐ | ☐ | |
-| Pulo / aterrissagem | ☐ | ☐ | |
-| Combo 3 hits | ☐ | ☐ | |
-| Esquiva | ☐ | ☐ | |
-| Counter | ☐ | ☐ | |
-| Dano recebido | ☐ | ☐ | |
-| Knockback | ☐ | ☐ | |
-| Morte / respawn | ☐ | ☐ | |
-
----
-
-## Seção comum — Cenário (rua only)
-
-| Critério | 1–5 | Notas |
-| --- | :---: | --- |
-| Repetição excessiva de módulos | | |
-| Parallax (conforto / nausea) | | |
-| Escala coerente | | |
-| Perspectiva 2D | | |
-| Density (vazio vs cheio) | | |
-| Foreground (obstrui ação?) | | |
-| Iluminação pôr do sol | | |
-| Cores / paleta | | |
-| Poluição visual | | |
-| Leitura de rota principal | | |
-| Leitura rota elevada | | |
-
----
-
-## Performance (registro obrigatório G3)
-
-| Cenário | FPS | Frame ms | Draw calls | Partículas | Luzes | Mem MB |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Repouso rua início | | | | | | |
-| Combate Brawler | | | | | | |
-| Estado Mol-Khar (**'**) | | | | | | |
-| Diálogo Elias | | | | | | |
-| 1280×720 | | | | | | |
-| 1920×1080 | | | | | | |
-
-**Stutter perceptível?** Sim / Não — quando: _______________  
-**Build Windows testada?** Sim / Não — caminho: _______________
-
----
-
-## Consolidação do gate
+## Consolidação
 
 | Métrica | Valor |
 | --- | --- |
-| Sessões completadas | A ☐ B ☐ C ☐ D ☐ |
-| Média “gostaria de continuar” (1–5) | |
-| Bloqueadores encontrados | |
-| Recomendação | Aprovar ajustes / Reprovar / Escalar molde |
+| Sessões A/B/C | ☐ ☐ ☐ |
+| Média “continuaria” (perg. 10) | |
+| Critérios de reprovação observados | procedural / estilo misto / HUD / plataforma / perf / outro: ___ |
+| Recomendação humana | APROVADO COMO MOLDE FINAL / APROVADO COM AJUSTES / **REPROVADO** |
 
 ### Assinaturas
 
 | Papel | Nome | Data |
 | --- | --- | --- |
-| Facilitador playtest | | |
+| Facilitador | | |
 | QA | | |
 | Direção | | |
 
@@ -262,8 +171,8 @@ Marcar após sessão (qualquer perfil):
 
 ## Anexos
 
-- [ ] Screenshot HUD V2  
-- [ ] Screenshot combate Brawler  
-- [ ] Screenshot performance (**P**)  
-- [ ] Screenshot rota elevada  
-- [ ] Notas de bugs (link issue / KI)
+- [ ] Screenshot final_candidate (trecho)  
+- [ ] Screenshot combate sample  
+- [ ] Screenshot **P**  
+- [ ] Screenshot plataforma  
+- [ ] Notas de bugs / KI

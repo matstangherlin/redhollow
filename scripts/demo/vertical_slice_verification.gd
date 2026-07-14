@@ -4,8 +4,8 @@ const TestHelpers := preload("res://scripts/tests/test_helpers.gd")
 const TestRuntimeContext := preload("res://scripts/tests/test_runtime_context.gd")
 
 const VS_STREET := "res://scenes/areas/vertical_slice_street_art.tscn"
-const VS_CHURCH := "res://scenes/areas/vertical_slice_church.tscn"
-const VS_UNDERGROUND := "res://scenes/areas/vertical_slice_underground.tscn"
+const VS_CHURCH := "res://scenes/areas/vertical_slice_church_art.tscn"
+const VS_UNDERGROUND := "res://scenes/areas/vertical_slice_underground_art.tscn"
 const VS_MAIN := "res://scenes/demo/vertical_slice_greybox.tscn"
 const PRODUCT_MAIN := "res://scenes/product/main_menu.tscn"
 const DIALOGUE_PATH := "res://data/dialogues/dialogues_pt_br.json"

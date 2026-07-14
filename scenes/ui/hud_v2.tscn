@@ -12,6 +12,23 @@ script = ExtResource("1_shell")
 
 [node name="ObjectiveHudV2" parent="." instance=ExtResource("3_objective")]
 
+[node name="InteractionPromptHost" type="CanvasLayer" parent="."]
+layer = 8
+
+[node name="PromptLabel" type="Label" parent="InteractionPromptHost"]
+unique_name_in_owner = true
+visible = false
+offset_right = 160.0
+offset_bottom = 20.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.78, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.05, 0.92)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+text = ""
+groups = ["interaction_prompt_host"]
+
 [node name="ControlsTutorial" type="CanvasLayer" parent="."]
 layer = 6
 script = ExtResource("4_tutorial")
@@ -23,19 +40,21 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 10
 
 [node name="TutorialPanel" type="PanelContainer" parent="ControlsTutorial/TutorialRoot"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
+mouse_filter = 2
 
 [node name="TutorialLabel" type="Label" parent="ControlsTutorial/TutorialRoot/TutorialPanel"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+mouse_filter = 2
+theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
-autowrap_mode = 2
+autowrap_mode = 3
 text = "Controles..."

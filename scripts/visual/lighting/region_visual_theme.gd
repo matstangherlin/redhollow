@@ -1,7 +1,8 @@
 extends Resource
 class_name RegionVisualTheme
 
-## Region-wide palette + lighting states. Gameplay collision unaffected.
+## Region-wide palette + lighting / corruption states. Gameplay collision unaffected.
+## Distinct from EnvironmentRegionTheme (kit inheritance stubs under scripts/environment/).
 
 @export var theme_id: StringName = &""
 @export var region_id: StringName = &""

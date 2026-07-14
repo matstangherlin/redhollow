@@ -1,7 +1,12 @@
 extends AreaRoot
 class_name UndergroundArtArea
 
+## Catacombs art area. Modes: greybox | north_star | final_candidate.
+## Does NOT alter street/church. Silhouette finale only — no full Mol-Khar / Palace.
+
 const ART_PRESENTATION_SCENE := preload("res://scenes/environment/chapter_zero/underground_art_presentation.tscn")
+const Spec := preload("res://scripts/visual/underground_final_mold_spec.gd")
+const FinalMoldComposer := preload("res://scripts/visual/underground_final_mold_composer.gd")
 const GREYBOX_VISUAL_GROUP := "underground_greybox_visual"
 const DEBUG_LABEL_NAMES: Array[StringName] = [
 	&"AreaLabel",
@@ -13,18 +18,22 @@ const DEBUG_LABEL_NAMES: Array[StringName] = [
 
 @export var show_greybox_visuals: bool = false
 @export var show_art_presentation: bool = true
+@export var enable_final_sample: bool = false
 
 var _art_presentation: UndergroundArtPresentation = null
 var _performance_monitor: Node = null
+var _visual_mode: StringName = Spec.MODE_NORTH_STAR
+var _mold_stats: Dictionary = {}
+var _greybox_tagged: bool = false
 
 
 func _ready() -> void:
 	super._ready()
-	call_deferred("_apply_visual_mode")
+	call_deferred("_sync_mode_from_exports")
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not show_art_presentation:
+	if _visual_mode == Spec.MODE_GREYBOX:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
@@ -49,10 +58,25 @@ func _cycle_region_visual_state() -> void:
 	controller.transition_to_state(next_state as CorruptionVisualState.State)
 
 
+func _sync_mode_from_exports() -> void:
+	if show_greybox_visuals and not show_art_presentation:
+		set_presentation_mode(Spec.MODE_GREYBOX)
+	elif enable_final_sample and show_art_presentation:
+		set_presentation_mode(Spec.MODE_FINAL_CANDIDATE)
+	else:
+		set_presentation_mode(Spec.MODE_NORTH_STAR if show_art_presentation else Spec.MODE_GREYBOX)
+
+
 func _apply_visual_mode() -> void:
 	_tag_greybox_visuals()
+	var is_greybox := _visual_mode == Spec.MODE_GREYBOX
+	show_greybox_visuals = is_greybox
+	show_art_presentation = not is_greybox
+	enable_final_sample = _visual_mode == Spec.MODE_FINAL_CANDIDATE
+
 	_set_greybox_visible(show_greybox_visuals)
 	_set_debug_labels_visible(show_greybox_visuals)
+
 	if show_art_presentation and _art_presentation == null:
 		_art_presentation = ART_PRESENTATION_SCENE.instantiate() as UndergroundArtPresentation
 		if _art_presentation != null:
@@ -66,12 +90,58 @@ func _apply_visual_mode() -> void:
 			_ensure_gameplay_draw_order()
 			_ensure_performance_monitor()
 
+	_apply_final_mold_layer()
+
+
+func _apply_final_mold_layer() -> void:
+	if _art_presentation == null or not show_art_presentation:
+		return
+	if _visual_mode == Spec.MODE_FINAL_CANDIDATE:
+		var profile: EnvironmentVisualProfile = _art_presentation.profile
+		if profile == null:
+			profile = load("res://resources/visual/chapter_zero_underground_profile.tres") as EnvironmentVisualProfile
+		_mold_stats = FinalMoldComposer.apply(_art_presentation, profile)
+		_refresh_perf_binding()
+	else:
+		FinalMoldComposer.remove(_art_presentation)
+		_mold_stats = {}
+
+
+func _refresh_perf_binding() -> void:
+	if _performance_monitor != null and _art_presentation != null:
+		if _performance_monitor.has_method("bind_scene_root"):
+			_performance_monitor.call("bind_scene_root", _art_presentation)
+		if _performance_monitor.has_method("note_sample_stats"):
+			_performance_monitor.call("note_sample_stats", _mold_stats)
+
 
 func _ensure_gameplay_draw_order() -> void:
 	for node_name in [&"WorldObjects", &"Exits", &"Spawns"]:
 		var node := get_node_or_null(NodePath(String(node_name)))
 		if node is CanvasItem:
 			(node as CanvasItem).z_index = 70
+
+
+func set_visual_mode(use_art: bool) -> void:
+	set_presentation_mode(Spec.MODE_NORTH_STAR if use_art else Spec.MODE_GREYBOX)
+
+
+func set_presentation_mode(mode: StringName) -> void:
+	_visual_mode = mode
+	_apply_visual_mode()
+
+
+func cycle_presentation_mode() -> StringName:
+	set_presentation_mode(Spec.next_mode(_visual_mode))
+	return _visual_mode
+
+
+func get_presentation_mode() -> StringName:
+	return _visual_mode
+
+
+func get_final_sample_stats() -> Dictionary:
+	return _mold_stats.duplicate(true)
 
 
 func get_art_presentation() -> UndergroundArtPresentation:
@@ -101,24 +171,24 @@ func _ensure_performance_monitor() -> void:
 
 
 func _tag_greybox_visuals() -> void:
+	if _greybox_tagged:
+		return
+	_greybox_tagged = true
 	for node_name in [&"BackgroundTint"]:
 		var node := get_node_or_null(NodePath(String(node_name)))
 		if node is Polygon2D:
 			node.add_to_group(GREYBOX_VISUAL_GROUP)
-
 	for prop_name in [&"ColossalStatue"]:
 		var prop := get_node_or_null("WorldObjects/%s" % String(prop_name))
 		if prop is Polygon2D:
 			prop.add_to_group(GREYBOX_VISUAL_GROUP)
-
 	for root_name in [&"Solids", &"Exits"]:
-		var root := get_node_or_null(NodePath(String(root_name)))
-		if root == null:
+		var root_node := get_node_or_null(NodePath(String(root_name)))
+		if root_node == null:
 			continue
-		for node in root.find_children("*", "Polygon2D", true, false):
+		for node in root_node.find_children("*", "Polygon2D", true, false):
 			if node is Polygon2D:
 				node.add_to_group(GREYBOX_VISUAL_GROUP)
-
 	for node in find_children("*", "Label", true, false):
 		if node.name in DEBUG_LABEL_NAMES:
 			node.add_to_group(GREYBOX_VISUAL_GROUP)

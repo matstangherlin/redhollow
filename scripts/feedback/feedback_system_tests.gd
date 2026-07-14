@@ -167,9 +167,14 @@ func _test_placeholder_audio_library(failures: PackedStringArray) -> void:
 		AudioEventIdScript.DODGE,
 		AudioEventIdScript.COUNTER,
 		AudioEventIdScript.RED_BRAND_BREAKER,
+		AudioEventIdScript.GUNSHOT,
+		AudioEventIdScript.CHAIN,
+		AudioEventIdScript.DOOR,
 		AudioEventIdScript.CHECKPOINT,
+		AudioEventIdScript.BOSS_STINGER,
 		AudioEventIdScript.UI_CONFIRM,
 		AudioEventIdScript.AMBIENCE_WIND,
+		AudioEventIdScript.AMBIENCE_MOL_KHAR,
 	]:
 		if not library.has(event_id):
 			failures.append("Placeholder audio library missing event: %s." % String(event_id))

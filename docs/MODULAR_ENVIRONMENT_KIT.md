@@ -9,7 +9,7 @@ Sistema de cenários modulares para produzir o mapa **aos poucos**, com peças r
 | Colisão separada | Arte em `LayerVisual` / props — colisão em `LayerCollision` ou `Solids/` |
 | Área incremental | Salas pequenas instanciadas; mesmo kit, layouts diferentes |
 | Gameplay preservado | `AreaRoot` contract: `Solids`, `Spawns`, `WorldObjects`, `Exits` |
-| Herança visual | `RegionVisualTheme` + `AreaVisualProfile` para distritos futuros |
+| Herança visual | `EnvironmentRegionTheme` + `AreaVisualProfile` para distritos futuros |
 | Sem duplicar kit | Variações por tema/paleta, não cópia de todos os módulos |
 
 ## Arquitetura
@@ -123,7 +123,8 @@ Catálogo: `resources/environment/prop_catalogs/chapter_zero_street_props.tres`
 | Mansão | `centro` | madeira nobre |
 | Palácio Rubro | `mansao` | modulate corrupção |
 
-Código: `RegionVisualTheme.get_future_region_stubs()`
+Código: `EnvironmentRegionTheme.get_future_region_stubs()`  
+(Iluminação por área: `RegionVisualTheme` em `scripts/visual/lighting/` — classes distintas.)
 
 ## Ferramentas
 

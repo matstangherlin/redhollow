@@ -16,10 +16,10 @@ Registro de decisões de produto, narrativa e arquitetura. Atualizar quando uma 
 
 | ID | Decisão | Motivo | Status |
 | --- | --- | --- | --- |
-| D-010 | `SaveManager.auto_load_on_ready = false` na greybox | Evitar load de saves incompatíveis (ex.: cenas de teste) | Ativa |
-| D-011 | F8 / F9 para save/load manual na demo | QA e debug sem auto-load | Ativa |
-| D-012 | Checkpoint auto-grava ao ativar | Progresso seguro no subterrâneo | Ativa |
-| D-013 | Reavaliar auto-load apenas após validação de área + API estável do player | `TECH_DEBT.md` P1 | Pendente beta |
+| D-010 | `SaveManager.auto_load_on_ready = false` (default e greybox) | Product shell / GameBootState possuem New Game e Continuar | Ativa |
+| D-011 | F8 / F9 apenas em **debug builds** (`OS.is_debug_build()`) | QA local; release não depende de hotkeys | Ativa |
+| D-012 | Checkpoint auto-grava ao ativar (com backup seguro) | Progresso seguro no Capítulo Zero | Ativa |
+| D-013 | Boot da beta: sem auto-load na cena de gameplay; Novo Jogo / Continuar via menu + GameBootState | Ver `docs/BOOT_AND_SAVE_POLICY.md` | **Resolvida** |
 
 ## Arquitetura
 

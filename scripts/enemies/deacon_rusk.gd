@@ -48,22 +48,22 @@ const TAUNT_LINES := [
 
 @export var boss_id: StringName = &"deacon_rusk"
 @export var display_name: String = "Deacon Rusk"
-@export var max_health: float = 120.0
-@export var move_speed: float = 95.0
-@export var phase_2_speed_multiplier: float = 1.28
+@export var max_health: float = 100.0
+@export var move_speed: float = 92.0
+@export var phase_2_speed_multiplier: float = 1.16
 @export var preferred_range: float = 120.0
 @export var detection_range: float = 420.0
-@export var intro_duration: float = 1.35
-@export var choose_attack_duration: float = 0.42
-@export var phase_transition_duration: float = 2.1
-@export var retreat_duration: float = 0.75
+@export var intro_duration: float = 1.55
+@export var choose_attack_duration: float = 0.55
+@export var phase_transition_duration: float = 2.4
+@export var retreat_duration: float = 0.85
 @export var taunt_duration: float = 1.8
-@export var stagger_duration: float = 1.75
-@export var stagger_immunity_duration: float = 3.6
+@export var stagger_duration: float = 1.9
+@export var stagger_immunity_duration: float = 4.2
 @export var stagger_threshold: float = 100.0
 @export var red_brand_stagger_amount: float = 100.0
-@export var hitstun_resistance: float = 0.5
-@export var max_hitstun_per_hit: float = 0.34
+@export var hitstun_resistance: float = 0.62
+@export var max_hitstun_per_hit: float = 0.20
 @export var phase_2_health_ratio: float = 0.5
 @export var gravity: float = 1800.0
 @export var max_fall_speed: float = 900.0
@@ -83,6 +83,7 @@ const TAUNT_LINES := [
 @onready var telegraph_visual: Polygon2D = %TelegraphVisual
 @onready var warning_visual: Polygon2D = %WarningVisual
 @onready var slam_visual: Polygon2D = %SlamVisual
+@onready var visual_controller: DeaconRuskVisualController = %DeaconRuskVisualController
 @onready var hurtbox_component: Area2D = %HurtboxComponent
 @onready var hitbox_component: Area2D = %HitboxComponent
 @onready var health_component: HealthComponent = %HealthComponent
@@ -118,6 +119,8 @@ func _ready() -> void:
 	_rng.randomize()
 	_initialize_health()
 	_connect_components()
+	if visual_controller != null:
+		visual_controller.setup(self)
 	_set_dormant(true)
 	_update_visual()
 
@@ -125,6 +128,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_boss_active and current_state != RuskState.DEAD:
 		velocity = Vector2.ZERO
+		_update_visual(delta)
 		return
 
 	_refresh_player_target()
@@ -134,7 +138,7 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	_apply_movement_rules(delta)
 	move_and_slide()
-	_update_visual()
+	_update_visual(delta)
 	_update_debug_label()
 
 
@@ -196,31 +200,37 @@ func mark_encounter_cleared() -> void:
 
 
 func reset_for_player_death() -> void:
-	if not is_boss_active and current_state != RuskState.DEAD:
-		return
-
 	velocity = Vector2.ZERO
 	_interrupt_attack()
 	_stagger_meter = 0.0
 	_stagger_immunity_remaining = 0.0
 	_phase_transition_triggered = false
 	_combat_pressure_active = false
+	current_phase = 1
+	current_state = RuskState.INTRO
+	state_time_remaining = 0.0
+	hitstun_remaining = 0.0
+	current_attack_kind = AttackKind.NONE
+	_last_attack_kind = AttackKind.NONE
+	combo_step = 0
+	player_target = null
 	_initialize_health()
-	collision_layer = _default_collision_layer
-	collision_mask = _default_collision_mask
+	set_deferred("collision_layer", _default_collision_layer)
+	set_deferred("collision_mask", _default_collision_mask)
 	var body_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if body_shape != null:
 		body_shape.set_deferred("disabled", false)
-	is_boss_active = true
+	is_boss_active = false
 	visible = true
-	_set_dormant(false)
-	_enter_state(RuskState.INTRO)
+	_set_dormant(true)
+	if visual_controller != null:
+		visual_controller.reset_visual()
+	_update_visual()
 
 
 func _set_dormant(dormant: bool) -> void:
-	# activate_boss() runs inside the activation zone's body_entered callback;
-	# changing monitoring/monitorable during physics query flushing is blocked by
-	# the engine, so it must be deferred (same pattern as cult_brawler).
+	# Monitoring changes are always deferred because activation, defeat and reset
+	# can all originate from physics callbacks.
 	if hurtbox_component != null:
 		hurtbox_component.set_deferred("monitoring", not dormant)
 		hurtbox_component.set_deferred("monitorable", not dormant)
@@ -432,6 +442,8 @@ func _start_attack_with_data(attack_data: Resource) -> void:
 	hitbox_component.call("deactivate")
 	_set_combat_pressure(true)
 	_face_target()
+	if visual_controller != null:
+		visual_controller.notify_attack_telegraph(attack_data)
 	if state_time_remaining <= 0.0:
 		_advance_attack_phase()
 
@@ -527,6 +539,8 @@ func _on_hit_received(attack_data_received: Resource, hitbox: Area2D, attacker: 
 	_apply_knockback(attack_data_received.get("knockback") as Vector2, hitbox, attacker)
 	current_state = RuskState.HURT if hitstun_remaining > 0.0 else RuskState.CHOOSE_ATTACK
 	velocity.x = 0.0
+	if visual_controller != null:
+		visual_controller.apply_hit_reaction(attack_data_received)
 	_update_visual()
 
 
@@ -605,6 +619,9 @@ func _on_died() -> void:
 	_set_dormant(true)
 	CorpseCollisionHelper.disable_body_collision(self)
 	velocity = Vector2.ZERO
+	if visual_controller != null:
+		visual_controller.play_death()
+	_update_visual()
 	boss_defeated.emit(boss_id)
 	HealthDropSpawner.try_spawn_from_defeat(self, HealthDropSpawner.PROFILE_BOSS)
 
@@ -640,8 +657,9 @@ func _scaled_attack(base_data: Resource) -> Resource:
 		return base_data
 
 	var scaled: AttackData = base_data.duplicate(true) as AttackData
-	scaled.startup_time *= 0.82
-	scaled.recovery_time *= 0.86
+	## Phase 2 is faster to read — not a teleport. Milder compression for first-chapter boss.
+	scaled.startup_time *= 0.90
+	scaled.recovery_time *= 0.92
 	return scaled
 
 
@@ -725,7 +743,13 @@ func _is_dead() -> bool:
 	return health_component != null and health_component.is_dead
 
 
-func _update_visual() -> void:
+func _update_visual(delta: float = 0.0) -> void:
+	if visual_controller != null and visual_controller.refresh(self, delta):
+		return
+	_update_placeholder_visual()
+
+
+func _update_placeholder_visual() -> void:
 	if body_visual == null:
 		return
 

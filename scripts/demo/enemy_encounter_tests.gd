@@ -15,8 +15,10 @@ func _run_suite() -> void:
 	_test_church_encounters(failures)
 	_test_underground_boss(failures)
 	_test_arena_spawn_points(failures)
+	_test_lifecycle_state_contract(failures)
+	_test_scene_controller_wiring(failures)
 
-	suite.finish(failures, 4)
+	suite.finish(failures, 6)
 
 
 func _test_street_encounters(failures: PackedStringArray) -> void:
@@ -51,6 +53,8 @@ func _test_underground_boss(failures: PackedStringArray) -> void:
 	var underground := (load(VS_UNDERGROUND) as PackedScene).instantiate()
 	if underground.get_node_or_null("WorldObjects/DeaconRusk") == null:
 		failures.append("Underground must keep Deacon Rusk.")
+	if underground.get_node_or_null("WorldObjects/DeaconRuskEncounter") == null:
+		failures.append("Underground must keep the Deacon Rusk encounter controller.")
 	underground.queue_free()
 
 
@@ -61,3 +65,43 @@ func _test_arena_spawn_points(failures: PackedStringArray) -> void:
 	if spawn_paths.size() < 3:
 		failures.append("Combined arena should spawn three enemy types.")
 	arena.queue_free()
+
+
+func _test_lifecycle_state_contract(failures: PackedStringArray) -> void:
+	var expected_states := [
+		"INACTIVE",
+		"ACTIVATION_REQUESTED",
+		"CLOSING_GATES",
+		"SPAWNING",
+		"ACTIVE",
+		"RESETTING",
+		"COMPLETED",
+	]
+	if Array(CombatArenaController.ArenaState.keys()) != expected_states:
+		failures.append("Combat arena lifecycle states do not match the deterministic contract.")
+	if Array(BossEncounterController.EncounterState.keys()) != expected_states:
+		failures.append("Boss encounter lifecycle states do not match the deterministic contract.")
+
+
+func _test_scene_controller_wiring(failures: PackedStringArray) -> void:
+	var church := (load(VS_CHURCH) as PackedScene).instantiate()
+	var arena := church.get_node_or_null("WorldObjects/ChurchYardArena") as CombatArenaController
+	if arena == null:
+		failures.append("North Star church arena must use CombatArenaController.")
+	else:
+		if arena.activation_zone_path.is_empty() or arena.gate_paths.is_empty():
+			failures.append("North Star church arena must wire activation and gates explicitly.")
+		if arena.enemy_spawn_paths.size() != 3:
+			failures.append("North Star church arena must retain its three configured spawn points.")
+	church.queue_free()
+
+	var underground := (load(VS_UNDERGROUND) as PackedScene).instantiate()
+	var encounter := underground.get_node_or_null("WorldObjects/DeaconRuskEncounter") as BossEncounterController
+	if encounter == null:
+		failures.append("Deacon Rusk arena must use BossEncounterController.")
+	else:
+		if encounter.activation_zone_path.is_empty() or encounter.gate_paths.is_empty():
+			failures.append("Deacon Rusk arena must wire activation and gates explicitly.")
+		if underground.find_children("*", "DeaconRusk", true, false).size() != 1:
+			failures.append("Deacon Rusk arena must contain exactly one boss instance.")
+	underground.queue_free()

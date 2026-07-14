@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="Red Hollow"
-config/description="Capítulo Zero — O Sino Antes do Anoitecer (beta local)"
-config/version="0.2.0-beta.1"
+config/description="Red Hollow — Chapter Zero Beta RC1 (Windows closed test candidate — not public)"
+config/version="0.2.0-beta.rc1"
 run/main_scene="res://scenes/product/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 run/max_fps=60

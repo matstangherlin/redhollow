@@ -27,6 +27,15 @@ func _ready() -> void:
 	visible = false
 	if _root != null:
 		_root.visible = false
+	var panel := get_node_or_null("PauseRoot/Panel") as PanelContainer
+	if panel != null:
+		UiThemeHelper.style_panel(panel)
+	var dim := get_node_or_null("PauseRoot/Dim") as ColorRect
+	if dim != null:
+		UiThemeHelper.style_dim(dim)
+	UiThemeHelper.style_title_label(get_node_or_null("PauseRoot/Panel/VBox/Title") as Label)
+	for button in [_resume_button, _options_button, _controls_button, _main_menu_button, _controls_back_button]:
+		UiThemeHelper.style_menu_button(button)
 	if _resume_button != null:
 		_resume_button.pressed.connect(_on_resume_pressed)
 	if _options_button != null:
@@ -44,6 +53,7 @@ func _ready() -> void:
 		_controls_back_button.pressed.connect(_on_controls_back_pressed)
 	if _controls_reference_label != null:
 		_controls_reference_label.text = ControlsTutorialOverlay.get_controls_reference()
+		UiThemeHelper.style_body_label(_controls_reference_label)
 
 
 func bind_lock_manager(manager: GameplayLockManager) -> void:

@@ -1,8 +1,28 @@
 # Art Cost Per Room — Red Hollow Capítulo Zero
 
-Estimativas para planejamento de produção. Derivadas do gate `ART_VERTICAL_SLICE_GATE.md` (2026-07-13).  
+Estimativas para planejamento de produção.  
+**Gate vigente (trecho final sample X 100–900):** `ART_VERTICAL_SLICE_GATE.md` — veredito **REPROVADO** (2026-07-13).  
 **Unidade:** person-day (pd) = 8 h de artista pixel art experiente.  
 **USD:** faixa indie remoto LATAM/EU 2026 ($400–550/pd).
+
+---
+
+## Leitura de custo após gate do trecho
+
+| Pergunta | Resposta |
+| --- | --- |
+| O sample `final_candidate` reduz custo? | **Não.** É `PLACEHOLDER_CANDIDATE`; não substitui PNG. |
+| Custo/sala inviável? | **Não** — envelope Cap. Zero permanece ~38–42 pd / $15k–23k. |
+| O que muda no plano? | Priorizar **chão + saloon + plataforma** no trecho 100–900 antes do restante da rua. |
+| Expandir igreja/catacumbas? | **Não** enquanto o gate do trecho estiver REPROVADO. |
+
+### Fatia trecho vs rua completa (ambiente)
+
+| Fatia | Assets alvo | pd arte est. |
+| --- | ---: | ---: |
+| Trecho 100–900 (P0) | ~8–10 | **3.5–4.5** |
+| Resto 900–2400 | ~9–11 | ~3.0 |
+| Rua total ambiente | 19 | **~6.5** |
 
 ---
 
@@ -127,11 +147,12 @@ Estimativas para planejamento de produção. Derivadas do gate `ART_VERTICAL_SLI
 
 ## Regras de orçamento
 
-1. **Não iniciar igreja/catacumbas** até gate rua P0 (G1–G4) fechado.  
+1. **Não iniciar igreja/catacumbas** até o gate do trecho final sample deixar de ser REPROVADO (FS1–FS5) e P0 rua G1/G3/G4 fecharem.  
 2. **Reutilizar** `EnvironmentVisualProfile` + `RegionVisualTheme` — não duplicar lógica por sala.  
 3. **Um atlas por área** quando possível (≤2048 px, `ASSET_IMPORT_RULES.md`).  
 4. **Cult Brawler** é template — próximos inimigos devem custar ≤3 pd arte cada.  
-5. Registrar desvio >20% no próximo gate.
+5. Registrar desvio >20% no próximo gate.  
+6. **Existência ≠ approved** — manifesto `draft`/`missing` não conta como custo pago de arte final.
 
 ---
 

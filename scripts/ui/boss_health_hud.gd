@@ -15,6 +15,14 @@ var _taunt_timer: SceneTreeTimer = null
 
 func _ready() -> void:
 	add_to_group(HUD_GROUP)
+	if panel != null:
+		UiThemeHelper.style_panel(panel)
+	if boss_name_label != null:
+		HudThemeV2.apply_label_cream(boss_name_label, 14)
+	if health_bar != null:
+		HudThemeV2.apply_progress_fill(health_bar, HudThemeV2.COLOR_BRAND)
+	if taunt_label != null:
+		HudThemeV2.apply_label_muted(taunt_label, 11)
 	hide_boss()
 
 

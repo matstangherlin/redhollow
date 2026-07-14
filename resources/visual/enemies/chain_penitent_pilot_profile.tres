@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="EnemyVisualProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/visual/enemies/enemy_visual_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_id = &"chain_penitent_pilot"
+enemy_id = &"chain_penitent"
+visual_mode = 1
+use_procedural_pilot_frames = true
+state_animation_map = {
+"alert": "idle",
+"approach": "walk",
+"dead": "death",
+"hurt": "hurt",
+"idle": "idle",
+"knocked_back": "hurt",
+"patrol": "walk",
+"recovery": "chain_recovery",
+"vulnerable": "stagger"
+}
+attack_phase_map = {
+"active": "chain_active",
+"recovery": "chain_recovery",
+"startup": "chain_startup"
+}
